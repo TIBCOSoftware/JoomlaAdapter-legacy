@@ -1,0 +1,18 @@
+.asg-app-step-1 {
+  display: none;
+  height: auto;
+}
+.asg-app-step-2 {
+  display: none;
+  height: auto;
+}
+.asg-app-step-3 {
+  display: none;
+  height: auto;
+}
+#adminForm .form-actions .btn {
+  display: none;
+}
+#adminForm .form-actions .btn:last-child {
+  display: inline-block;
+}
