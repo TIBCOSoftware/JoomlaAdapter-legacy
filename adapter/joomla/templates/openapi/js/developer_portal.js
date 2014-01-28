@@ -815,9 +815,22 @@ var DeveloperPortal = {};
             dForm.find('input[name="task"]').val(sTask);
             dForm.attr('target', sIFrameId);
             dIFrame.on('load', function(oEvent) {
-
+				var isOrgs = false;
+				try {
+					isOrgs = dForm.context.location.pathname.indexOf('/organizations/') != -1;
+				}
+				catch(ex) {
+				}
                 dWindow = oEvent.target.contentWindow;
-                sRedirectUrl = dWindow.location.href;
+				try {
+					if(isOrgs) {
+						document.domain = dForm.context.domain;
+					}
+					sRedirectUrl = dWindow.location.href;
+				}
+				catch(ex) {
+					
+				}
 
                 if(DeveloperPortal._pathsMatch(dWindow.location, window.location) || !dWindow.RecordTemplate || dWindow.RecordTemplate.nRecordId === undefined) {
                     // The path of the iframe being identical to the one of the main window means the page was not redirected due to some errors occurred.
