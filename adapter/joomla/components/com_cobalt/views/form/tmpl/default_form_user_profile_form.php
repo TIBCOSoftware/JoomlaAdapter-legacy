@@ -19,14 +19,33 @@ if($params->get('tmpl_params.form_grouping_type', 0))
 {
 	$started = true;
 }
+
 $k = 0;
 $path = JRequest::getURI();
+$current_user_org_id = TibcoTibco::getCurrentUserOrgId();
+$auth_group_ids = $this->user->getAuthorisedGroups();
+$path = JRequest::getURI();
 $userprofile = false;
-if(strpos($path,'userprofile')){
-  $userprofile = true;
+if(strpos($path,'userprofile') || strpos($path, 'dashboard')){
+  if(!(in_array(7, $auth_group_ids) || in_array(8, $auth_group_ids))) {
+    $userprofile = true;
+  }
+  $users_userProfileID = DeveloperPortalApi::getUserProfileId();
+  
+  $userprofile_id = $this->item->id; 
+
+  if(!($users_userProfileID == $userprofile_id || in_array(7, $auth_group_ids) || in_array(8, $auth_group_ids))){
+  	
+  	JFactory::getApplication()->enqueueMessage(JText::_('USERPROFILE_CUSTOM_ACCESS_DENIED_ERROR'), 'error');
+  	
+    return;
+  }
+}
+$userorganizations = false;
+if(strpos($path,'userorganizations')){
+	$userorganizations = true;
 }
 ?>
-
 <?php  if($userprofile):?>
   <script type="text/javascript">
     if(typeof asgUserProfile == 'undefined'){
@@ -34,6 +53,15 @@ if(strpos($path,'userprofile')){
     }
   </script>
 <?php endif;?>
+<script type="text/javascript">
+var asgUserOrganisation=false;
+</script>
+<?php  if($userorganizations):?>
+  <script type="text/javascript">
+     asgUserOrganisation = true;
+      
+  </script>
+ <?php endif;?>
 <style>
 	.licon {
 	 	float: right;
@@ -104,7 +132,24 @@ if(strpos($path,'userprofile')){
   border-style: none;
 }		
 </style>
+	<?php 
+ 	$comEmail = JComponentHelper::getComponent('com_emails');
+	$spotfire_domain = $comEmail->params->get('spotfire_domain');
+	if(!$spotfire_domain){
+		$spotfire_domain = '';
+	}
+	?>
+
 <script type="text/javascript">
+
+var old_usertype;
+(function($){
+	$(function(){
+		$(window).load(function(){
+			 old_usertype = jQuery("#form_field_list_88").val();
+		});
+	});
+})(jQuery);
     
     Joomla.beforesubmitform = function(callback, errorback) {
         
@@ -116,6 +161,8 @@ if(strpos($path,'userprofile')){
         var email = jQuery("#field_102");
         var token = jQuery("input:hidden[value='1']").last().attr("name");
         var userType = jQuery("#form_field_list_88");
+        username.val(email.val());
+        var new_userType_val=userType.val();
         var data = {
             "option" : "com_users",
             "task" : "autoreg.register"
@@ -124,20 +171,40 @@ if(strpos($path,'userprofile')){
             "email1" : email.val(),
             "email2" : email.val(),
             "name" : name.val(),
-            "username" : username.val(),
-            "user_group_name" : "Organization <?php echo $this->fields[47]->value[0]; ?> " + userType.val()
+            "username" : email.val(),
+            "user_group_name" : "Organization <?php echo $this->fields[47]->value[0]; ?> " + userType.val(),
+            "old_user_group_name" : "Organization <?php echo $this->fields[47]->value[0]; ?> " + old_usertype
         };
         data[token]=1;
+        //Set domain for handling correct redirect to dashboard page
+        //console.log(profile_id);
+        if(profile_id){
+            
+    	function analyticsErrorHandler(errorCode, description){
+    		console.error("Error loading analtyics: code(" + errorCode + ")\n\t" + description);
+    	}
+    	jQuery(document).ready(function(){
+    	try{
+    		
+    		document.domain = '<?php echo $spotfire_domain;?>';
+    	}
+    	catch(err){
+    		analyticsErrorHandler(0, 'Failed setting of analytics domain to "<?php echo $spotfire_domain;?>". Please check your settings and try again. [' + err + ']');
+    		return;
+    	}
+    	});
+        }
+        
+        if((joomla_user_id.length && joomla_user_id.val() == '0' && !parseInt(record_id))||(asgUserOrganisation && !parseInt(record_id))){
 
-        if(joomla_user_id.length && joomla_user_id.val() == '0' && !parseInt(record_id)){
-            jQuery.ajax({
+             jQuery.ajax({
                 type : 'post',
                 data : data,
                 dataType:'json',
                 complete: function(jqXHR, textStatus) {
                     var result = jQuery.parseJSON(jqXHR.responseText);
                     if(result && result.userid && result.userid[0]) {
-                        jQuery("#fld-101,#fld-102").slideUp().attr("disabled","disabled");
+                        jQuery("#fld-101,#fld-102").slideUp().attr('readonly', 'true');
                         joomla_user_name.val(data.jform.name);
                         joomla_user_id.val(result.userid[0]);
                         callback();
@@ -163,10 +230,29 @@ if(strpos($path,'userprofile')){
                     }
                 }
             });
+        }else if(joomla_user_id.length && joomla_user_id.val() && parseInt(record_id) && !(old_usertype == new_userType_val)){
+            data.task   = "ajaxmore.updateUsersGroup";
+            data.option = "com_cobalt";
+            data.userId = joomla_user_id.val();
+            jQuery.ajax({
+                type : 'post',
+                data : data,
+                dataType:'json',
+                complete: function(jqXHR, textStatus) {        
+                    var result = jQuery.parseJSON(jqXHR.responseText);
+                    if(result.success) {
+                        
+                        callback();     
+                    } else if(result.error) {
+                        errorback(result.error);
+                    }
+                }
+            });
+            
         }else{
         	callback();
         }
-    }
+    };
     
 </script>
 <div class="form-horizontal">
@@ -937,6 +1023,14 @@ if(strpos($path,'userprofile')){
     $profile_id = JFactory::getApplication()->input->getInt('id', 0);
     $user_id = DeveloperPortalApi::getUserIdByProfileId($profile_id);
   ?>
+  	<script type="text/javascript">
+	var profile_id =false;
+	<?php  if($profile_id == 0):?>
+
+	profile_id=true;
+	<?php endif;?>
+
+	</script>
 
 	<?php if(count($this->core_fields)):?>
 		<?php group_start($this, 'Core Fields', 'tab-core');?>
@@ -969,14 +1063,15 @@ if(strpos($path,'userprofile')){
       }
     });
     function setUserProfile() {
-      var id = $('#77_id').val();
+
+        <?php //echo DeveloperPortalApi::getUserIdByProfileId($this->item->id);?>
+      var id = $('#77_id').val()||"<?php echo $this->item->id?DeveloperPortalApi::getUserIdByProfileId($this->item->id):0;?>";
       if (id && id != 0) {
         //TODO: call an api to get username and email
         $.ajax({
           url: GLOBAL_CONTEXT_PATH + 'index.php?option=com_cobalt&task=ajaxMore.getUserByUid&uid=' + id
         }).done(function(data) {
           var result = JSON.parse(data).result;
-          $('#jform_title').val(result.name).attr('readonly', 'true');
           $('#field_101').val(result.username).attr('readonly', 'true');
           $('#field_102').val(result.email).attr('readonly', 'true');
         });
@@ -996,7 +1091,7 @@ if(strpos($path,'userprofile')){
 <?php if($userprofile):?>
   (function($){
     var USER_PROFILE_FORM_SUBMIT_BUTTON_CLASS = 'asg-submit-userprofile-form';
-
+    $("#asg-userprofile-form").parents("form").find("#field_102").attr('readonly', 'true');
     /**
      * Get the fields which are required to update the Joomla User Profile
      * @return {Object} if the validation is failed, return Null, otherwise return request data object
@@ -1168,4 +1263,4 @@ function total_end($data)
 		break;
 	}
 }
-
+?>

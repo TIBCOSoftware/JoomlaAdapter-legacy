@@ -78,6 +78,23 @@ $tasks_to_hide = DeveloperPortalApi::isReferencedByDownstreamSubs($this->item->i
 .line-brk {
 	margin-left: 0px !important;
 }
+#configUIbutton {
+	float:left;
+	margin-left:9px;
+	margin-top:9px;
+}
+.toolbar{
+	height:45px;
+	margin-top:10px;
+	background-color:#eee;
+	-webkit-box-shadow: inset 0 0 20px rgba(0,0,0,.1);
+	-moz-box-shadow: inset 0 0 20px rgba(0,0,0,.1);
+	box-shadow: inset 0 0 20px rgba(0,0,0,.1);
+}
+.toolbar .right-button{
+	margin-top:12px;
+	margin-right:10px;
+}
 <?php echo $params->get('tmpl_params.css');?>
 </style>
 
@@ -136,33 +153,43 @@ if($params->get('tmpl_core.item_follow_num'))
 ?>
 
 <article class="<?php echo $this->appParams->get('pageclass_sfx')?><?php if($item->featured) echo ' article-featured' ?>">
-	<?php if(!$this->print):?>
-		<div class="pull-right controls">
-			<div class="btn-group">
-				<?php if($params->get('tmpl_core.item_print')):?>
-					<a class="btn btn-mini" rel="tooltip" data-original-title="<?php echo JText::_('CPRINT');?>" onclick="window.open('<?php echo JRoute::_($this->item->url.'&tmpl=component&print=1');?>','win2','status=no,toolbar=no,scrollbars=yes,titlebar=no,menubar=no,resizable=yes,width=640,height=480,directories=no,location=no'); return false;">
+	
+	<div class="toolbar">
+	
+		<?php if(!$this->print):?>
+			<div class="pull-right controls right-button">
+				<div class="btn-group">
+					<?php if($params->get('tmpl_core.item_print')):?>
+						<a class="btn btn-mini" rel="tooltip" data-original-title="<?php echo JText::_('CPRINT');?>" onclick="window.open('<?php echo JRoute::_($this->item->url.'&tmpl=component&print=1');?>','win2','status=no,toolbar=no,scrollbars=yes,titlebar=no,menubar=no,resizable=yes,width=640,height=480,directories=no,location=no'); return false;">
 						<?php echo HTMLFormatHelper::icon('printer.png');  ?></a>
-				<?php endif;?>
-
-				<?php if($this->user->get('id')):?>
-					<?php echo HTMLFormatHelper::bookmark($item, $this->type, $params);?>
-					<?php echo HTMLFormatHelper::follow($item, $this->section);?>
-					<?php echo HTMLFormatHelper::repost($item, $this->section);?>
-					<?php if($item->controls):?>
-						<a href="#" data-toggle="dropdown" class="dropdown-toggle btn btn-mini">
-							<?php echo HTMLFormatHelper::icon('gear.png');  ?></a>
-						<ul class="dropdown-menu">
-							<?php echo DeveloperPortalApi::list_controls($item->controls, $tasks_to_hide, $this->item->id, $this->item->type_id);?>
-						</ul>
 					<?php endif;?>
-				<?php endif;?>
+
+					<?php if($this->user->get('id')):?>
+						<?php echo HTMLFormatHelper::bookmark($item, $this->type, $params);?>
+						<?php echo HTMLFormatHelper::follow($item, $this->section);?>
+						<?php echo HTMLFormatHelper::repost($item, $this->section);?>
+						<?php if($item->controls):?>
+							<a href="#" data-toggle="dropdown" class="dropdown-toggle btn-mini">
+								<?php echo HTMLFormatHelper::icon('gear.png');  ?></a>
+							<ul class="dropdown-menu">
+								<?php echo DeveloperPortalApi::list_controls($item->controls, $tasks_to_hide, $this->item->id, $this->item->type_id);?>
+							</ul>
+						<?php endif;?>
+					<?php endif;?>
+				</div>
 			</div>
-		</div>
-	<?php else:?>
-		<div class="pull-right controls">
-			<a href="#" class="btn btn-mini" rel="tooltip" data-original-title="<?php echo JText::_('CPRINT');?>" onclick="window.print();return false;"><?php echo HTMLFormatHelper::icon('printer.png');  ?></a>
-		</div>
-	<?php endif;?>
+		<?php else:?>
+			<div class="pull-right controls">
+				<a href="#" class="btn btn-mini" rel="tooltip" data-original-title="<?php echo JText::_('CPRINT');?>" onclick="window.print();return false;"><?php echo HTMLFormatHelper::icon('printer.png');  ?></a>
+			</div>
+		<?php endif;?>
+		<button type="button" class="iframe_active btn" id="configUIbutton" >Configure</button>		
+	</div>
+	<div id="configuidiv">
+		<iframe id="configuiframe" src="about:blank" frameborder=0 style="display:none;width:100%;height:800px;"> </iframe>
+	</div>
+	
+	<div class="clearfix"></div>
 	<?php if($params->get('tmpl_core.item_title')):?>
 		<?php if($this->type->params->get('properties.item_title')):?>
 			<div class="page-header">
@@ -176,10 +203,7 @@ if($params->get('tmpl_core.item_follow_num'))
 	<div class="clearfix"></div>
 
 	<?php if(isset($this->item->fields_by_groups[null])):?>
-		<div id="configuidiv">
-			<button type="button" class="iframe_active btn" id="configUIbutton" style="float:right" >Configure</button>
-			<iframe id="configuiframe" src="about:blank" frameborder=0 style="display:none;width:100%;height:800px;"> </iframe>
-		</div>
+
 		<dl class="dl-horizontal fields-list">
 			<?php foreach ($this->item->fields_by_groups[null] as $field_id => $field):?>
 				<dt id="<?php echo 'dt-'.$field_id; ?>" class="<?php echo $field->fieldclass;?>">
@@ -322,7 +346,7 @@ function toggleIframe(bool){
    var text = bool?'Close':'Configure';
    jQuery(this).toggleClass("iframe_active");
    bool?jQuery("#configuiframe").show():jQuery("#configuiframe").hide();
-   bool?jQuery(".dl-horizontal.fields-list").hide():jQuery(".dl-horizontal.fields-list").show();
+   //bool?jQuery(".dl-horizontal.fields-list").hide():jQuery(".dl-horizontal.fields-list").show();
    jQuery("#configuiframe").attr("src",src);
    jQuery("#configUIbutton").text(text);
 }

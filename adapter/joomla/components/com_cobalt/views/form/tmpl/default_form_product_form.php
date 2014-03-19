@@ -14,6 +14,8 @@
 defined('_JEXEC') or die('Restricted access');
 require_once JPATH_ROOT . "/includes/api.php";
 require_once JPATH_BASE . "/components/com_cobalt/controllers/ajaxmore.php";
+require_once JPATH_ROOT . '/components/com_cobalt/library/php/helpers/itemsstore.php';
+
 $started = false;
 $params = $this->tmpl_params;
 if($params->get('tmpl_params.form_grouping_type', 0))
@@ -24,6 +26,15 @@ $k = 0;
 $user_profile_id = DeveloperPortalApi::getUserProfileId();
 
 $apisData = DeveloperPortalApi::valueForKeyFromJson($this->item->fields, 7);
+
+
+$userOrgIds = DeveloperPortalApi::getUserOrganization();
+
+if(!empty($userOrgIds)){
+  $userOrg = ItemsStore::getRecord($userOrgIds[0]);
+}
+
+
 ?>
 
 
@@ -96,17 +107,19 @@ $apisData = DeveloperPortalApi::valueForKeyFromJson($this->item->fields, 7);
 #tabs-box {
   border-style: none;
 }
-.form-actions .btn {
-  display: none;
-}
 .form-actions .btn:last-child {
   display: inline-block;
 }
 #parent_list7 {
   /*display: none;*/
 }
+.asg-create-product-step1 {
+  height: auto;
+  margin-bottom: 15px;
+}
 .asg-create-product-step2 {
-  display: none;
+  height: auto;
+  margin-bottom: 15px;
 }
 .asg-create-product-step2 .table {
   display: none;
@@ -124,7 +137,29 @@ $apisData = DeveloperPortalApi::valueForKeyFromJson($this->item->fields, 7);
   vertical-align: middle;
 }
 .asg-create-product-step3 {
-  display: none;
+  height: auto;
+  margin-bottom: 15px;
+}
+.asg-pro-step-title-container {
+  height:23px;
+  position:relative;
+}
+.asg-pro-step-title-container-line {
+  height:10px;
+  background:#006699;
+  position:relative;
+  top:8px;
+}
+.asg-pro-step-title {
+  position:absolute;
+  background:#FFFFFF;
+  padding:0px 5px;
+  z-index:999;
+}
+.asg-pro-step-title i {
+  font-size:14px;
+  color:#006699;
+  cursor: pointer;
 }
 </style>
 
@@ -153,6 +188,7 @@ $apisData = DeveloperPortalApi::valueForKeyFromJson($this->item->fields, 7);
 		</ul>
 <?php endif;?>
 	<?php group_start($this, $params->get('tmpl_params.tab_main', 'Main'), 'tab-main');?>
+  <div class="asg-pro-step-title-container"><div class="asg-pro-step-title"><i class="icon-chevron-down"></i><?php echo JText::_('CREATE_PRODUCT_STEP1_DES')?></div><div class="asg-pro-step-title-container-line"></div></div>
   <div class="asg-create-product-step1">
     <div class="row-fluid">
       <div class="span12">
@@ -347,7 +383,12 @@ $apisData = DeveloperPortalApi::valueForKeyFromJson($this->item->fields, 7);
 
     <div class="<?php if(in_array($organization->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($organization->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $organization->fieldclass  ?>">
       <div id="field-alert-<?php echo $organization->id?>" class="alert alert-error" style="display:none"></div>
-      <?php echo $organization->result; ?>
+      <?php //echo $organization->result; ?>
+      <div id="parent_list<?php echo $organization->id?>">
+        <div rel="<?php echo $userOrg->id;?>" class="alert alert-info list-item">
+          <span><?php echo $userOrg->title;?></span><input type="hidden" value="<?php echo $userOrg->id;?>" name="jform[fields][<?php echo $organization->id?>]">
+        </div>
+      </div>
     </div>
   </div>
 	<?php if(MECAccess::allowAccessAuthor($this->type, 'properties.item_can_add_tag', $this->item->user_id) &&
@@ -395,12 +436,8 @@ $apisData = DeveloperPortalApi::valueForKeyFromJson($this->item->fields, 7);
       </div>
 
     </div>
-    <div class="control-group">
-      <div class="controls">
-        <a class="btn btn-primary asg-create-app-next">Next</a>
-      </div>
-    </div>
   </div>
+  <div class="asg-pro-step-title-container"><div class="asg-pro-step-title"><i class="icon-chevron-down"></i><?php echo JText::_('CREATE_PRODUCT_STEP2_DES')?></div><div class="asg-pro-step-title-container-line"></div></div>
   <div class="asg-create-product-step2">
     <div class="row-fluid">
       <div class="span12">
@@ -445,13 +482,8 @@ $apisData = DeveloperPortalApi::valueForKeyFromJson($this->item->fields, 7);
         </table>
       </div>
     </div>
-    <div class="control-group">
-      <div class="controls">
-        <a class="btn asg-create-app-back">Back</a>
-        <a class="btn btn-primary asg-create-app-next">Next</a>
-      </div>
-    </div>
   </div>
+  <div class="asg-pro-step-title-container"><div class="asg-pro-step-title"><i class="icon-chevron-down"></i><?php echo JText::_('CREATE_PRODUCT_STEP3_DES')?></div><div class="asg-pro-step-title-container-line"></div></div>
   <div class="asg-create-product-step3">
       <div class="row-fluid">
         <div class="span12">
@@ -571,11 +603,6 @@ $apisData = DeveloperPortalApi::valueForKeyFromJson($this->item->fields, 7);
 
     </div>
   </div>
-    <div class="control-group">
-      <div class="controls">
-        <a class="btn asg-create-app-back">Back</a>
-      </div>
-    </div>
   </div>
 	<?php group_end($this);?>
   <?php unset($this->sorted_fields[0]);?>
@@ -746,23 +773,31 @@ jQuery(function(){
     jQuery('#modal7').on('hide', function() {
       renderAPITable();
     });
-    jQuery('.asg-create-app-next').on('click', function() {
-      var tab = jQuery(this).parent().parent().parent();
-      tab.hide();
-      tab.next().show();
-      jQuery('.asg-create-app-guide .active').removeClass('active').next().addClass('active');
-      if (jQuery('.asg-create-app-guide .active').is(':last-child')) {
-        jQuery('.form-actions .btn').show();
-      }
+    jQuery('.asg-pro-step-title-container .asg-pro-step-title').on('click', '.icon-chevron-down', function() {
+      jQuery(this).removeClass('icon-chevron-down').addClass('icon-chevron-right');
+      jQuery(this).parent().parent().next().hide();
     });
-    jQuery('.asg-create-app-back').on('click', function() {
-      var tab = jQuery(this).parent().parent().parent();
-      tab.hide();
-      tab.prev().show();
-      jQuery('.asg-create-app-guide .active').removeClass('active').prev().addClass('active');
-      jQuery('.form-actions .btn').hide();
-      jQuery('.form-actions .btn:last-child').show();
+    jQuery('.asg-pro-step-title-container .asg-pro-step-title').on('click', '.icon-chevron-right', function() {
+      jQuery(this).removeClass('icon-chevron-right').addClass('icon-chevron-down');
+      jQuery(this).parent().parent().next().show();
     });
+    // jQuery('.asg-create-app-next').on('click', function() {
+      // var tab = jQuery(this).parent().parent().parent();
+      // tab.hide();
+      // tab.next().show();
+      // jQuery('.asg-create-app-guide .active').removeClass('active').next().addClass('active');
+      // if (jQuery('.asg-create-app-guide .active').is(':last-child')) {
+        // jQuery('.form-actions .btn').show();
+      // }
+    // });
+    // jQuery('.asg-create-app-back').on('click', function() {
+      // var tab = jQuery(this).parent().parent().parent();
+      // tab.hide();
+      // tab.prev().show();
+      // jQuery('.asg-create-app-guide .active').removeClass('active').prev().addClass('active');
+      // jQuery('.form-actions .btn').hide();
+      // jQuery('.form-actions .btn:last-child').show();
+    // });
 
     jQuery(function() {
         jQuery('input[name="jform[fields][7][]"]').each(function() {

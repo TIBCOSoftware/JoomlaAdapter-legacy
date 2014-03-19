@@ -13,7 +13,10 @@
  */
 
 defined('_JEXEC') or die;
-
+if(($this->error->getCode())=='404' || ($this->error->getCode())=='500'){
+  header('Location: '.$this->baseurl . "/templates/" . $this->template."/error.html");
+  exit;
+}
 // Getting params from template
 $params = JFactory::getApplication()->getTemplate(true)->params;
 

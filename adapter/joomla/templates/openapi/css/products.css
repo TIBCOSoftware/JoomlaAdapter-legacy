@@ -113,7 +113,7 @@ ul.products-featured-product li a.readmore:hover{
 
 .asg-products-list{
  background: #fff;
- padding: 0px 30px;
+ padding: 0;
 }
 .list-by-catgory h3 {
     padding-top: 0px;
@@ -192,7 +192,7 @@ ul.products-featured-product li a.readmore:hover{
     font-size: 18px;
     line-height: 22px;
     height: 100px;
-    word-wrap: break-word; 
+    word-wrap: break-word;
     word-break: break-all;
 }
 
@@ -210,9 +210,10 @@ ul.products-featured-product li a.readmore:hover{
 #tabs-list{margin-bottom: 0;}
 #tabs-box{
     padding: 20px;
+	padding-top:0px;
     /*border: 1px solid #ccc;*/
     /*border-top: none;*/
-    margin-top: 5px;
+/*    margin-top: 5px;*/
 }
 
 #products-featured-list {
@@ -241,7 +242,7 @@ ul.products-featured-product li a.readmore:hover{
 
 #products-featured-product{
     margin: 0 auto;
-    overflow: hidden;
+    /*overflow: hidden;*/
     padding: 0px;
 }
 

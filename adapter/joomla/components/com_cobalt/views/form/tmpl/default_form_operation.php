@@ -42,6 +42,8 @@ if($api_id)
 	$old_operations_of_api_js .= "var operation_id=".$operation_id.";";
 	$old_operations_of_api_js .= 'var old_operation_of_api='.json_encode($old_operations_of_api).";";
 	$doc->addScriptDeclaration($old_operations_of_api_js);
+	$_api_type = DeveloperPortalApi::valueForKeyFromJson(ItemsStore::getRecord($api_id)->fields, 75);
+	$api_type = $_api_type[0];
 }
 ?>
 
@@ -269,6 +271,9 @@ if($api_id)
 
 	<?php if(isset($this->sorted_fields[0])):?>
 		<?php foreach ($this->sorted_fields[0] as $field_id => $field):?>
+			<?php if (($api_type=='REST' && in_array($field->id, array(128)))): ?>
+				<?php continue; ?>
+			<?php endif ?>
 			<div id="fld-<?php echo $field->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo 'field-'.$field_id; ?> <?php echo $field->fieldclass;?>">
 				<?php if($field->params->get('core.show_lable') == 1 || $field->params->get('core.show_lable') == 3):?>
 					<label id="lbl-<?php echo $field->id;?>" for="field_<?php echo $field->id;?>" class="control-label <?php echo $field->class;?>" >

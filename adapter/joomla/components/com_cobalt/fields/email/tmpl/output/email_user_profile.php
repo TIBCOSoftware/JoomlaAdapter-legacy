@@ -71,7 +71,7 @@ if (in_array($params->get('params.send_mail', 3), $this->user->getAuthorisedView
 
 		<div style="width:700px;" class="modal hide fade" id="emailmodal<?php echo $this->id;?>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&#215;</button>
 				<h3 id="myModalLabel"><?php echo JText::_('E_SENDMSG');?></h3>
 			</div>
 
@@ -96,24 +96,24 @@ if (in_array($params->get('params.send_mail', 3), $this->user->getAuthorisedView
 }
 ?>
 
-<?php 
-        $db = JFactory::getDbo();
-        $db->setQuery('select `field_value` from #__js_res_record_values where `field_id`=77 and `record_id`='.$record->id);
-        $result1 = $db->loadColumn();
-        if(!empty($result1))
-        {
-            $db->setQuery('select `id` from #__users where `id`="'.$result1[0].'"');
-            $user_id = $db->loadColumn();
-            if(!empty($user_id))
+<?php
+        if(in_array(10,JFactory::getUser()->getAuthorisedViewLevels())){
+            $db = JFactory::getDbo();
+            $db->setQuery('select `field_value` from #__js_res_record_values where `field_id`=77 and `record_id`='.$record->id);
+            $result1 = $db->loadColumn();
+            if(!empty($result1))
             {
-             $re_user = &JFactory::getUser($user_id[0]);
-             $token = $re_user->get('activation');
-             if($token)
-             {
-?>
-             	<a href="<?php echo JRoute::_('index.php?options=com_cobalt&task=ajaxmore.resendActiveEmail&id='.$record->id.'&'.JSession::getFormToken() .'=1');?>">resend active email</a>
- <?php            	
-      				}
+                $db->setQuery('select `id` from #__users where `id`="'.$result1[0].'"');
+                $user_id = $db->loadColumn();
+                if(!empty($user_id))
+                {
+                    $re_user = &JFactory::getUser($user_id[0]);
+                    $token = $re_user->get('activation');
+                    if($token)
+                    {
+                        echo '<p><br/><a href="'.JRoute::_('index.php?options=com_cobalt&task=ajaxmore.resendActiveEmail&id='.$record->id.'&'.JSession::getFormToken() .'=1').'">'. JText::_('BTN_RESEND_ACTIVATION_EMAIL').'</a></p>';
+                    }
+                }
             }
         }
 ?>

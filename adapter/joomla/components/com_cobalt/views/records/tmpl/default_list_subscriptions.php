@@ -22,7 +22,6 @@ settype($exclude, 'array');
 foreach ($exclude as &$value) {
 	$value = $this->fields_keys_by_id[$value];
 }
-
 ?>
 <?php if($params->get('tmpl_core.show_title_index')):?>
 	<h2><?php echo JText::_('CONTHISPAGE')?></h2>
@@ -143,6 +142,7 @@ foreach ($exclude as &$value) {
 					<span rel="tooltip" data-original-title="<?php echo JText::_('CHITS');?>"><?php echo JString::substr(JText::_('CHITS'), 0, 1)?></span>
 				</th>
 			<?php endif;?>
+			<th  nowrap="nowrap" width="1%"><?php echo JText::_('SUBSCRIPTION_STATUS');?></th>
 		</tr>
 	</thead>
 	<tbody>
@@ -223,6 +223,8 @@ foreach ($exclude as &$value) {
 				<?php foreach ($this->total_fields_keys AS $field):?>
 					<?php if(in_array($field->key, $exclude)) continue; ?>
 					<td class="<?php echo $field->params->get('core.field_class')?>"><?php if(isset($item->fields_by_key[$field->key]->result)) echo $item->fields_by_key[$field->key]->result ;?></td>
+					<?php if($field->id == 71){ $item->startDate = $field->value;}?>
+					<?php if($field->id == 72){ $item->endDate = $field->value;}?>
 				<?php endforeach;?>
 
 				<?php if($params->get('tmpl_core.item_user_categories') == 1 && $this->section->params->get('personalize.pcat_submit')):?>
@@ -264,6 +266,18 @@ foreach ($exclude as &$value) {
 				<?php if($params->get('tmpl_core.item_hits') == 1):?>
 					<td><?php echo $item->hits;?></td>
 				<?php endif;?>
+				<td>
+					<?php 
+						if(is_array($item->endDate))
+						{
+							
+							$date = JFactory::getDate($item->endDate[0]);
+							$now = JFactory::getDate();
+							$diff = $now->toUnix() - $date->toUnix();
+							echo $diff>0 ? JText::_('SUBSCRIPTION_EXPIRED') : "";
+						}
+					?>
+				</td>
 			</tr>
 		<?php endforeach;?>
 	</tbody>

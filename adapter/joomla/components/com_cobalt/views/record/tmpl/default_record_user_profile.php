@@ -24,36 +24,61 @@ $details = array();
 $started = FALSE;
 $i = $o = 0;
 $tasks_to_hide = array();
-
+$user_profile_org_id = TibcoTibco::getOrgIdByUserProfileId($this->item->id);
+$current_user_org_id = TibcoTibco::getCurrentUserOrgId();
+$auth_group_ids = $this->user->getAuthorisedGroups();
 $path = JRequest::getURI();
-if(strpos($path,'userprofile')){
+if(strpos($path,'userprofile') || strpos($path,'dashboard')){
    $userProfile = DeveloperPortalApi::getUserProfileId();
    $userprofile_id = $item->id;
 
+  if(!($current_user_org_id == $user_profile_org_id || in_array(7, $auth_group_ids) || in_array(8, $auth_group_ids))){
+    JFactory::getApplication()->enqueueMessage(JText::_('USERPROFILE_CUSTOM_ACCESS_DENIED_ERROR'), 'error');
+    return;
+  }
    // userorganizations
    if($userProfile == $userprofile_id){
    		$item->controls = array($item->controls[0]);
-   }else{
+   }else if(!(in_array(7, $auth_group_ids) || in_array(8, $auth_group_ids))){
    		unset($item);
    }
 }
 ?>
-
-<?php if(strpos($path,'userprofile')):?>
 <script type="text/javascript">
-		(function($){
-			$(function(){
-				$(window).load(function(){
-					var org_links = $("table.table-striped h2.record-title>a[href^='\/joomla\/index.php\/organizations\/']");
-					org_links.each(function(i,ele){
-						var new_link = $(ele).attr("href").replace(/^(\/joomla\/?index\.php\/)(organizations)(\/.*)$/,function(m,p1,p2,p3){
-						        							return p1+"userorganizations"+p3;
-											});
-						$(ele).attr("href",new_link);
-					});
-				})
+var hasJoomlaRoot=false;
+</script>
+<?php $hasJoomlaRoot= JUri::base(true);?>
+<?php if($hasJoomlaRoot):?>
+<script type="text/javascript">
+var hasJoomlaRoot='<?php echo $hasJoomlaRoot;?>';
+</script>
+<?php endif;?>
+
+<?php if(strpos($path,'userprofile')||strpos($path,'dashboard')):?>
+<script type="text/javascript">
+(function($){
+	$(function(){
+
+			var org_links_seletor,search_selector, mem_links;
+			if(hasJoomlaRoot){
+				 org_links_seletor="table.table-striped h2.record-title>a[href^='"+hasJoomlaRoot+"\/index.php\/organizations\/']";
+				 search_selector=new RegExp('^('+hasJoomlaRoot+'\/?index\.php\/)(organizations)(\/.*)$');
+				  
+			}else{
+				 org_links_seletor="table.table-striped h2.record-title>a[href^='\/index.php\/organizations\/']";
+				 search_selector=new RegExp("^(\/?index\.php\/)(organizations)(\/.*)$");
+				 
+				} 
+			
+			var org_links = $(org_links_seletor);
+			org_links.each(function(i,ele){
+				var new_link = $(ele).attr("href").replace(search_selector,function(m,p1,p2,p3){
+				        							return p1+"dashboard"+p3;
+									});
+				$(ele).attr("href",new_link);
 			});
-		})(jQuery);
+	});
+})(jQuery);
 </script>
 <?php endif;?>
 <style>
@@ -91,6 +116,11 @@ if(strpos($path,'userprofile')){
 }
 .line-brk {
 	margin-left: 0px !important;
+}
+/* hide username field */
+.asg-hidden-field{
+display:none;
+
 }
 <?php echo $params->get('tmpl_params.css');?>
 </style>
@@ -159,15 +189,17 @@ if($params->get('tmpl_core.item_follow_num'))
 				<?php endif;?>
 
 				<?php if($this->user->get('id')):?>
-					<?php echo HTMLFormatHelper::bookmark($item, $this->type, $params);?>
-					<?php echo HTMLFormatHelper::follow($item, $this->section);?>
-					<?php echo HTMLFormatHelper::repost($item, $this->section);?>
-					<?php if($item->controls):?>
-						<a href="#" data-toggle="dropdown" class="dropdown-toggle btn btn-mini">
-							<?php echo HTMLFormatHelper::icon('gear.png');  ?></a>
-						<ul class="dropdown-menu">
-							<?php echo DeveloperPortalApi::list_controls($item->controls, $tasks_to_hide, $this->item->id, $this->item->type_id);?>
-						</ul>
+					<?php if(in_array(7, $this->user->getAuthorisedGroups()) || in_array(8, $this->user->getAuthorisedGroups()) || $item->id == DeveloperPortalApi::getUserProfileId()):?>
+						<?php echo HTMLFormatHelper::bookmark($item, $this->type, $params);?>
+						<?php echo HTMLFormatHelper::follow($item, $this->section);?>
+						<?php echo HTMLFormatHelper::repost($item, $this->section);?>
+						<?php if($item->controls):?>
+							<a href="#" data-toggle="dropdown" class="dropdown-toggle btn btn-mini">
+								<?php echo HTMLFormatHelper::icon('gear.png');  ?></a>
+							<ul class="dropdown-menu">
+								<?php echo DeveloperPortalApi::list_controls($item->controls, $tasks_to_hide, $this->item->id, $this->item->type_id);?>
+							</ul>
+						<?php endif;?>
 					<?php endif;?>
 				<?php endif;?>
 			</div>
@@ -250,6 +282,21 @@ if($params->get('tmpl_core.item_follow_num'))
 			</dl>
 			<?php group_end($this);?>
 		<?php endforeach;?>
+		
+		<?php if($this->user->get('id')):?>
+			<?php if ($item->id == DeveloperPortalApi::getUserProfileId() && JPluginHelper::isEnabled('system', 'useguide')) : ?>
+			<div>
+				<form action="" method="post" name="reset-work-through" >
+						<input type="hidden" name="option" value="com_cobalt" />
+						<input type="hidden" name="task" value="ajaxMore.resetWorkThrough" />
+						<input type="hidden" name="return" value="<?php echo base64_encode(JURI::current());?>" />
+						<a href="javascript:void(0);" onClick="document.forms['reset-work-through'].submit(); return false;"><?php echo JText::_("RESET_WORK_THROUGH");?></a>
+				</form>
+			</div>
+			<?php endif;?>
+		<?php endif; ?>
+
+		
 	<?php endif;?>
 
 	<?php if($started):?>

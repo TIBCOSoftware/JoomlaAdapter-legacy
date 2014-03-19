@@ -12,6 +12,9 @@
  * @license GNU/GPL http://www.gnu.org/copyleft/gpl.html
  */
 defined('_JEXEC') or die('Restricted access');
+
+require_once JPATH_BASE . "/includes/api.php";
+
 $k = $p1 = 0;
 $params = $this->tmpl_params['list'];
 $doc = JFactory::getDocument();
@@ -24,6 +27,8 @@ foreach ($exclude as &$value) {
 	$value = $this->fields_keys_by_id[$value];
 }
 
+$user = JFactory::getUser();
+$isAdmin = in_array(7, $user->getAuthorisedGroups()) || in_array(8, $user->getAuthorisedGroups()) || in_array($user->id, DeveloperPortalApi::getIdsOfOrganizationAdmin(68));
 ?>
 <?php if($params->get('tmpl_core.show_title_index')):?>
 	<h2><?php echo JText::_('CONTHISPAGE')?></h2>
@@ -41,25 +46,43 @@ foreach ($exclude as &$value) {
     <span class="als-prev">&nbsp;</span>
     <div class="my-als-items">
     <div class="als-viewport">
-      <ul class="als-wrapper products-featured-product featured2list">
-          <?php $color=0; ?>
-            <?php foreach ($this->items AS $item):?>
-                <?php $color++; ?>
-            <li class="als-item span3">
-                <div class="primary-color<?php echo $color; ?>">
-                <a href="<?php echo JRoute::_($item->url);?>">
-              <?php echo str_replace("/a>","/span>",str_replace("<a","<span",$item->fields_by_id[3]->result));?>
-              <h4 class="newsflash-title">
-                  <?php echo $item->title?>
-              </h4>
-              <div class="products-list-item-description"><?php echo $item->fields_by_id[2]->result;?></div>
-                </a>
-                </div>
-            </li>
-                <?php if($color == 5)
-                    $color = 0; ?>
-            <?php endforeach; ?>
-      </ul>
+	      <ul class="als-wrapper products-featured-product featured2list">
+	          <?php $color=0; ?>
+	            <?php $count = 0;?>
+	            <?php foreach ($this->items AS $item):?>
+               <?php
+                  if(TibcoTibco::getFlagForShow($item->id) && !$isAdmin)
+                  {
+                    continue;
+                  }
+                ?>
+	                <?php $color++;
+                          $count++;
+                    ?>
+	            <li class="als-item span3">
+	              <div class="primary-color<?php echo $color; ?>">
+	              <a href="<?php echo JRoute::_($item->url);?>">
+	              <?php echo str_replace("/a>","/span>",str_replace("<a","<span",$item->fields_by_id[3]->result));?>
+	              <div class="newsflash-title">
+	                  <h4><?php echo $item->title?></h4>
+	              </div>
+	              <div class="products-list-item-description"><?php echo $item->fields_by_id[2]->result;?></div>
+	                </a>
+	                </div>
+	            </li>
+      	            <?php if($color == 5)
+      	            $color = 0; ?>
+                <?php endforeach; ?>
+	            <?php if($count<4):?>
+	              <?php for($i=0; $i<4-$count;$i++):?>
+	              <li class="als-item span3">
+					<div class="empty-card">
+					<div>
+	              </li>
+	              <?php endfor;?>
+                <?php endif;?>
+	      </ul>
+
     </div>
     </div>
         <span class="als-next">&nbsp;</span>

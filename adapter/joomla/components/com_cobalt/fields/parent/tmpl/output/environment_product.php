@@ -139,7 +139,7 @@ if($this->show_btn_exist)
   ?>
     <div style="width:770px;" class="modal hide fade" id="modal<?php echo $this->id;?>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&#215;</button>
         <h3 id="myModalLabel"><?php echo JText::_('FS_ATTACHEXIST');?></h3>
       </div>
 

@@ -45,6 +45,7 @@ class UsersControllerAutoreg extends UsersController
 
 		$app	= JFactory::getApplication();
 		$model	= $this->getModel('Registration', 'UsersModel');
+		$is_self_register = false;
 
 		// Get the user data.
 		$requestData = $this->input->post->get('jform', array(), 'array');
@@ -52,8 +53,22 @@ class UsersControllerAutoreg extends UsersController
 		// $requestData['password1'] = 'TibcoOpenAPI';
 		$requestData['password2'] = $requestData['password1'];
 		
-		if($groupName = $requestData['user_group_name']){
-			$requestData['groups'] = $this->_getUserGroupId($groupName);
+
+		if($requestData["apiuser"] && is_array($requestData)){
+			$is_self_register = true;
+		}
+
+		if($is_self_register){
+			$requestData['email1']   = $requestData["apiuser"]["user-email"];
+			$requestData['email2']   = $requestData['email1'];
+			$requestData["name"]     = $requestData["apiuser"]["first-name"]." ".$requestData["apiuser"]["last-name"];
+			$requestData["username"] = $requestData['email1'];
+			$userFirstName           = $requestData["apiuser"]["first-name"];
+		}
+
+
+		if(!$is_self_register && isset($requestData['user_group_name'])){
+			$requestData['groups'] = $this->_getUserGroupId($requestData['user_group_name']);
             array_push($requestData['groups'], 2);
 		} else {
 		    $requestData['groups'] = array(2);
@@ -91,12 +106,30 @@ class UsersControllerAutoreg extends UsersController
 			{
 				if ($errors[$i] instanceof Exception)
 				{
-					$msg[] = $errors[$i]->getMessage();
+					if($is_self_register){
+						$app->enqueueMessage($errors[$i]->getMessage(), 'warning');
+					}else{
+						$msg[] = $errors[$i]->getMessage();
+					}
 				} else {
-					$msg[]=$errors[$i];
+					if($is_self_register){
+						$app->enqueueMessage($errors[$i], 'warning');
+					}else{
+						$msg[] = $errors[$i];
+					}
 				}
 			}
-			AutoregHelper::error($msg);
+
+			if($is_self_register){
+				// Save the data in the session.
+				$app->setUserState('com_users.registration.data', $requestData);
+
+				// Redirect back to the registration screen.
+				$this->setRedirect(JRoute::_('index.php?option=com_users&view=registration', false));
+			}else{
+				AutoregHelper::error($msg);
+			}
+			
 			return false;
 		}
 
@@ -124,15 +157,39 @@ class UsersControllerAutoreg extends UsersController
 		$db->setQuery($query);
 		
 		$newuser =  $db->loadColumn(0);
-		AutoregHelper::send($newuser,'userid');
+
+		if(!$is_self_register){
+			$userProfile_guide_flag = new stdClass();
+			$userProfile_guide_flag->user_id = $newuser[0];
+			$userProfile_guide_flag->profile_key = "guide.show";
+			$userProfile_guide_flag->profile_value = 1;
+
+			$userProfile_guide_step = new stdClass();
+			$userProfile_guide_step->user_id = $newuser[0];
+			$userProfile_guide_step->profile_key = "guide.step";
+			$userProfile_guide_step->profile_value = 1;
+
+
+			$userProfile_reset_password = new stdClass();
+			$userProfile_reset_password->user_id = $newuser[0];
+			$userProfile_reset_password->profile_key = "reset.password";
+			$userProfile_reset_password->profile_value = 1;
+
+			$db->insertObject("#__user_profiles",$userProfile_reset_password,'id');
+			$db->insertObject("#__user_profiles",$userProfile_guide_flag,'id');
+			$db->insertObject("#__user_profiles",$userProfile_guide_step,'id');
+			AutoregHelper::send($newuser,'userid');
+		}
+		
 		// Redirect to the profile screen.
 		if ($return === 'adminactivate'){
 			$this->setMessage(JText::_('COM_USERS_REGISTRATION_COMPLETE_VERIFY'));
 			$this->setRedirect(JRoute::_('index.php?option=com_users&view=registration&layout=complete', false));
-		} elseif ($return === 'useractivate')
+		} 
+		elseif ($return === 'useractivate')
 		{
-			$this->setMessage(JText::_('COM_USERS_REGISTRATION_COMPLETE_ACTIVATE'));
-			$this->setRedirect(JRoute::_('index.php?option=com_users&view=registration&layout=complete', false));
+			// $this->setMessage(JText::_('COM_USERS_REGISTRATION_COMPLETE_ACTIVATE'));
+			$this->setRedirect(JRoute::_('index.php?option=com_users&view=registration&layout=complete'.($userFirstName?'&uname='.$userFirstName:''), false));
 		}
 		else
 		{

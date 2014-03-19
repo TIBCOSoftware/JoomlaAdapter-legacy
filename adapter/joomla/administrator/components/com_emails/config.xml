@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
-	<fieldset name="component">
+	<fieldset name="component" addfieldpath="/administrator/components/com_emails/models/fields">
 		<field
 			name="spotfire_domain"
 			type="text"
@@ -15,6 +15,18 @@
 			default="http://"
 			label="COM_EMAILS_XML_CONFIGUI_URL"
 			description="COM_EMAILS_XML_CONFIGUI_URL_DESC"/>
+		<field
+			name="enable_oauth"
+			type="radio"
+			class="btn-group"
+			default="1"
+			label="COM_EMAILS_XML_IS_SHOW_OAUTH_LABEL"
+			description="COM_EMAILS_XML_IS_SHOW_OAUTH_DESC"
+		>
+			<option value="1">COM_EMAILS_XML_IS_SHOW_OAUTH_OPTION1</option>
+			<option value="2">COM_EMAILS_XML_IS_SHOW_OAUTH_OPTION2</option>
+			<option value="3">COM_EMAILS_XML_IS_SHOW_OAUTH_OPTION3</option>
+		</field>
 		<field
 			name="is_show_ping"
 			type="radio"
@@ -32,5 +44,21 @@
 			default=""
 			label="COM_EMAILS_XML_PING_URL_LABEL"
 			description="COM_EMAILS_XML_PING_URL_DESC"/>
+
+		<field
+			name="show_alerts_count"
+			type="text"
+			class="btn-group"
+			default="3"
+			label="COM_EMAILS_XML_SHOW_ALERTS_COUNT_LABEL"
+			description="COM_EMAILS_XML_SHOW_ALERTS_COUNT_DESC"/>
+   
+   <field
+      name="resync_db"
+      type="resync"
+      class="btn-group btn-resync"
+      label="COM_EMAILS_XML_RESYNC"
+      description="COM_EMAILS_XML_RESYNC_DESC" />
+   
 	</fieldset>
 </config>

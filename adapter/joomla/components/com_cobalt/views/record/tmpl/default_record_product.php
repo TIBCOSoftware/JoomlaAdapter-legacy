@@ -18,8 +18,9 @@ require_once JPATH_BASE . "/includes/api.php";
 require_once JPATH_BASE . "/components/com_cobalt/library/php/helpers/developerportal.php";
 require_once JPATH_BASE . "/components/com_cobalt/controllers/ajaxmore.php";
 $app = JFactory::getApplication();
-
+$app_id = $app->input->getInt('app_id');
 $item = $this->item;
+
 
 $product_id = JRequest::getVar("id");
 
@@ -28,10 +29,9 @@ if($product_id)
   $product_id = explode(":",$product_id);
   if(count($product_id) == 2)
   {
-    $app->redirect(JRoute::_($item->url));
+    $app->redirect(JRoute::_($item->url.'&app_id='.$app_id));
   }
 }
-
 $params = $this->tmpl_params['record'];
 $icons = array();
 $category = array();
@@ -59,6 +59,32 @@ if($this->user->id > 0) {
     }
 }
 $public_environments = DeveloperPortalApi::getPublicEnvironments($this->item->id);
+$apps = DeveloperPortalApi::getActiveKeysOfCurOrgByProdId($this->item->id);
+
+
+
+$toShow = TibcoTibco::getFlagForShow($this->item->id);
+
+$isAdmin = false;
+$show_plans = true;
+
+
+
+if($this->user->id){
+  $user_org = DeveloperPortalApi::getUserOrganization();
+  $user_org = $user_org[0];
+
+  $isAdmin = in_array(7, $this->user->getAuthorisedGroups()) || in_array(8, $this->user->getAuthorisedGroups()) || in_array($this->user->id, DeveloperPortalApi::getIdsOfOrganizationAdmin(68));
+}
+
+
+ if($toShow && !$isAdmin){
+     if($app_id && in_array($item->id,DeveloperPortalApi::getProductIdsInApplication($app_id))) {
+       $show_plans = false;;
+     }else{
+         $app->redirect(JUri::root().'index.php/products');
+     }
+ }
 ?>
 <style>
 	.dl-horizontal dd {
@@ -232,8 +258,39 @@ if($params->get('tmpl_core.item_follow_num'))
 		float:right;
 		clear:left;
 	}
-
+	.newsflash-title{
+		width:200px;
+	}
+	.toolbar{
+		height:45px;
+		margin-top:0px;
+		background-color:#eee;
+		-webkit-box-shadow: inset 0 0 20px rgba(0,0,0,.1);
+		-moz-box-shadow: inset 0 0 20px rgba(0,0,0,.1);
+		box-shadow: inset 0 0 20px rgba(0,0,0,.1);
+		margin-bottom:20px;
+	}
+	.toolbar .right-button{
+		margin-top:12px;
+		margin-right:10px;
+	}
+	article h4{
+		margin-left:20px;
+	}
 </style>
+<!-- <link rel="stylesheet" type="text/css" href="libraries/swagger-ui/css/screen.css" /> -->
+<!-- <link rel="stylesheet" type="text/css" href="libraries/swagger-ui/css/highlight.default.css" /> -->
+<!-- <script src="libraries/swagger-ui/lib/shred.bundle.js" type="text/javascript"></script> -->
+<!-- <script src="libraries/swagger-ui/lib/jquery.slideto.min.js" type="text/javascript"></script> -->
+<!-- <script src="libraries/swagger-ui/lib/jquery.wiggle.min.js" type="text/javascript"></script> -->
+<!-- <script src="libraries/swagger-ui/lib/jquery.ba-bbq.min.js" type="text/javascript"></script> -->
+<!-- <script src="libraries/swagger-ui/lib/handlebars-1.0.0.js" type="text/javascript"></script> -->
+<!-- <script src="libraries/swagger-ui/lib/underscore-min.js" type="text/javascript"></script> -->
+<!-- <script src="libraries/swagger-ui/lib/backbone-min.js" type="text/javascript"></script> -->
+<!-- <script src="libraries/swagger-ui/lib/swagger.js" type="text/javascript"></script> -->
+<!-- <script src="libraries/swagger-ui/swagger-ui.js" type="text/javascript"></script> -->
+<!-- <script src="libraries/swagger-ui/lib/highlight.7.3.pack.js" type="text/javascript"></script> -->
+
 <link rel="stylesheet" type="text/css" href="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/css/screen.css" />
 <link rel="stylesheet" type="text/css" href="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/css/highlight.default.css" />
 <script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/shred.bundle.js" type="text/javascript"></script>
@@ -262,9 +319,68 @@ if($params->get('tmpl_core.item_follow_num'))
                     if(isset($item->ucatname)):
                         echo " &gt; ".$item->ucatname;
                     endif;
-//                    echo $item->title
             ;?> </h4>
         </div>
+    <?php if($isAdmin): ?>
+		<div class="toolbar">
+		<?php if(!$this->print):?>
+       		<div class="pull-right controls right-button">
+       			<div class="btn-group">
+       				<?php if($this->user->get('id')):?>
+                  <?php if(DeveloperPortalApi::list_controls($item->controls, $tasks_to_hide, $this->item->id, $this->item->type_id)
+                            || $params->get('tmpl_core.item_print')
+                            || ($isAdmin && $toShow)
+                            || ($isAdmin && !$toShow)
+                            || $bookmark_list
+                            || $follow_list
+                            || $repost):
+                  ?>
+					<a href="#" data-toggle="dropdown" class="dropdown-toggle btn-mini">
+						<?php echo HTMLFormatHelper::icon('gear.png');  ?></a>
+
+       						<ul id="product-dropdown-menu" class="dropdown-menu" style="margin-left:-90px;">
+       							<?php if($item->controls):?>
+       							<?php echo DeveloperPortalApi::list_controls($item->controls, $tasks_to_hide, $this->item->id, $this->item->type_id);?>
+       							<?php endif;?>
+       							<?php if($params->get('tmpl_core.item_print')):?>
+       								<li><a rel="tooltip" data-original-title="<?php echo JText::_('CPRINT'); ?>" onclick="window.open('<?php echo JRoute::_($this->item->url.'&tmpl=component&print=1');?>','win2','status=no,toolbar=no,scrollbars=yes,titlebar=no,menubar=no,resizable=yes,width=640,height=480,directories=no,location=no'); return false;">
+       									<?php echo HTMLFormatHelper::icon('printer.png').'Print';  ?></a></li>
+       							<?php endif;?>
+
+                    <?php if($isAdmin):?>
+                      <?php if($toShow):?>
+                        <li><?php echo DeveloperPortalFormatHelper::approve_publish($item, true);?></li>
+                      <?php elseif (!$toShow):?>
+                        <li><?php echo DeveloperPortalFormatHelper::approve_publish($item, false);?></li>
+                      <?php endif;?>
+                    <?php endif;?>
+
+                    <?php $bookmark_list = DeveloperPortalFormatHelper::bookmark_list($item, $this->type, $params); ?>
+                    <?php if($bookmark_list):?>
+       							  <li><?php echo $bookmark_list;?></li>
+                    <?php endif;?>
+
+                    <?php $follow_list = DeveloperPortalFormatHelper::follow_list($item, $this->section);?>
+                    <?php if($follow_list):?>
+                    <li><?php echo $follow_list;?></li>
+       							<?php endif;?>
+
+                    <?php $repost = HTMLFormatHelper::repost($item, $this->section);?>
+                    <?php if($repost):?>
+       							<li><?php echo $repost;?></li>
+                    <?php endif;?>
+       						</ul>
+                <?php endif;?>
+       				<?php endif;?>
+       			</div>
+       		</div>
+       	<?php else:?>
+       		<div class="pull-right controls right-button">
+       			<a href="#" class="btn btn-mini" rel="tooltip" data-original-title="<?php echo JText::_('CPRINT');?>" onclick="window.print();return false;"><?php echo HTMLFormatHelper::icon('printer.png');  ?></a>
+       		</div>
+       	<?php endif;?>
+		</div>
+    <?php endif; ?>
         <div class="row">
 			<div class="product-image-box primary-color<?php echo rand(1,5); ?>">
                 <?php echo $item->fields_by_id[3]->result;?>
@@ -277,31 +393,7 @@ if($params->get('tmpl_core.item_follow_num'))
 <!--				<li><span>Info</span>--><?php //echo implode(',  ', $details);?><!--</li>-->
 <!--				<li><span>Email</span>--><?php //echo $item_contact_email;?><!--</li>-->
 <!--			</ul>-->
-            <?php if(!$this->print):?>
-           		<div class="pull-right controls">
-           			<div class="btn-group">
-           				<?php if($this->user->get('id')):?>
-           						<button data-toggle="dropdown" class="btn" style="width:120px;height:40px;">Action</button>
-           						<ul class="dropdown-menu" style="margin-left:-90px;">
-           							<?php if($item->controls):?>
-           							<?php echo DeveloperPortalApi::list_controls($item->controls, $tasks_to_hide, $this->item->id, $this->item->type_id);?>
-           							<?php endif;?>
-           							<?php if($params->get('tmpl_core.item_print')):?>
-           								<li><a rel="tooltip" data-original-title="<?php echo JText::_('CPRINT'); ?>" onclick="window.open('<?php echo JRoute::_($this->item->url.'&tmpl=component&print=1');?>','win2','status=no,toolbar=no,scrollbars=yes,titlebar=no,menubar=no,resizable=yes,width=640,height=480,directories=no,location=no'); return false;">
-           									<?php echo HTMLFormatHelper::icon('printer.png').'Print';  ?></a></li>
-           							<?php endif;?>
-           							<li><?php echo DeveloperPortalFormatHelper::bookmark_list($item, $this->type, $params);?></li>
-           							<li><?php echo DeveloperPortalFormatHelper::follow_list($item, $this->section);?></li>
-           							<li><?php echo HTMLFormatHelper::repost($item, $this->section);?></li>
-           						</ul>
-           				<?php endif;?>
-           			</div>
-           		</div>
-           	<?php else:?>
-           		<div class="pull-right controls">
-           			<a href="#" class="btn btn-mini" rel="tooltip" data-original-title="<?php echo JText::_('CPRINT');?>" onclick="window.print();return false;"><?php echo HTMLFormatHelper::icon('printer.png');  ?></a>
-           		</div>
-           	<?php endif;?>
+
         </div>
     </div>
 
@@ -309,31 +401,45 @@ if($params->get('tmpl_core.item_follow_num'))
     <?php echo str_replace("&amp;","&",$item->fields_by_id[35]->result);?>
     <div class="tabtable">
        <ul class="nav nav-tabs" id="tabs-list">
+           <?php if($show_plans):?>
            <li class="active">
                <a class="category-<?php echo $item->ucatalias; ?>" href="#tab-overview" data-toggle="tab">Plans</a>
            </li>
+            <?php endif;?>
            <li>
                <a class="category-<?php echo $item->ucatalias; ?>" href="#tab-api-explorer" data-toggle="tab">API Explorer</a>
            </li>
-           <li>
+           <li <?php if(!$show_plans){echo ' class="active"';}?>>
                <a class="category-<?php echo $item->ucatalias; ?>" href="#tab-documentation" data-toggle="tab">Documentation</a>
            </li>
        </ul>
         <div class="nav-tab-title category-<?php echo $item->ucatalias; ?>"></div>
        <div id="tabs-box" class="tab-content">
+           <?php if($show_plans):?>
            <div id="tab-overview" class="tab-pane active">
-               <div class="article-info" style="overflow:hidden;">
+               <div class="article-info">
                    <div class="plans-area">
                    <?php echo $item->fields_by_id[54]->result;?>
                    </div>
                </div>
            </div>
+           <?php endif;?>
            <div id="tab-api-explorer" class="tab-pane">
 			   <div>
+			   				
                    <div class="pull-left" style="margin-left: 10px; margin-top: 10px;">
+                     <?php if($this->user->id > 0): ?>
+                     <select id="apps">
+                          <option value="">Select Application</option>
+                       <?php foreach($apps as $app): ?>
+						   <option value="<?php echo $app->active_key[0]->apiKey ?>"><?php echo $app->title ?></option>
+                       <?php endforeach; ?>
+                     </select>
+                     <?php endif; ?>
                        <span>API Key:&nbsp;</span>
                        <input type="text" id="input_apiKey" size="40" />
                    </div>
+                
                    <div class="pull-right" style="margin-right: 10px; margin-top: 10px;display:none;">
     				   <span>Environment:&nbsp;</span>
     				   <select id="select_environment" name="env">
@@ -361,46 +467,55 @@ if($params->get('tmpl_core.item_follow_num'))
                 <script type="text/javascript">
                 	jQuery(function () {
                 	    var swaggerUi = new SwaggerUi({
-                            url: GLOBAL_CONTEXT_PATH + 'asg/internal/product/<?php echo $item->id; ?>',
-                            dom_id: 'swagger_ui_div',
-                            supportHeaderParams: true,
-                            supportedSubmitMethods: ['get', 'post', 'put'],
-                            onComplete: function(swaggerApi, swaggerUi){
-                              jQuery('pre code').each(function(i, e) {hljs.highlightBlock(e);});
-                            },
-                            onFailure: function(data) {
-                            	if(console) {
-                                    console.log('Unable to Load SwaggerUI');
-                                    console.log(data);
-                                }
-                                jQuery('#tabs-list a[href="#tab-api-explorer"]').removeAttr('data-toggle');
-                                jQuery('#tabs-list a[href="#tab-api-explorer"]').addClass("tab-disabled");
-                            },
-                            docExpansion: 'none'
-                        });
-                        jQuery('#input_apiKey').change(function() {
+                          url: GLOBAL_CONTEXT_PATH + 'asg/internal/product/<?php echo $item->id; ?>',
+                          dom_id: 'swagger_ui_div',
+                          supportHeaderParams: true,
+                          supportedSubmitMethods: ['get', 'post', 'put'],
+                          onComplete: function(swaggerApi, swaggerUi){
+                              <?php if($app_id):?>
+                                  jQuery("#swagger_ui_div a[href^='#']").each(function(i,ele){
+                                      var link = jQuery(ele).attr("href");
+                                      jQuery(ele).attr("href","<?php echo JUri::getInstance()->toString();?>" + link);
+                                  });
+                              <?php endif;?>
+                            jQuery('pre code').each(function(i, e) {hljs.highlightBlock(e);});
+                          },
+                          onFailure: function(data) {
+                            if(console) {
+                                  console.log('Unable to Load SwaggerUI');
+                                  console.log(data);
+                              }
+                              jQuery('#tabs-list a[href="#tab-api-explorer"]').removeAttr('data-toggle').addClass("tab-disabled");
+                          },
+                          docExpansion: 'none'
+                      }), setKeyInHeader = function() {
                           var key = jQuery('#input_apiKey').val();
-                          if(key && key.trim && key.trim() != "") {
+                          if(key && key.trim && key.trim() !== "") {
                               window.authorizations.add("key", new ApiKeyAuthorization("Apikey", key, "header"));
                           } else {
                               if(window.authorizations.authz && window.authorizations.authz.key) {
                                   delete window.authorizations.authz.key;
                               }
                           }
-                        });
-                        jQuery('#input_apiKey').keyup(function() {
-                          var key = jQuery('#input_apiKey').val();
-                          if(key && key.trim && key.trim() != "") {
-                              window.authorizations.add("key", new ApiKeyAuthorization("Apikey", key, "header"));
-                          } else {
-                              if(window.authorizations.authz && window.authorizations.authz.key) {
-                                  delete window.authorizations.authz.key;
-                              }
-                          }
-                        });
-
-                        swaggerUi.load();
-                        window.swaggerUis && window.swaggerUis.splice ? window.swaggerUis.push(swaggerUi) : window.swaggerUis = [swaggerUi];
+                      };
+                      jQuery('#input_apiKey').change(function() {
+                          setKeyInHeader();
+                      }).keyup(function() {
+                          setKeyInHeader();
+                      });
+                      jQuery('#input_apiKey').val(jQuery('#apps').val());
+                      setKeyInHeader();
+                      jQuery('#apps').change(function() {
+                        jQuery('#input_apiKey').val(jQuery('#apps').val());
+                        setKeyInHeader();
+                      });
+                      swaggerUi.load();
+                      window.swaggerUis && window.swaggerUis.splice ? window.swaggerUis.push(swaggerUi) : window.swaggerUis = [swaggerUi];
+                      if(jQuery('#apps').length > 0 && jQuery('#apps')[0].options.length > 1) {
+                        jQuery('#apps')[0].selectedIndex = 1;
+                        jQuery('#input_apiKey').val(jQuery('#apps').val());
+                        setKeyInHeader();
+                      }
                     });
 
                 </script>
@@ -413,7 +528,7 @@ if($params->get('tmpl_core.item_follow_num'))
                <p>Data Explorer tab</p>
            </div> -->
 
-           <div id="tab-documentation" class="tab-pane">
+           <div id="tab-documentation" class="tab-pane<?php if(!$show_plans){ echo ' active';}?>">
                <p><?php echo $this->loadTemplate('record_asg_article_tab_doc');?></p>
            </div>
        </div>
@@ -438,6 +553,7 @@ if($params->get('tmpl_core.item_follow_num'))
 	var oPublicEnvs = {
 	    35: <?php echo makeEnvIdArrayString($public_environments); ?>
 	}, nTypeId = <?php echo $this->item->type_id; ?>, nProductId = <?php echo $this->item->id; ?>;
+
 
 </script>
 

@@ -59,6 +59,23 @@ $i = $o = 0;
 .line-brk {
 	margin-left: 0px !important;
 }
+#configuidiv{
+	float:left;
+	margin-left:9px;
+	margin-top:9px;
+}
+.toolbar{
+	height:45px;
+	margin-top:10px;
+	background-color:#eee;
+	-webkit-box-shadow: inset 0 0 20px rgba(0,0,0,.1);
+	-moz-box-shadow: inset 0 0 20px rgba(0,0,0,.1);
+	box-shadow: inset 0 0 20px rgba(0,0,0,.1);
+}
+.toolbar .right-button{
+	margin-top:12px;
+	margin-right:10px;
+}
 <?php echo $params->get('tmpl_params.css');?>
 </style>
 
@@ -117,8 +134,11 @@ if($params->get('tmpl_core.item_follow_num'))
 ?>
 
 <article class="<?php echo $this->appParams->get('pageclass_sfx')?><?php if($item->featured) echo ' article-featured' ?>">
+	
+	<div class="toolbar">
+	
 	<?php if(!$this->print):?>
-		<div class="pull-right controls">
+		<div class="pull-right controls right-button">
 			<div class="btn-group">
 				<?php if($params->get('tmpl_core.item_print')):?>
 					<a class="btn btn-mini" rel="tooltip" data-original-title="<?php echo JText::_('CPRINT');?>" onclick="window.open('<?php echo JRoute::_($this->item->url.'&tmpl=component&print=1');?>','win2','status=no,toolbar=no,scrollbars=yes,titlebar=no,menubar=no,resizable=yes,width=640,height=480,directories=no,location=no'); return false;">
@@ -130,7 +150,7 @@ if($params->get('tmpl_core.item_follow_num'))
 					<?php echo HTMLFormatHelper::follow($item, $this->section);?>
 					<?php echo HTMLFormatHelper::repost($item, $this->section);?>
 					<?php if($item->controls):?>
-						<a href="#" data-toggle="dropdown" class="dropdown-toggle btn btn-mini">
+						<a href="#" data-toggle="dropdown" class="dropdown-toggle btn-mini">
 							<?php echo HTMLFormatHelper::icon('gear.png');  ?></a>
 						<ul class="dropdown-menu">
 							<?php echo DeveloperPortalApi::list_controls($item->controls, array(), $this->item->id, $this->item->type_id);?>
@@ -140,10 +160,14 @@ if($params->get('tmpl_core.item_follow_num'))
 			</div>
 		</div>
 	<?php else:?>
-		<div class="pull-right controls">
+		<div class="pull-right controls right-button">
 			<a href="#" class="btn btn-mini" rel="tooltip" data-original-title="<?php echo JText::_('CPRINT');?>" onclick="window.print();return false;"><?php echo HTMLFormatHelper::icon('printer.png');  ?></a>
 		</div>
 	<?php endif;?>
+	
+	</div>
+	<div class="clearfix"></div>
+	
 	<?php if($params->get('tmpl_core.item_title')):?>
 		<?php if($this->type->params->get('properties.item_title')):?>
 			<div class="page-header">

@@ -2,8 +2,9 @@
 /*
  * $HeadURL: http://svn.tibco.com/asg/branches/1.0/runtime/functions/asg_functions/src/main/java/com/tibco/asg/asg_functionsVersion.tag $ $Revision: 47285 $ $Date: 2012-01-20 15:54:53 -0800 (Fri, 20 Jan 2012) $
  *
- * @copyright Copyright © 2013, TIBCO Software Inc. All rights reserved.
- * @license GNU General Public License version 2; see LICENSE.txt
+ * Copyright (c) 2013-2014, TIBCO Software Inc. All rights reserved.
+ *
+ * GNU General Public License version 2; see LICENSE.txt
  *
  * asg-functions.jar Version Information
  *
@@ -32,11 +33,11 @@ defined('_JEXEC') or die;
 class joomla_adapterVersion
 {
 	static $asterisks       = "**********************************************************************";
-	static $copyright       = "Copyright(c) 2004-2013 TIBCO Software Inc. All rights reserved.";
+	static $copyright       = "Copyright(c) 2004-2014 TIBCO Software Inc. All rights reserved.";
 	static $line_separator  = "\n"; //In Java we use: System.getProperty("line.separator");
-	static $version = "2.0.0";
-	static $build = "122";
-	static $buildDate = "2013-11-25";
+	static $version = "2.1.0";
+	static $build = "046";
+	static $buildDate = "2014-03-18";
 	static $company = "TIBCO Software Inc.";
 	static $component = "Adapter Code for TIBCO API Exchange and Joomla!";
 	static $license = "";

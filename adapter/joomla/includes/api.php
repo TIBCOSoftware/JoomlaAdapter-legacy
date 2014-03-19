@@ -21,10 +21,25 @@ class DeveloperPortalApi {
     const TASK_PUBLISH = "records.spub";
     const TASK_UNPUBLISH = "records.sunpub";
     const TASK_HIDE = "records.shide";
+    const TASK_MARK_FEATURED = "records.sfeatured";
+    const USER_TYPE_MEMBER = "Member";
+    const USER_TYPE_CONTACT = "Contact";
+    const USER_TYPE_MANAGER = "Manager";
 
     public static function list_controls($ctrls, $tasks_to_hide = array(), $rec_id = 0, $type_id = 0) {
     	$out = "";
       array_push($tasks_to_hide, DeveloperPortalApi::TASK_DELETE, DeveloperPortalApi::TASK_PUBLISH, DeveloperPortalApi::TASK_UNPUBLISH, DeveloperPortalApi::TASK_HIDE);
+	  // Change associated records message based on type
+      switch ($type_id)
+      {
+      	case '5':
+      		$can_not_delete_msg = 'CAN_NOT_DELETE_ORGANIZATION_HAS_ATTACHED_OBJECTS';
+      		break;
+
+      	default:
+      		$can_not_delete_msg = 'CAN_NOT_DELETE_OBJECT_HAS_ATTACHED_OBJECTS';
+      		break;
+      }
         if(isset($ctrls)) {
         	foreach($ctrls as $key => $link) {
         		if(is_array($link)) {
@@ -35,13 +50,13 @@ class DeveloperPortalApi {
         		} else {
         		    if(!DeveloperPortalApi::hide_link($link, $tasks_to_hide)) {
         		        if(strpos($link, DeveloperPortalApi::TASK_ARCHIVE) != FALSE) {
-                            if(in_array($type_id, array(5,1)) && self::getObejectCountsAttachedToCotentType($type_id, $rec_id))
-                            {
-                              $out .= "<li>" . preg_replace('/href="[^"]+"/', 'href="javascript:void(0)" onclick="Joomla.showError([\''.JText::_('CAN_NOT_DELETE_OBJECT_HAS_ATTACHED_OBJECTS').'\']);return false;"', $link) . "</li>";
-                            } else {
-        		              $out .= "<li>" . preg_replace('/href="[^"]+"/', 'href="javascript:void(0)" onclick="DeveloperPortal.archiveRecord(' . $rec_id . ', ' . $type_id . ')"', $link) . "</li>";
-                            }
-        		        } else {
+                        if(in_array($type_id, array(5)) && self::getObejectCountsAttachedToCotentType($type_id, $rec_id))
+                        {
+                           $out .= "<li>" . preg_replace('/href="[^"]+"/', 'href="javascript:void(0)" onclick="Joomla.showError([\''.JText::_($can_not_delete_msg).'\']);return false;"', $link) . "</li>";
+                        } else {
+        		               $out .= "<li>" . preg_replace('/href="[^"]+"/', 'href="javascript:void(0)" onclick="DeveloperPortal.archiveRecord(' . $rec_id . ', ' . $type_id . ')"', $link) . "</li>";
+                        }
+        		        } else if(!strpos($link, DeveloperPortalApi::TASK_MARK_FEATURED) || (strpos($link, DeveloperPortalApi::TASK_MARK_FEATURED) && $type_id == 1)) {
         			        $out .= "<li>{$link}</li>";
         		        }
         		    }
@@ -213,7 +228,25 @@ where type_id=10)');
         }
         return $rv;
     }
-
+    // Get the application's active keys of current organization by using product id
+    public static function getActiveKeysOfCurOrgByProdId($productId) {
+      $ret = array();
+      $db = JFactory::getDbo();
+      $user = JFactory::getUser();
+      $sql = "SELECT field_value FROM #__js_res_record_values WHERE record_id IN (SELECT record_id FROM #__js_res_record_values WHERE field_id=77 AND field_value=" . $user->id . ") and field_id=47";
+      $db->setQuery($sql);
+      if ($orgId = $db -> loadObject()->field_value) {
+        $sql = "select t.application_id, t.title, t.user_id from #__js_res_record_values rv, (select r.id as application_id, r.title, r.user_id from #__js_res_record r, #__js_res_record_values rv where rv.field_id=60 and rv.field_value=".$orgId." and rv.record_id=r.id and r.archive=0 and r.published<>2) t where rv.record_id=".$productId." and rv.field_id=62 and rv.field_value=t.application_id";
+        $db->setQuery($sql);
+        if($result = $db->loadObjectList()) {
+          foreach($result as $object) {
+            $object->active_key = DeveloperPortalApi::getActiveKeyOfApplication($object->application_id);
+            $ret[] = $object;
+          }
+        }
+      }
+      return $ret;
+    }
     /**
      * Get the ids of all plans along with ids of the products to which they belong.
      *
@@ -750,15 +783,20 @@ where type_id=10)');
     public static function getEmailsOfOrganizationAdmin($org_id = '')
     {
         $result = array();
+
+
         if(!$org_id)
         {
+          $org_id     = DeveloperPortalApi::getUserOrganization();
+
+          if(empty($org_id)){
             return $result;
+          }else{
+            $org_id   = $org_id[0];
+          }
         }
 
-        $db     = JFactory::getDbo();
-        $query  = "SELECT user_id from #__user_usergroup_map where group_id in (SELECT id from #__usergroups where title ='Organization ".$org_id." Manager')";
-        $db->setQuery($query);
-        $user_ids = $db->loadColumn();
+        $user_ids = self::getIdsOfOrganizationAdmin($org_id);
 
         if(count($user_ids))
         {
@@ -772,6 +810,22 @@ where type_id=10)');
     }
 
     /**
+     * Get the ids of organization's admins
+     *
+     * @Author Jacky
+     * @Created 2013-10-15
+     * @param  string $org_id which organization we want to get its administrator's email
+     * @return Array  if no result is found, return empty array, otherwise, return a array containing ids of amdins
+     */
+
+    public static function getIdsOfOrganizationAdmin($org_id = '')
+    {
+      $db     = JFactory::getDbo();
+      $query  = "SELECT user_id from #__user_usergroup_map where group_id in (SELECT id from #__usergroups where title ='Organization ".$org_id." Manager')";
+      $db->setQuery($query);
+      return $db->loadColumn();
+    }
+    /**
      * Get the emails of organization's contacts
      *
      * @Author Jacky
@@ -782,9 +836,16 @@ where type_id=10)');
     public static function getEmailsOfOrganizationContact($org_id = '')
     {
         $result = array();
+
         if(!$org_id)
         {
+          $org_id     = DeveloperPortalApi::getUserOrganization();
+
+          if(empty($org_id)){
             return $result;
+          }else{
+            $org_id   = $org_id[0];
+          }
         }
 
         $db     = JFactory::getDbo();
@@ -814,7 +875,7 @@ where type_id=10)');
         $query->select($db->quoteName("record_id"))->from("#__js_res_record_values")->where("field_id=77 AND field_value=" . $user_id);
         $db->setQuery($query);
         $result = $db->loadColumn();
-        return is_array($result) ? $result[0] : 0;
+        return !empty($result) ? $result[0] : 0;
     }
 
 
@@ -838,11 +899,12 @@ where type_id=10)');
     public static function createUserGroups($org_id) {
         $mid=DeveloperPortalApi::_createUserGroup($org_id,12);
         if(!empty($mid)) {
-            $cid=DeveloperPortalApi::_createUserGroup($org_id, $mid[0], 'Contact');
+            $cid=DeveloperPortalApi::_createUserGroup($org_id, $mid[0], DeveloperPortalApi::USER_TYPE_CONTACT);
             if(!empty($cid)) {
-                $gid = DeveloperPortalApi::_createUserGroup($org_id, $cid[0], 'Manager');
+                $gid = DeveloperPortalApi::_createUserGroup($org_id, $cid[0], DeveloperPortalApi::USER_TYPE_MANAGER);
                 if(!empty($gid)) {
                     DeveloperPortalApi::_rebuildUserGroup();
+                    TibcoTibco::linkGroupWithViewLevel(39, $gid);
                 }
             }
         }
@@ -855,7 +917,7 @@ where type_id=10)');
      * @param string $gtype
      * @return Ambigous <mixed, NULL, multitype:mixed >
      */
-    private static function _createUserGroup($org_id=0, $parent_id=12, $gtype="Member")
+    private static function _createUserGroup($org_id=0, $parent_id=12, $gtype = DeveloperPortalApi::USER_TYPE_MEMBER)
     {
         $db = JFactory::getDbo();
         $query = $db->getQuery(true);
@@ -873,7 +935,7 @@ where type_id=10)');
 
     }
 
-    private static function _createUserACL($rule=array(),$org_id=0, $gtype="Member")
+    private static function _createUserACL($rule=array(),$org_id=0, $gtype = DeveloperPortalApi::USER_TYPE_MEMBER)
     {
         $db = JFactory::getDbo();
         $query = $db->getQuery(true);
@@ -981,17 +1043,40 @@ where type_id=10)');
 
     public function resendActiveEmail($user_id, $active_url) {
       $user = JFactory::getUser($user_id);
-      $user_id = $user -> id;
+      $user_id = $user->id;
       if ($user_id) {
         $db = JFactory::getDbo();
-        $db -> setQuery('SELECT * FROM #__email_templates WHERE alias="resend_active_email" AND published = 1 LIMIT 1');
-        $results = $db -> loadObject();
-        if ($results -> subject && $results -> content) {
+        $query = $db->getQuery(true);
+
+        $query->select("*")->from("#__email_templates")
+              ->where($db->quoteName('alias') . "=". $db->quote('resend_active_email'))
+              ->where($db->quoteName('published') . "=1  LIMIT 1");
+        
+        $db->setQuery($query);
+
+        $results = $db->loadObject();
+        if ($results->subject && $results->content) {
+          $password = JUserHelper::genRandomPassword();
+          $salt = JUserHelper::genRandomPassword(32);
+          $crypted = JUserHelper::getCryptedPassword($password, $salt);
+          $passwordHashed = $crypted . ':' . $salt;
+
+          $query->clear();
+
+          $query->update('#__users')
+          ->set($db->quoteName('password') . ' = ' . $db->quote($passwordHashed))
+          ->where('id='.$user_id);
+
+          $db->execute();
+
           $config = &JFactory::getConfig();
-          $title = $results -> subject;
-          $content = str_replace("{USER}", $user -> name, $results -> content);
+
+          $title   = $results->subject;
+          $content = str_replace("{USER}", $user->name, $results->content);
           $content = str_replace("{ACTIVE_URL}", $active_url, $content);
-          return DeveloperPortalApi::send_email($user->email, $title, $content, $results -> isHTML);
+          $content = str_replace("{USER_NAME}", $user->username, $content);
+          $content = str_replace("{PASSWORD}", $password, $content);
+          return DeveloperPortalApi::send_email($user->email, $title, $content, $results->isHTML);
         }
         return false;
       }
@@ -1197,42 +1282,40 @@ where type_id=10)');
         return count($attached_objects);
     }
 
-
     /**
      * Get the count of objects attached to one particular content type
      */
 
     public function getObejectCountsAttachedToCotentType($type = 0, $id = 0)
     {
-        $count = 0;
-        if($type && $id)
-        {
-            switch ((int) $type) {
-                case 1:
-                    $condition = '(field_id=48 and record_id='.$id.') or (field_id in (114,53) and field_value='.$id.')';
-                    break;
-                case 5:
-                    $condition = '(field_id=48 and record_id='.$id.') or (field_id in (40,42,60,47,73) and field_value='.$id.')';
-                    break;
-                default:
-                    $condition = '';
-                    break;
-            }
+    	$count = 0;
+    	if($type && $id)
+    	{
+    		switch ((int) $type) {
+    			case 1:
+    				$condition = '(field_id=48 and record_id='.$id.') or (field_id in (114,53) and field_value='.$id.')';
+    				break;
+    			case 5:
+    				$condition = '(v.field_id IN (40,42,60,47,73) AND v.field_value='.$id.') AND r.published = 1';
+    				break;
+    			default:
+    				$condition = '';
+    				break;
+    		}
 
-            if ($condition)
-            {
-                $db    = JFactory::getDbo();
-                $query = $db->getQuery(true);
+    		if ($condition)
+    		{
+    			$db    = JFactory::getDbo();
+    			$query = $db->getQuery(true);
 
-                $query->select("id")->from("#__js_res_record_values");
-                $query->where($condition);
-                $db->setQuery($query);
-                $count= count($db->loadColumn());
-            }
-        }
-        return $count;
+    			$query->select("v.id")->from("#__js_res_record_values AS v LEFT JOIN #__js_res_record AS r ON v.record_id = r.id");
+    			$query->where($condition);
+    			$db->setQuery($query);
+    			$count= count($db->loadColumn());
+    		}
+    	}
+    	return $count;
     }
-
 
 
     public static function getOrganizationIdByName ($org_name = ''){
@@ -1297,13 +1380,13 @@ where type_id=10)');
         if(!empty($orgs))
         {
             foreach ($orgs as $org){
-                if($member_group = self::getOrganizationIdByName('Organization '.$org.' Member')){
+                if($member_group = self::getOrganizationIdByName('Organization '.$org.' '.DeveloperPortalApi::USER_TYPE_MEMBER)){
                     $result[] = $member_group;
                 }
-                if($contact_group = self::getOrganizationIdByName('Organization '.$org.' Contact')){
+                if($contact_group = self::getOrganizationIdByName('Organization '.$org.' '.DeveloperPortalApi::USER_TYPE_CONTACT)){
                     $result[] = $contact_group;
                 }
-                if($manage_group = self::getOrganizationIdByName('Organization '.$org.' Manager')){
+                if($manage_group = self::getOrganizationIdByName('Organization '.$org.' '.DeveloperPortalApi::USER_TYPE_MANAGER)){
                     $result[] = $manage_group;
                 }
             }
@@ -1447,12 +1530,61 @@ where type_id=10)');
             $query = $db->getQuery(true);
             $query->select("a.record_id")->from("#__js_res_record_values AS a,#__js_res_record AS b")->where('(a.record_id=b.id and b.published=1 and a.field_id=30 and a.field_value='.$api_id.')');
             $db->setQuery($query);
-            
+
             $result = $db->loadColumn();
         }
 
         return $result;
 
+    }
+    /**
+     * Get all applications for the current user's Organization
+     *
+     * @return array An array of application ids if any, otherwise an empty array will be returned.
+     */
+    public static function getApplicationsForUserOrganization() {
+    	$rv = array();
+    	$db = JFactory::getDbo();
+    	$user = JFactory::getUser();
+
+    	$access = self::getUserOrganizationAccessLevel();
+
+    	$sql = "SELECT * FROM #__js_res_record
+    				WHERE published=1
+    				AND archive=0
+    				AND hidden=0
+    				AND section_id=5
+    				AND access=" .$access . " GROUP BY id ORDER BY ctime DESC";
+
+    	$db -> setQuery($sql);
+    	if ($result = $db-> loadObjectList()) {
+    		foreach($result as $record) {
+    			array_push($rv, $record->id);
+    		}
+    	}
+    	return $rv;
+    }
+
+    public static function getUserOrganizationAccessLevel()
+    {
+    	$rv = array();
+    	$db = JFactory::getDbo();
+    	$user = JFactory::getUser();
+
+    	$sql = "SELECT title
+			FROM #__usergroups
+			WHERE id
+			IN (
+    			SELECT group_id
+				FROM #__user_usergroup_map
+				WHERE user_id =".$user->id."
+				AND `group_id` NOT LIKE '2'
+    		)";
+
+    	$db->setQuery($sql);
+    	$org_name = explode(' ',$db->loadResult());
+    	$access = self::getUserAccessGroupId('Organization '.$org_name[1].' Member');
+    	return $access;
     }
 }
 ?>

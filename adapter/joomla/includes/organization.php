@@ -92,7 +92,7 @@ class CreateOrganizationApi {
         return false;
       }
     
-      public function insertOganization($options = array())
+      public function insertOrganization($options = array())
       {
         $db = JFactory::getDbo();
         $organization = new stdClass();
@@ -101,14 +101,17 @@ class CreateOrganizationApi {
         $contact->contacts = (object) array("tel"=>"000-000-0000");
 
         $fields = new stdClass();
-        $user = JFactory::getUser(129);
+
+        $user_id = isset($options['user']) ? $options['user']->get("id") : 129;
+        $user = JFactory::getUser($user_id);
         $lang   = JFactory::getLanguage();
 
-        $options['title'] = $options['title'] ? $options['title']: 'Ping Organization'; 
-      
+        $options['title'] = $options['title'] ? $options['title'] : 'Ping Organization'; 
+        $options['type'] = $options['type'] ? $options['type'] : 'partner'; 
+        
         $fields->{'17'}   =   '';
         $fields->{'19'}    =   $user->get('email');
-        $fields->{'20'}    =   $contact;
+        $fields->{'20'}    =   null;
         $fields->{'41'}    =   null;
         $fields->{'48'}    =   null;
         $fields->{'43'}    =   null;
@@ -116,7 +119,7 @@ class CreateOrganizationApi {
         $fields->{'61'}    =   null;
         $fields->{'74'}    =   null;
         $fields->{'109'}   =   self::getUuid('');
-        $fields->{'122'}    =  array('partner');
+        $fields->{'122'}    =  array($options['type']);
 
         $organization->id          =   null;
         $organization->title       =   trim($options['title']);
@@ -130,6 +133,7 @@ class CreateOrganizationApi {
         $organization->inittime    =   JFactory::getDate()->toSql();
         $organization->ftime       =   '';
         $organization->type_id     =   5;
+        $organization->parent_id   =   0;
         $organization->meta_descr  =   '';
         $organization->meta_key    =   '';
         $organization->meta_index  =   '';
@@ -142,6 +146,9 @@ class CreateOrganizationApi {
         $organization->hidden      =   0;
         $organization->access_key  =   md5(time() . $_SERVER['REMOTE_ADDR'] . $organization->title);
         $organization->fields      =   json_encode($fields);
+        $organization->fieldsdata  =   $organization->title . " " . $organization->alias;
+        $organization->categories  =   "[]";
+        
         
         $record_id                 =   0;
         if($db->insertObject("#__js_res_record",$organization,'id'))
@@ -151,6 +158,22 @@ class CreateOrganizationApi {
               DeveloperPortalApi::createUserGroups($record_id);
           }
         }
+
+
+        if($record_id)
+        {
+          //Trigger portal event for creating organization
+
+          $http = JHttpFactory::getHttp();
+          $portalData = array('id'=>$record_id, "eventType"=>"Create","objectType"=>"Organization","userId"=>$user_id);
+          $registry = new JRegistry;
+          $registry->loadArray($portalData);
+          $data = (string) $registry;
+          $http->post(JURI::root().'portalEvent',$data);
+
+        }
+
+
         return $record_id;
       }
 

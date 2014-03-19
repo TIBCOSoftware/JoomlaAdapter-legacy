@@ -11,6 +11,7 @@
 	<files>
 		<filename>component.php</filename>
 		<filename>error.php</filename>
+		<filename>error.html</filename>
 		<filename>favicon.ico</filename>
 		<filename>index.php</filename>
 		<filename>templateDetails.xml</filename>
@@ -59,9 +60,13 @@
 					<!--label="TPL_OPENAPI_BACKGROUND_COLOR_LABEL"-->
 					<!--description="TPL_OPENAPI_BACKGROUND_COLOR_DESC" />-->
 
-				<!--<field name="logoFile" class="" type="media" default=""-->
-					<!--label="TPL_OPENAPI_LOGO_LABEL"-->
-					<!--description="TPL_OPENAPI_LOGO_DESC" />-->
+				<field name="logoFile" class="" type="media" default=""
+					label="TPL_OPENAPI_LOGO_LABEL"
+					description="TPL_OPENAPI_LOGO_DESC" />
+
+				<field name="goHere" class="" type="text" default="http://"
+					label="TPL_OPENAPI_GO_HERE_LABEL"
+					description="TPL_OPENAPI_GO_HERE_DESC" />
 
 				<field name="sitetitle"  type="text" default=""
 					label="JGLOBAL_TITLE"

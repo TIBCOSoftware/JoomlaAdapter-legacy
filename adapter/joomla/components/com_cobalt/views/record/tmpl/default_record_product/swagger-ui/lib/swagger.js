@@ -96,6 +96,9 @@
                 e = exports;
             }
             e.authorizations.apply(obj);
+            if(obj.headers.Apikey) {
+              delete obj.headers.Apikey;
+            }
             new SwaggerHttp().execute(obj);
             return this;
         };
@@ -260,16 +263,13 @@
             for (resource_name in _ref) {
                 if (_ref.hasOwnProperty(resource_name)) {
                     resource = _ref[resource_name];
-                    console.log(resource_name);
                     _ref1 = resource.operations;
                     for (operation_name in _ref1) {
                         if (_ref1.hasOwnProperty(operation_name)) {
                             operation = _ref1[operation_name];
-                            console.log("  " + operation.nickname);
                             _ref2 = operation.parameters;
                             for ( _i = 0, _len = _ref2.length; _i < _len; _i++) {
                                 parameter = _ref2[_i];
-                                console.log("    " + parameter.name + (parameter.required ? ' (required)' : '') + " - " + parameter.description);
                             }
                         }
                     }
@@ -323,7 +323,7 @@
                     headers: {},
                     on: {
                         error: function(response) {
-                            return _this.api.fail("Unable to read api '" + _this.name + "' from path " + _this.url + " (server returned " + error.statusText + ")");
+                            return _this.api.fail("Unable to read api '" + _this.name + "' from path " + _this.url + " (server returned " + response.statusText + ")");
                         },
                         response: function(rawResponse) {
                             var response;
@@ -339,6 +339,9 @@
                     e = exports;
                 }
                 e.authorizations.apply(obj);
+                if(obj.headers.Apikey) {
+                  delete obj.headers.Apikey;
+                }
                 new SwaggerHttp().execute(obj);
             }
         }
@@ -536,7 +539,6 @@
 
         SwaggerModel.prototype.createJSONSample = function(modelsToIgnore) {
             var prop, result, _i, _len, _ref;
-            console.log("creating json sample for " + this);
             result = {};
             modelsToIgnore = modelsToIgnore || [];
             modelsToIgnore.push(this.name);
@@ -558,11 +560,9 @@
         function SwaggerModelProperty(name, obj) {
             this.name = name;
             this.dataType = obj.type || obj.dataType || obj["$ref"];
-            console.log(this.name + " has data type " + this.dataType);
             this.isCollection = this.dataType && (this.dataType.toLowerCase() === 'array' || this.dataType.toLowerCase() === 'list' || this.dataType.toLowerCase() === 'set');
             this.descr = obj.description;
             this.required = obj.required;
-            console.log(this);
             if (obj.items != null) {
                 if (obj.items.type != null) {
                     this.refDataType = obj.items.type;
@@ -658,7 +658,6 @@
             this.method = this.method.toLowerCase();
             this.isGetMethod = this.method === "get";
             this.resourceName = this.resource.name;
-            console.log("model type: " + type);
             if ((( _ref = this.type) != null ? _ref.toLowerCase() :
             void 0) === 'void') {
                 this.type =
@@ -1124,7 +1123,6 @@
                 if (opts.mock == null) {
                     new SwaggerHttp().execute(obj);
                 } else {
-                    console.log(obj);
                     return obj;
                 }
             }

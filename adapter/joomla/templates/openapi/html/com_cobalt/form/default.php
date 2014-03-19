@@ -90,17 +90,17 @@ $app = JFactory::getApplication();
         <?php foreach ($this->fields AS $field):?>
             /*<?php echo $field->id.' '.$field->title;?>*/
             <?php if($field->id == 101) : ?>
-                 var txt101 = jQuery('[name^="jform\\[fields\\]\\[101\\]"]').val();
-                 var reg = /[()<>\\&%;"']/;
-                 if(!txt101){
-                   hfid.push(101); 
-                   isValid = false; 
-                   errorText.push('Field Username is required');
-                 } else if (txt101.length < 2 || reg.test(txt101)) {
-                   hfid.push(101); 
-                   isValid = false; 
-                   errorText.push('Please enter a valid username. No spaces, at least 2 characters and must not contain the following characters: < > \ " \' % ; ( ) &');
-                 }
+//                 var txt101 = jQuery('[name^="jform\\[fields\\]\\[101\\]"]').val();
+//                 var reg = /[()<>\\&%;"']/;
+//                 if(!txt101){
+//                   hfid.push(101); 
+//                   isValid = false; 
+//                   errorText.push('Field Username is required');
+//                 } else if (txt101.length < 2 || reg.test(txt101)) {
+//                   hfid.push(101); 
+//                   isValid = false; 
+//                   errorText.push('Please enter a valid username. No spaces, at least 2 characters and must not contain the following characters: < > \ " \' % ; ( ) &');
+//                 }
             <?php elseif ($field->id == 2): ?>
 
                 var txt2 = jQuery(document.getElementById('field_2_ifr').contentWindow.document.body).text();
@@ -124,16 +124,17 @@ $app = JFactory::getApplication();
             return errorText;
         }
     };
-    
+
     Joomla.submitbutton = function(task) {
 
         jQuery('.btn-submit').attr('disabled', 'disabled');
         if (task == 'form.cancel')
         {
+          	jQuery('#adminForm').removeAttr('target');
             Joomla.oldsubmitform(task);
             return;
         }
-        
+
         var bValid = Joomla.validate();
         if(bValid === true) {
             //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -170,16 +171,22 @@ $app = JFactory::getApplication();
              DeveloperPortal.submitForm(task);
         <?php endif;?>
     }
-    
+
 --></script>
 <?php if ($this->tmpl_params->get('properties.form_heading', 1)): ?>
 	<h1>
-        <?php if($this->item->id):?>
-            <?php echo JText::sprintf('CTEDIT', $this->escape($this->type->name), $this->item->title); ?>
-        <?php else :?>
-            <?php echo JText::sprintf('CTSUBMIT', $this->escape($this->type->name)); ?>
-        <?php endif; ?>
-        
+			<?php if($this->item->id):?>
+					<?php echo JText::sprintf('CTEDIT', $this->escape($this->type->name), $this->item->title); ?>
+			<?php else:?>
+				     <?php if($this->type->id==9):?> 
+                      <?php $createFormText=  JText::_('REGISTER_APP').JText::_($this->type->name); 
+                       echo $createFormText; ?>	
+                      <?php else:?> 
+                      <?php $createFormText= JText::sprintf('CTSUBMIT', $this->escape($this->type->name));
+                       echo $createFormText;?>           
+					   <?php endif; ?>
+			<?php endif; ?>
+
         <?php if($this->parent):?>
             - <?php echo $this->parent; ?>
         <?php endif; ?>
@@ -206,7 +213,7 @@ $app = JFactory::getApplication();
 	<?php if(in_array($this->tmpl_params->get('tmpl_core.form_button_position', 1), array(1,3))):?>
 		<?php echo $this->loadTemplate('buttons');?>
 	<?php endif;?>
-	
+
 	<?php echo $this->loadTemplate('form_'.$this->params->get('properties.tmpl_articleform'));?>
 
 	<?php if($this->tmpl_params->get('tmpl_core.form_captcha', 1) && !$this->user->get('id')):?>
@@ -223,7 +230,7 @@ $app = JFactory::getApplication();
 	<?php if(in_array($this->tmpl_params->get('tmpl_core.form_button_position', 1), array(2,3))):?>
 		<?php echo $this->loadTemplate('buttons');?>
 	<?php endif;?>
-	
+
 	<?php echo $this->form->getInput('section_id'); ?>
 	<?php echo $this->form->getInput('type_id'); ?>
 	<?php echo $this->form->getInput('id'); ?>

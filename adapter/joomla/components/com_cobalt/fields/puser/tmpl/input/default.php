@@ -20,7 +20,7 @@ defined('_JEXEC') or die();
 
 <div style="width:770px;" class="modal hide fade" id="modal<?php echo $this->id;?>" tabindex="-1" role="dialog">
   <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&#215;</button>
     <h3 id="myModalLabel">Select Contact User</h3>
   </div>
 

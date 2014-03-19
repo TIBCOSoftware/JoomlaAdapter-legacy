@@ -26,28 +26,28 @@ $this->direction = $doc->direction;
 $menus = &JSite::getMenu();
 $currentMenu = $menus->getActive();
 
-$title = $currentMenu->params->page_title?$currentMenu->params->page_title:$currentMenu->title;
-$doc->title = $title;
-
-    /**
-     *      * For overide the browser's title
-     * @var [type]
-     */
-    $menu = $app->getMenu();
-    if($active = $menu->getActive())
-    {
-        $title = $active->params->get('page_title');
-        $doc->title = $title ? $title : $active->title;
-    }
-
-
 // Detecting Active Variables
 $option   = $app->input->getCmd('option', '');
 $view     = $app->input->getCmd('view', '');
 $layout   = $app->input->getCmd('layout', '');
 $task     = $app->input->getCmd('task', '');
 $itemid   = $app->input->getCmd('Itemid', '');
+$titlePosition = $app->getCfg('sitename_pagetitles');
 $sitename = $app->getCfg('sitename');
+
+$title = $currentMenu->params->page_title?$currentMenu->params->page_title:$currentMenu->title;
+$doc->title = $title;
+
+$menu = $app->getMenu();
+if($active = $menu->getActive())
+{
+   $title = $active->params->get('page_title');
+   $doc->title = $title ? $title : $active->title;
+}
+
+if ((int)$titlePosition===1) {
+	$doc->title = $sitename.' - '.$doc->title;
+}
 
 if($task == "edit" || $layout == "form" )
 {
@@ -117,8 +117,23 @@ else
 }
 $doc->addScript($this->baseurl . '/templates/' . $this->template . '/js/public.js', 'text/javascript');
 $doc->addScript($this->baseurl . '/templates/' . $this->template . '/js/vendor/jquery.als-1.1.min.js', 'text/javascript');
+
 $doc->addScript($this->baseurl . '/templates/' . $this->template . '/js/developer_portal.js', 'text/javascript');
 $doc->addScript($this->baseurl . '/templates/' . $this->template . '/js/support.js', 'text/javascript');
+
+if(isset($doc->_scripts[juri::base(true)."/media/jui/js/jquery.min.js"])){
+	$jui = $doc->_scripts[juri::base(true)."/media/jui/js/jquery.min.js"];
+	unset($doc->_scripts[juri::base(true)."/media/jui/js/jquery.min.js"]);
+	$doc->_scripts = array_merge(array_slice($doc->_scripts,0,0),array(juri::base(true)."/media/jui/js/jquery.min.js"=>$jui),array_slice($doc->_scripts,0));
+}
+
+// if(isset($doc->_scripts[juri::base(true)."/templates/" . $this->template . "/js/vendor/jqueryui/jquery-ui-1.10.3.custom.min.js"])){
+//   $jui = $doc->_scripts[juri::base(true)."/templates/" . $this->template . "/js/vendor/jqueryui/jquery-ui-1.10.3.custom.min.js"];
+//   unset($doc->_scripts[juri::base(true)."/templates/" . $this->template . "/js/vendor/jqueryui/jquery-ui-1.10.3.custom.min.js"]);
+//   $doc->_scripts = array_merge(array_slice($doc->_scripts,0,2),array(juri::base(true)."/templates/" . $this->template . "/js/vendor/jqueryui/jquery-ui-1.10.3.custom.min.js"=>$jui),array_slice($doc->_scripts,2));
+
+// }
+
 
 function getUuid($prefix = ''){
     $chars  =  md5(uniqid(mt_rand(), true));
@@ -130,7 +145,8 @@ function getUuid($prefix = ''){
     return $prefix.$uuid;
 }
 
-
+$comEmail = JComponentHelper::getComponent('com_emails');
+$oauthState = $comEmail->params->get('enable_oauth');
 ?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<?php echo $this->language; ?>" lang="<?php echo $this->language; ?>" dir="<?php echo $this->direction; ?>">
@@ -151,6 +167,7 @@ function getUuid($prefix = ''){
 			SUPPORT_USER_NAME = '<?php echo JFactory::getUser()->name;?>',
 			SUPPORT_USER_EMAIL = '<?php echo JFactory::getUser()->email; ?>',
             ARCHIVE_FAILED = '<?php echo JText::_("ARCHIVE_FAILED"); ?>',
+            DISABLE_KEYS_FAILED = '<?php echo JText::_("DISABLE_KEYS_FAILED"); ?>',
             FAILED_TO_DEACTIVATE_USER_AFTER_ARCHIVE_USERPROFILE = '<?php echo JText::_("FAILED_TO_DEACTIVATE_USER_AFTER_ARCHIVE_USERPROFILE"); ?>',
             INVALID_SUBSCRIPTION_END_DATE = '<?php echo JText::_("INVALID_SUBSCRIPTION_END_DATE"); ?>',
             ERROR_GETTING_API_KEY = '<?php echo JText::_("ERROR_GETTING_API_KEY"); ?>',
@@ -196,6 +213,7 @@ function getUuid($prefix = ''){
       -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, .25), inset 0 -1px 0 rgba(0, 0, 0, .1), inset 0 30px 10px rgba(0, 0, 0, .2);
       box-shadow: 0 1px 3px rgba(0, 0, 0, .25), inset 0 -1px 0 rgba(0, 0, 0, .1), inset 0 30px 10px rgba(0, 0, 0, .2);
     }
+
   </style>
   <?php
   }
@@ -213,6 +231,19 @@ function getUuid($prefix = ''){
   . ($params->get('fluidContainer') ? ' fluid' : '');
 ?>">
   <!-- Body -->
+<style>
+.copyright p a
+{
+	color:#fff;
+	margin-left:0px;
+}
+.get-started-page .trial-guide{
+	display:none;
+}
+.get-started-page .featured-items{
+	margin-top:0;
+}
+</style>
     <a id="top" style="height:0px;"></a>
   <div class="body">
       <div class="header-wrapper">
@@ -229,8 +260,15 @@ function getUuid($prefix = ''){
                     <?php endif; ?>
                 </nav>
               <div class="header-inner clearfix">
-                <a class="logo" href="<?php echo $this->baseurl; ?>"><div class="logo-img"></div></a>
-                <a class="brand pull-left" href="<?php echo $this->baseurl; ?>">
+                <!-- <a class="logo" href="<?php echo $this->baseurl; ?>"><div class="logo-img"></div></a> -->
+                <a class="logo" href="<?php
+                                                  if($this->params->get('goHere')){
+                                                    echo $this->params->get('goHere');
+                                                  }else{
+                                                    echo $this->baseurl;
+                                                  }
+                                                ?>">
+
                   <?php echo $logo;?> <?php if ($this->params->get('sitedescription')) { echo '<div class="site-description">'. htmlspecialchars($this->params->get('sitedescription')) .'</div>'; } ?>
                 </a>
                   <nav class="main-nav">
@@ -248,7 +286,22 @@ function getUuid($prefix = ''){
       <div class="navigation-wrapper">
           <div class="container">
               <div class="navigation">
-                <jdoc:include type="modules" name="position-1" style="none" />
+  				<?php
+  				// Display position-1 modules
+  				$this->navmodules = JModuleHelper::getModules('position-1');
+  				foreach ($this->navmodules as $navmodule)
+  				{
+  					$output = JModuleHelper::renderModule($navmodule, array('style' => 'none'));
+  					$params = new JRegistry;
+  					$params->loadString($navmodule->params);
+					$alias = $app->getMenu()->getItem(140)->alias;
+					
+					if ($oauthState==3) {
+						$output = preg_replace('#<li class="item-126">(.*?)</li>#', '', $output);
+					}
+  					echo str_replace($alias,$alias.'/item/'.$orgid,$output);
+  				}
+  				?>
               </div>
           </div>
       </div>
@@ -299,8 +352,8 @@ function getUuid($prefix = ''){
     <footer>
     	<div class="parbase footercopyright">
     	<div id="footerLegal" class="copyright">
-    		<div class="container"><p><?php echo $sitename; ?>&nbsp;&nbsp;|&nbsp;&nbsp;<span><a target="_blank" href="index.php?option=com_content&view=article&id=9&catid=2&Itemid=107">Privacy Policy</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a target="_blank" href="index.php?option=com_content&view=article&id=8&catid=2&Itemid=107">Terms of Use</a></span></p>
-    </div>
+            <div class="container"><p><?php echo $sitename; ?>&nbsp;&nbsp;|&nbsp;&nbsp;<span><a target="_blank" href="index.php?option=com_content&view=article&id=9&catid=2&Itemid=107">Privacy Policy</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a target="_blank" href="index.php?option=com_content&view=article&id=8&catid=2&Itemid=107">Terms of Use</a></span></p>
+                </div>
     	</div>
     </div>
     </footer>
@@ -369,7 +422,7 @@ function getUuid($prefix = ''){
       var div = jQuery(".login-greeting");
       var user_profile_link = "<?php echo JURI::root().'index.php/userprofile';?>";
       div.html('<a href="'+user_profile_link+'">' + div.text() + '</a>');
-      jQuery(".logout-button").after("<br/><div class='login-organization'><a href='<?php echo $orguri; ?>'><?php echo $orgname; ?></a></div>");
+
 
       jQuery(function() {
           if(window === window.top) {

@@ -1,7 +1,7 @@
 ==================================================================================
 Project Name    : Adapter Code for TIBCO API Exchange and Joomla!
-Release Version : 2.0.0
-Release Date    : November 2013
+Release Version : 2.1.0
+Release Date    : February 2014
 ==================================================================================
 DISCLAIMER
 

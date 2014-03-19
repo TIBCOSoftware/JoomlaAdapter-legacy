@@ -24,6 +24,16 @@ $details = array();
 $started = FALSE;
 $i = $o = 0;
 $tasks_to_hide = array();
+$auth_group_ids = $this->user->getAuthorisedGroups();
+$path = JRequest::getURI();
+$sub_org_id = TibcoTibco::getSubOrgId($this->item->id);
+$current_user_org_id = TibcoTibco::getCurrentUserOrgId();
+if(strpos($path,'userprofile') || strpos($path, 'dashboard')){
+  if(!($current_user_org_id == $sub_org_id || in_array(7, $auth_group_ids) || in_array(8, $auth_group_ids))){
+    JFactory::getApplication()->enqueueMessage(JText::_('USERPROFILE_CUSTOM_ACCESS_DENIED_ERROR'), 'error');
+    return;
+  }
+}
 /**
  * the comment line is for disabled deleting button
  */
@@ -78,8 +88,58 @@ $tasks_to_hide = array();
 .line-brk {
 	margin-left: 0px !important;
 }
+.toolbar{
+	height:45px;
+	margin-top:10px;
+	background-color:#eee;
+	margin-bottom:20px;
+	-webkit-box-shadow: inset 0 0 20px rgba(0,0,0,.1);
+	-moz-box-shadow: inset 0 0 20px rgba(0,0,0,.1);
+	box-shadow: inset 0 0 20px rgba(0,0,0,.1);
+}
+.toolbar .right-button{
+	margin-top:12px;
+	margin-right:10px;
+}
 <?php echo $params->get('tmpl_params.css');?>
 </style>
+
+<script type="text/javascript">
+  var hasJoomlaRoot=false;
+</script>
+<?php $hasJoomlaRoot= JUri::base(true);?>
+<?php if($hasJoomlaRoot):?>
+  <script type="text/javascript">
+    var hasJoomlaRoot='<?php echo $hasJoomlaRoot;?>';
+  </script>
+<?php endif;?>
+<?php if(strpos($path,'userprofile')||strpos($path,'dashboard')):?>
+  <script type="text/javascript">
+    (function($){
+      $(function(){
+
+        var org_links_seletor,search_selector, mem_links;
+        if(hasJoomlaRoot){
+          org_links_seletor="table.table-striped h2.record-title>a[href^='"+hasJoomlaRoot+"\/index.php\/organizations\/']";
+          search_selector=new RegExp('^('+hasJoomlaRoot+'\/?index\.php\/)(organizations)(\/.*)$');
+
+        }else{
+          org_links_seletor="table.table-striped h2.record-title>a[href^='\/index.php\/organizations\/']";
+          search_selector=new RegExp("^(\/?index\.php\/)(organizations)(\/.*)$");
+
+        }
+
+        var org_links = $(org_links_seletor);
+        org_links.each(function(i,ele){
+          var new_link = $(ele).attr("href").replace(search_selector,function(m,p1,p2,p3){
+            return p1+"dashboard"+p3;
+          });
+          $(ele).attr("href",new_link);
+        });
+      });
+    })(jQuery);
+  </script>
+<?php endif;?>
 
 <?php
 if($params->get('tmpl_core.item_categories') && $item->categories_links)
@@ -133,14 +193,13 @@ if($params->get('tmpl_core.item_follow_num'))
 {
 	$details[] = sprintf('%s: %s', JText::_('CFOLLOWERS'), $item->subscriptions_num);
 }
-if (count(DeveloperPortalApi::getApplicationBySubscriptionId($this->item->id))>0) {
-  $tasks_to_hide[] = DeveloperPortalApi::TASK_ARCHIVE;
-}
+
 ?>
 
 <article class="<?php echo $this->appParams->get('pageclass_sfx')?><?php if($item->featured) echo ' article-featured' ?>">
+	<div class="toolbar">
 	<?php if(!$this->print):?>
-		<div class="pull-right controls">
+		<div class="pull-right controls right-button">
 			<div class="btn-group">
 				<?php if($params->get('tmpl_core.item_print')):?>
 					<a class="btn btn-mini" rel="tooltip" data-original-title="<?php echo JText::_('CPRINT');?>" onclick="window.open('<?php echo JRoute::_($this->item->url.'&tmpl=component&print=1');?>','win2','status=no,toolbar=no,scrollbars=yes,titlebar=no,menubar=no,resizable=yes,width=640,height=480,directories=no,location=no'); return false;">
@@ -152,7 +211,7 @@ if (count(DeveloperPortalApi::getApplicationBySubscriptionId($this->item->id))>0
 					<?php echo HTMLFormatHelper::follow($item, $this->section);?>
 					<?php echo HTMLFormatHelper::repost($item, $this->section);?>
 					<?php if($item->controls):?>
-						<a href="#" data-toggle="dropdown" class="dropdown-toggle btn btn-mini">
+						<a href="#" data-toggle="dropdown" class="dropdown-toggle btn-mini">
 							<?php echo HTMLFormatHelper::icon('gear.png');  ?></a>
 						<ul class="dropdown-menu">
 							<?php echo DeveloperPortalApi::list_controls($item->controls, $tasks_to_hide, $this->item->id, $this->item->type_id);?>
@@ -162,10 +221,12 @@ if (count(DeveloperPortalApi::getApplicationBySubscriptionId($this->item->id))>0
 			</div>
 		</div>
 	<?php else:?>
-		<div class="pull-right controls">
+		<div class="pull-right controls right-button">
 			<a href="#" class="btn btn-mini" rel="tooltip" data-original-title="<?php echo JText::_('CPRINT');?>" onclick="window.print();return false;"><?php echo HTMLFormatHelper::icon('printer.png');  ?></a>
 		</div>
 	<?php endif;?>
+	</div>
+	
 	<?php if($params->get('tmpl_core.item_title')):?>
 		<?php if($this->type->params->get('properties.item_title')):?>
 			<div class="page-header">

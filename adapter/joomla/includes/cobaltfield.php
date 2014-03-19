@@ -17,7 +17,7 @@ class autoCreationCobaltField
     $this->field_label    =    $field_label;
     $this->field_value    =    $field_value;
 
-    $this->field_key      =    'k'.md5($field->field_label.'-'.$field->field_type);
+    $this->field_key      =    'k'.md5($field_label.'-'.$field_type);
     $this->user_id        =    '129';
     $this->type_id        =    '8';
     $this->section_id     =    '4';

@@ -20,11 +20,11 @@ $user_profile_id = DeveloperPortalApi::getUserProfileId();
 $orgId = 0;
 $ownedSubscriptions = array();
 if (empty($this->item->id)) {
-	$orgIDS = DeveloperPortalApi::getUserOrganization($user_profile->id);
-	$orgId = $orgIDS[0];
+  $orgIDS = DeveloperPortalApi::getUserOrganization($user_profile->id);
+  $orgId = $orgIDS[0];
 }else{
-	$orgId = DeveloperPortalApi::valueForKeyFromJson($jsonStr, 60, $this->item->id);
-	$ownedSubscriptions = DeveloperPortalApi::subscriptionsInApplication($this->item->id);
+  $orgId = DeveloperPortalApi::valueForKeyFromJson($jsonStr, 60, $this->item->id);
+  $ownedSubscriptions = DeveloperPortalApi::subscriptionsInApplication($this->item->id);
 }
 $subscriptions = DeveloperPortalApi::subscriptionsOfOrgnazions($orgId);
 $groupedItems = DeveloperPortalApi::classify_subscriptions($subscriptions);
@@ -114,114 +114,141 @@ $active_key = DeveloperPortalApi::getActiveKeyOfApplication($this->item->id);
     }
 
     a.plus, a.minus {
-        height: 18px;
-        width: 8px;
     }
+  
+  .table tbody tr td.actions a.btn{
+    background-color:transparent;
+    color:#6A6A6A;
+  }
+  .table tbody tr td.actions a.plus{
+    text-decoration:underline;
+    font-size:16px;
+  }
+  .table tbody tr td.actions a.minus{
+    color:#000;
+  }
+  .checked{
+    display:block;
+    height:10px;
+    width:10px;
+    border:solid 1px;
+      margin-top: -10px;
+      position: relative;
+      top: 18px;
+    color:#6A6A6A;
+  }
+  
 </style>
 <article class="<?php echo $this->appParams->get('pageclass_sfx')?><?php if($this->item->featured) echo ' article-featured' ?>">
-	<?php if($this->item->id!=0): ?>
+  <?php if($this->item->id!=0): ?>
     <div class="container-fluid">
 
     </div>
-	<?php endif?>
-	
-	<div id="list_panel">
-        <h3><?php echo JText::_( 'ADD_PRODUCT_TO_APP_TEXT' );?>
-        </h3>
-       
-			<div id="products-list">
-				<?php foreach($groupedItems as $key => $value): ?>
-					<div class="inline-documents" style="width:100%;">
-						<div class="inline-doc">
-							<h2><span id="prod-item-title"><?php echo CobaltApi::getArticleLink($key); ?></span></h2>
-							<div class="inline-doc-content">
-								<table  class="table app-products-table">
-									<thead>
-										<tr>
-											<th>Plan</th>
-											<th>Detail</th>
-											<th>Status</th>
-											<th>Enabled</th>
-										</tr>
-									</thead>
-									<tbody>
-										<?php $row_count=0; ?>
-										<?php foreach($value as $item): ?>
-											<?php
-											$status = DeveloperPortalApi::valueForKeyFromJson("", 78, $item->id);
-											$endTime = DeveloperPortalApi::valueForKeyFromJson($item->fields,72);
-											if (!empty($endTime)) {
-												$curTimestamp = mktime(0,0,0,date("m"),date("d"),date("Y"));
-												$desTimestamp = mktime(0,0,0,((int)substr($endTime[0],5,2)),((int)substr($endTime[0],8,2)),((int)substr($endTime[0],0,4)));
-												if($curTimestamp-$desTimestamp>0){
-													$status = "Expired";
-												}
-											}
-											
-											if ($status!='Active') {
-												continue;
-											}
-											
-											$plan = DeveloperPortalApi::getRecordById(DeveloperPortalApi::valueForKeyFromJson("", 69, $item->id));
-											$limit = DeveloperPortalApi::valueForKeyFromJson($plan->fields,80);
-											$burst = DeveloperPortalApi::valueForKeyFromJson($plan->fields,79);
-											$ownedFlag = in_array($item->id, $ownedSubscriptions);
-											$row_count++;
-											?>
-								            <?php if($ownedFlag): ?>
-											<input type="hidden" name="jform[fields][63][]" value="<?php echo $key; ?>" />
-								            <input type="hidden" name="jform[fields][115][]" value="<?php echo $item->id; ?>" />
-								            <?php endif; ?>
-										<tr>
-											<td>
-												<?php echo $plan->title; ?>
-											</td>
-											<td>
-												<p><?php echo $limit.' per second<br/>'.$burst.' per day'; ?></p>
-											</td>
-											<td>
-												<?php 
-												
-												echo $status;
-												?>
-											</td>
-											<td class="actions">
-							                    <a class="btn plus" <?php if($ownedFlag) echo 'style="display: none;"'; ?> subscription-id="<?php echo $item->id; ?>" data-product-id="<?php echo $key; ?>">+</a>
-							                    <a class="btn minus" <?php if(!$ownedFlag) echo 'style="display: none;"'; ?> subscription-id="<?php echo $item->id; ?>" data-product-id="<?php echo $key; ?>">-</a>
-											</td>
-										</tr>
-										<?php endforeach; ?>
-										<?php if ($row_count==0): ?>
-											<tr>
-												<td colspan='4' class='center'>No available subscription to <?php echo CobaltApi::getArticleLink($key); ?>.</td>
-											</tr>
-										<?php endif ?>
-									</tbody>
-								</table>
-							</div>
-						</div>    
-					</div>
-				<?php endforeach; ?>
-				<div class="clearfix"></div>
-				<style>
-					.inline-doc h2{
-						cursor:pointer;
-						padding-left:10px;
-						font-size:14px;
-					}
-				</style>
-		    	<script type="text/javascript">
-		        (function ($) {
-		            $('.inline-doc h2').click(function (e) {
-		                if($(this).parent().hasClass("active")) {
-		                    $(this).parent().removeClass("active");
-		                }else {
-		                    $(this).parent().addClass("active");
-		                }
-		            });
-		        })(jQuery);
-		    	</script>
-			</div>
+  <?php endif?>
+  
+  <div id="list_panel">
+      <?php if(!count($groupedItems)):?>
+      <h3><?php echo JText::sprintf('ADD_PRODUCT_TO_APP_TEXT',JRoute::_("index.php?option=com_cobalt&view=records&section_id=1"));?></h3>
+      <?php endif;?>
+      <div id="products-list">
+        <?php foreach($groupedItems as $key => $value): ?>
+          <div class="inline-documents" style="width:100%;">
+            <div class="inline-doc">
+              <h2><span id="prod-item-title"><?php echo CobaltApi::getArticleLink($key); ?></span></h2>
+              <div class="inline-doc-content">
+                <table  class="table app-products-table">
+                  <thead>
+                    <tr>
+                      <th>Plan</th>
+                      <th>Detail</th>
+                      <th>Status</th>
+                      <th>Enabled</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php $row_count=0; ?>
+                    <?php foreach($value as $item): ?>
+                      <?php
+                      $statusValue = DeveloperPortalApi::valueForKeyFromJson($item->fields, 78);
+                      $startTime = DeveloperPortalApi::valueForKeyFromJson($item->fields, 71);
+                      $endTime = DeveloperPortalApi::valueForKeyFromJson($item->fields, 72);
+                      $status = $statusValue[0];
+                      if (!empty($endTime)) {
+                        $curTimestamp = mktime(0,0,0,date("m"),date("d"),date("Y"));
+                        $startTimestamp = mktime(0,0,0,((int)substr($startTime[0],5,2)),((int)substr($startTime[0],8,2)),((int)substr($startTime[0],0,4)));
+                        $desTimestamp = mktime(0,0,0,((int)substr($endTime[0],5,2)),((int)substr($endTime[0],8,2)),((int)substr($endTime[0],0,4)));
+                        if($curTimestamp-$desTimestamp>0){
+                          $status = "Expired";
+                        }
+                        
+                        if ($startTimestamp-$curTimestamp>0) {
+                          $status = "Inactive";
+                        }
+                      }
+                      
+                      if ($status!='Active') {
+                        continue;
+                      }
+                      
+                      $plan = DeveloperPortalApi::getRecordById(DeveloperPortalApi::valueForKeyFromJson("", 69, $item->id));
+                      $limit = DeveloperPortalApi::valueForKeyFromJson($plan->fields,79);
+                      $burst = DeveloperPortalApi::valueForKeyFromJson($plan->fields,80);
+                      $ownedFlag = in_array($item->id, $ownedSubscriptions);
+                      $row_count++;
+                      ?>
+                            <?php if($ownedFlag): ?>
+                      <input type="hidden" name="jform[fields][63][]" value="<?php echo $key; ?>" />
+                            <input type="hidden" name="jform[fields][115][]" value="<?php echo $item->id; ?>" />
+                            <?php endif; ?>
+                    <tr>
+                      <td>
+                        <?php echo $plan->title; ?>
+                      </td>
+                      <td>
+                        <p><?php echo $limit.' per second<br/>'.$burst.' per day'; ?></p>
+                      </td>
+                      <td>
+                        <?php
+                        echo $status;
+                        ?>
+                      </td>
+                      <td class="actions">
+                                  <a class="btn plus" <?php if($ownedFlag) echo 'style="display: none;"'; ?> subscription-id="<?php echo $item->id; ?>" data-product-id="<?php echo $key; ?>">Use</a>
+                                  <a class="btn minus" <?php if(!$ownedFlag) echo 'style="display: none;"'; ?> subscription-id="<?php echo $item->id; ?>" data-product-id="<?php echo $key; ?>"><div class="checked"></div>√</a>
+                      </td>
+                    </tr>
+                    <?php endforeach; ?>
+                    <?php if ($row_count==0): ?>
+                      <tr>
+                        <td colspan='4' class='center'>No available subscription to <?php echo CobaltApi::getArticleLink($key); ?>.</td>
+                      </tr>
+                    <?php endif ?>
+                  </tbody>
+                </table>
+              </div>
+            </div>    
+          </div>
+        <?php endforeach; ?>
+        <div class="clearfix"></div>
+        <style>
+          .inline-doc h2{
+            cursor:pointer;
+            padding-left:10px;
+            font-size:14px;
+          }
+        </style>
+          <script type="text/javascript">
+            (function ($) {
+                $('.inline-doc h2').click(function (e) {
+                    if($(this).parent().hasClass("active")) {
+                        $(this).parent().removeClass("active");
+                    }else {
+                        $(this).parent().addClass("active");
+                    }
+                });
+            })(jQuery);
+          </script>
+      </div>
         <?php foreach($keys as $key): ?>
             <input type="hidden" name="jform[fields][87][]" value="<?php echo $key; ?>" />
         <?php endforeach; ?>
@@ -232,20 +259,20 @@ $active_key = DeveloperPortalApi::getActiveKeyOfApplication($this->item->id);
     (function($){
         $(function(){
             $("a.plus").live("click",function(){
-				$(this).closest('tbody').find('input').next("tr").find(".actions .plus").show().next(".minus").hide();
-				$(this).closest('tbody').find('input').remove();
-				$(this).closest('tr').before('<input type="hidden" name="jform[fields][115][]" value="' + $(this).attr("subscription-id") + '">');
-				$(this).closest('tr').before('<input type="hidden" name="jform[fields][63][]" value="' + $(this).attr("data-product-id") + '">');
+        $(this).closest('tbody').find('input').next("tr").find(".actions .plus").show().next(".minus").hide();
+        $(this).closest('tbody').find('input[type="hidden"]').remove();
+        $(this).closest('tr').before('<input type="hidden" name="jform[fields][115][]" value="' + $(this).attr("subscription-id") + '">');
+        $(this).closest('tr').before('<input type="hidden" name="jform[fields][63][]" value="' + $(this).attr("data-product-id") + '">');
                 $(this).hide().next(".minus").show();
             });
 
             $('a.minus').live('click', function() {
-            	$('input[name="jform[fields][115][]"][value="' + $(this).attr("subscription-id") + '"]').remove();
-				$('input[name="jform[fields][63][]"][value="' + $(this).attr("data-product-id") + '"]').remove();
-            	$(this).hide().prev(".plus").show();
+              $('input[name="jform[fields][115][]"][value="' + $(this).attr("subscription-id") + '"]').remove();
+        $('input[name="jform[fields][63][]"][value="' + $(this).attr("data-product-id") + '"]').remove();
+              $(this).hide().prev(".plus").show();
             });
         });
-		$('#prod-item-title a').attr('href','javascript:void(0)');
+    $('#prod-item-title a').attr('href','javascript:void(0)');
     })(jQuery);
 
 </script>

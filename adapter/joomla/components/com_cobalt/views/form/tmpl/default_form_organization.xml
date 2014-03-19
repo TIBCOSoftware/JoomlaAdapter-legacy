@@ -7,7 +7,7 @@
 	<license>Commercial (http://www.mintjoomla.com/commercial-license)</license>
 	<authorEmail>support@mintjoomla.com</authorEmail>
 	<authorUrl>www.mintjoomla.com</authorUrl>
-	<version>8.25</version>
+	<version>8.27</version>
 	<description>Template Submission form</description>
 
 	<fields name="tmpl_params">
@@ -27,14 +27,11 @@
 	</fields>
 	<fields name="tmpl_core">
 		<fieldset name="main" label="CGENERAL">
-			<field name="show_top_tab" type="radio" class="btn-group" label="X_TOPTAB"  default="0">
-				<option value="0">CNO</option>
-				<option value="1">CYES</option>
-			</field>
 			<field name="form_heading" type="radio" class="btn-group" label="X_HOWHEAD"  default="1">
 				<option value="0">CNO</option>
 				<option value="1">CYES</option>
 			</field>
+			<field name="form_heading_text" type="text" class="btn-group" label="X_HOWHEADTEXT"  default="" />
 			<field name="form_captcha" type="radio" class="btn-group" label="X_SHOWCAPTCHAPUBLIC"  default="1">
 				<option value="0">CNO</option>
 				<option value="1">CYES</option>

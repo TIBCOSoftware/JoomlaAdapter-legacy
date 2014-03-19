@@ -40,7 +40,7 @@ class CreateUserprofileApi {
       public function getUserprofile($access_key)
       {
         $db = JFactory::getDbo();
-        $db->setQuery('SELECT id from #__js_res_record where user_id=129 AND access_key="'.$access_key.'"');
+        $db->setQuery('SELECT id from #__js_res_record where user_id=129 AND type_id = 8 AND access_key="'.$access_key.'"');
         return $db->loadObject()->id;
       }
 
@@ -87,6 +87,7 @@ class CreateUserprofileApi {
           {
             $flag = false;
           }
+		 
           self::updateOrganizationMembers($record_id, $org_id);
 
         }
@@ -103,12 +104,11 @@ class CreateUserprofileApi {
         $record         = ItemsStore::getRecord($org_id);
 
         $fields         = json_decode($record->fields);
-        $mebers         = $fields->{'56'}?$fields->{'56'}:array();
+        $mebers         = ($fields->{'56'} && is_array($fields->{'56'}))?$fields->{'56'}:array();
         $mebers[]       = $record_id;
         $fields->{'56'} = $mebers;
         $fields         = json_encode($fields);
         $record->fields = $fields;
-
         $query = $db->getQuery(true);
         $query->update($db->quoteName('#__js_res_record'))->set($db->quoteName('fields') . "='" . $record->fields ."'")->where($db->quoteName('id') . '=' . $org_id);
         $db->setQuery($query);
@@ -186,7 +186,7 @@ class CreateUserprofileApi {
         $db = JFactory::getDbo();
         $userprofile = new stdClass();
         $fields = new stdClass();
-        $user = JFactory::getUser();
+        $user = $options['user_id'] ? JFactory::getUser($options['user_id']):JFactory::getUser();
         $lang   = JFactory::getLanguage();
 
         $options['lastName'] = $options['lastName'] ? $options['lastName']: 'Ping'; 
@@ -205,7 +205,7 @@ class CreateUserprofileApi {
         $fields->{'59'}    =   null;
         $fields->{'68'}    =   null;
         $fields->{'77'}    =   $user->id;
-        $fields->{'88'}    =   array('Member');
+        $fields->{'88'}    =   $options['usertype'];
         $fields->{'101'}   =   $user->username;
         $fields->{'102'}   =   $user->email;
         $fields->{'113'}   =   self::getUuid('');

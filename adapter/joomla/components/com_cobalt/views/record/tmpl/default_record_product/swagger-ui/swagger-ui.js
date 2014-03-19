@@ -723,7 +723,7 @@ var Docs = {
         if (stack1 || stack1 === 0) {
             buffer += stack1;
         }
-        buffer += "\n        </form>\n        <div class='response' style='display:none'>\n          <h4>Request URL</h4>\n          <div class='block request_url'></div>\n          <h4>Response Body</h4>\n          <div class='block response_body'></div>\n          <h4>Response Code</h4>\n          <div class='block response_code'></div>\n          <h4>Response Headers</h4>\n          <div class='block response_headers'></div>\n        </div>\n      </div>\n    </li>\n  </ul>\n";
+        buffer += "\n        </form>\n        <div class='response' style='display:none'>\n          <h4>Request URL</h4>\n          <div class='block request_url'></div>\n          <h4>Request Headers</h4>\n          <div class='block request_headers'></div>\n          <h4>Response Body</h4>\n          <div class='block response_body'></div>\n          <h4>Response Code</h4>\n          <div class='block response_code'></div>\n          <h4>Response Headers</h4>\n          <div class='block response_headers'></div>\n        </div>\n      </div>\n    </li>\n  </ul>\n";
         return buffer;
     });
 })();
@@ -2081,7 +2081,6 @@ var Docs = {
 
         SwaggerUi.prototype.buildUrl = function(base, url) {
             var parts;
-            console.log("base is " + base);
             parts = base.split("/");
             base = parts[0] + "//" + parts[2];
             if (url.indexOf("/") === 0) {
@@ -2317,7 +2316,6 @@ var Docs = {
                 type = param.type || param.dataType;
                 if (type.toLowerCase() === 'file') {
                     if (!contentTypeModel.consumes) {
-                        console.log("set content type ");
                         contentTypeModel.consumes = 'multipart/form-data';
                     }
                 }
@@ -2557,13 +2555,14 @@ var Docs = {
                 pre = jQuery('<pre class="json" />').append(code);
             }
             response_body = pre;
-            jQuery(".request_url").html("<pre>" + data.request.url + "</pre>");
-            jQuery(".response_code", jQuery(this.el)).html("<pre>" + data.status + "</pre>");
-            jQuery(".response_body", jQuery(this.el)).html(response_body);
-            jQuery(".response_headers", jQuery(this.el)).html("<pre>" + JSON.stringify(data.getHeaders()) + "</pre>");
-            jQuery(".response", jQuery(this.el)).slideDown();
-            jQuery(".response_hider", jQuery(this.el)).show();
-            jQuery(".response_throbber", jQuery(this.el)).hide();
+            jQuery(this.el).find(".request_url").html("<pre>" + data.request.url + "</pre>");
+            jQuery(this.el).find(".request_headers").html("<pre>" + JSON.stringify(data.request.getHeaders()) + "</pre>");
+            jQuery(this.el).find(".response_code", jQuery(this.el)).html("<pre>" + data.status + "</pre>");
+            jQuery(this.el).find(".response_body", jQuery(this.el)).html(response_body);
+            jQuery(this.el).find(".response_headers", jQuery(this.el)).html("<pre>" + JSON.stringify(data.getHeaders()) + "</pre>");
+            jQuery(this.el).find(".response", jQuery(this.el)).slideDown();
+            jQuery(this.el).find(".response_hider", jQuery(this.el)).show();
+            jQuery(this.el).find(".response_throbber", jQuery(this.el)).hide();
             return hljs.highlightBlock(jQuery('.response_body', jQuery(this.el))[0]);
         };
 

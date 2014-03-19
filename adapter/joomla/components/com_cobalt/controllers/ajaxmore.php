@@ -124,6 +124,13 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
       $db -> setQuery('SELECT * FROM #__email_templates WHERE alias="'.$alias.'" AND published = 1 LIMIT 1');
       return $db -> loadObject();
     }
+    /**
+     * user request custom plan
+     *   1. send email to administrator of joomla back-end
+     *   2. send email to administrator and contacter organization
+     *   3. send email to requester
+     * @author Owen
+     */
     public function requestNormalPlan() {
       $user = JFactory::getUser();
       $user_id = $user -> id;
@@ -138,8 +145,8 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
         $plan_url         = $_domain.JRoute::_(Url::record($plan_id));
         $product_url      = $_domain.JRoute::_(Url::record($product_id));
         $organization     = DeveloperPortalApi::getUserOrganization();
-        $organization_url = $_domain.JRoute::_(Url::record($organization[0]));
-        $user_url         = $_domain.JRoute::_(Url::record(DeveloperPortalApi::getUserProfileId($user_id)));
+        $organization_url = $_domain.JRoute::_('index.php?option=com_cobalt&view=record&Itemid=140&id='.$organization[0]);
+        $user_url         = $_domain.JRoute::_('index.php?option=com_cobalt&view=record&Itemid=140&id='.DeveloperPortalApi::getUserProfileId($user_id));
         
         //send email to administrator of joomla back-end
         $results = $this->_getEmailTemplateByAlias("request_normal_plan_notify_admin_of_joomla");
@@ -183,7 +190,9 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
             
             DeveloperPortalApi::send_email($user->email, $title, $content, $results -> isHTML);
           }
-          AjaxHelper::send(JText::_('PLAN_REQUEST_RESULT_SUCCESS'),"msg");
+          $result=array();
+          $result['msg']=JText::_('PLAN_REQUEST_RESULT_SUCCESS');
+          AjaxHelper::send($result,'result');
         }else{
           AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_2'));
         }
@@ -191,6 +200,12 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
         AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_4'));
       }
     }
+    /**
+     * user request custom plan
+     *   1. send email to administrator of joomla back-end
+     *   2. send email to administrator and contacter organization
+     * @author Owen
+     */
     public function requestCustomPlan() {
       $user = JFactory::getUser();
       $user_id = $user -> id;
@@ -203,8 +218,8 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
       if ($user_id && $product_id) {
         $product_url      = $_domain.JRoute::_(Url::record($product_id));
         $organization     = DeveloperPortalApi::getUserOrganization();
-        $organization_url = $_domain.JRoute::_(Url::record($organization[0]));
-        $user_url         = $_domain.JRoute::_(Url::record(DeveloperPortalApi::getUserProfileId($user_id)));
+        $organization_url = $_domain.JRoute::_('index.php?option=com_cobalt&view=record&Itemid=140&id='.$organization[0]);
+        $user_url         = $_domain.JRoute::_('index.php?option=com_cobalt&view=record&Itemid=140&id='.DeveloperPortalApi::getUserProfileId($user_id));
         
         //send email to administrator of joomla back-end
         //send email to administrator and contacter organization
@@ -238,7 +253,9 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
           
             DeveloperPortalApi::send_email($user->email, $title, $content, $results -> isHTML);
           }
-          AjaxHelper::send(JText::_('PLAN_REQUEST_RESULT_SUCCESS'),"msg");
+          $result=array();
+          $result['msg']=JText::_('PLAN_REQUEST_RESULT_SUCCESS');
+          AjaxHelper::send($result,'result');
         }else{
           AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_2'));
         }
@@ -343,6 +360,10 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
 	      AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_4'));
 	    }
     }	
+	
+    /**
+     * invoke when user click send in support page. 
+     */
 	public function requestSupport() {
 	  $name = $_POST["fname"].' '.$_POST["lname"];
 	  $email = $_POST["email"];
@@ -372,13 +393,85 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
 	  }
 	}
 	
+    /**
+     * get enabled subscriptions' product&plan in specific application. 
+     */
+	public function subscriptionsInApp() {
+		$app_ids = $_POST["app_ids"];
+		$sub_ids = $_POST["sub_ids"];
+		$plan_ids = $_POST["plan_ids"];
+		$counter = array();
+		if (!empty($app_ids)) {
+			$counter = $app_ids;
+		}else if(!empty($sub_ids)){
+			$counter = array(1);
+		}else{
+			AjaxHelper::error("");
+		}
+		$returnValue = array();
+		foreach ($counter as $app_id) {
+			if (!empty($app_ids)) {
+				$records = DeveloperPortalApi::subscriptionsInApplication($app_id);
+			}else{
+				$records = $sub_ids;
+			}
+			
+	        if (count($records)>0) {
+				$results = array();
+				$db = JFactory::getDbo();
+				$sql = 'select title as productName from `#__js_res_record` where id in (SELECT field_value FROM `#__js_res_record_values` WHERE field_id=114 and record_id in ('.implode(',',$records).'))';
+				$db -> setQuery($sql);
+				$results['products'] = $db->loadObjectList();
+				$sql = 'select fields as planDetail from `#__js_res_record` where id in (SELECT field_value FROM `#__js_res_record_values` WHERE field_id=69 and record_id in ('.implode(',',$records).'))';
+				if (!empty($plan_ids)) {
+					$sql = 'select id,title,fields as planDetail from `#__js_res_record` where id in ('.implode(',',$plan_ids).')';
+				}
+				$db -> setQuery($sql);
+				$results['plans'] = $db->loadObjectList();
+				$sql = 'select id,pct from (select id from #__js_res_record where id in ('.implode(',',$records).')) a left join (SELECT subscription_id, pct FROM  `asg_subscription_usage` WHERE subscription_id in ('.implode(',',$records).')) b on a.id=b.subscription_id';
+				$db -> setQuery($sql);
+				$results['usage'] = $db->loadObjectList();
+				$returnValue[] = $results;
+	        }else {
+	        	$returnValue[] = array();
+	        }
+		}
+		
+		AjaxHelper::send($returnValue);
+	}
+	
+    /**
+     * get alert data from table asg_log 
+     */
+	public function alertMessages(){
+		$orgID  = $_POST["org_id"];
+		$comEmail = JComponentHelper::getComponent('com_emails');
+		$limitCount = $comEmail->params->get('show_alerts_count');
+		$limitCount = (empty($limitCount)||$limitCount<1)?0:$limitCount;
+		$curUser = JFactory::getUser();
+		
+		if (!empty($orgID)) {
+			$db = JFactory::getDbo();
+			$db -> setQuery('SELECT event, http_status_text, log_type, summary,event_status,entity_type, create_time FROM  `asg_logs` WHERE (event_status in ("Error","Partially Completed") and uid = '.$curUser->id.') or org_id ='.$orgID.' ORDER BY create_time desc LIMIT 0,'.$limitCount);
+			$result = $db->loadObjectList();
+			AjaxHelper::send($result);
+		} else {
+		    AjaxHelper::error("");
+		}
+	}
+	
+    /**
+     * send email to related people when a subscription created. 
+     */
 	public function subscriptionDidCreate() {
 	  $requester_uid   = $_POST["requester_uid"];
 	  $product_id      = $_POST["product_id"];
 	  $subscription_id = $_POST["subscription_id"];
 	  $_domain = DeveloperPortalApi::getHostUrl();
 	  $product_url      = $_domain.JRoute::_(Url::record($product_id));
-	  $subscription_url = $_domain.JRoute::_(Url::record($subscription_id));
+	  $subscription_url = $_domain.JRoute::_('index.php?option=com_cobalt&view=record&Itemid=140&id='.$subscription_id);
+
+
 	  
     //send email to joomla admin/organization admin,contacter/requester
 	  if ($requester_uid && $product_id && $subscription_id) {
@@ -459,39 +552,40 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
       }
     }
 
-    public function resendActiveEmail(){
-        JSession::checkToken('get') or jexit(JText::_('JINVALID_TOKEN'));
-        $app = JFactory::getApplication();
-        $url = '';
-        $url .= JURI::root().'index.php/userprofile?task=registration.activate&token=';
+  public function resendActiveEmail(){
+    JSession::checkToken('get') or jexit(JText::_('JINVALID_TOKEN'));
+    $app = JFactory::getApplication();
+    $url = '';
+    $url .= JURI::root().'index.php/component/users/?task=registration.activate&token=';
 
-        $res_id = $_REQUEST['id'];
-        $db = JFactory::getDbo();
-        $db->setQuery('select `field_value` from #__js_res_record_values where `field_id`=77 and `record_id`='.$res_id);
-        $result = $db->loadColumn();
-        if(empty($result))
-        {
-            $app->redirect( JRoute::_('index.php'), $msg='Actived failed!', $msgType='message');
-        }
 
-        $db->setQuery('select `id` from #__users where `id`="'.($result[0]?$result[0]:0).'"');
-        $user_id = $db->loadColumn();
-        if(empty($user_id))
-        {
-         $app->redirect( JRoute::_('index.php'), $msg='Actived failed!', $msgType='message');
-        }
-        
-        $user = &JFactory::getUser($user_id[0]);
-        $url .= $user->get('activation');
-
-        if(DeveloperPortalApi::resendActiveEmail($user_id[0], $url)){
-            $app->redirect( JRoute::_('index.php'), $msg='Success actived', $msgType='message');
-        }
-        else
-        {
-            $app->redirect( JRoute::_('index.php'), $msg='Actived failed!', $msgType='message');
-        } 
+    $res_id = $_REQUEST['id'];
+    $db = JFactory::getDbo();
+    $db->setQuery('select `field_value` from #__js_res_record_values where `field_id`=77 and `record_id`='.$res_id);
+    $result = $db->loadColumn();
+    if(empty($result))
+    {
+      $app->redirect( JRoute::_('index.php'), $msg=JText::_("RESEND_ACTIVATION_EMAIL_FAIL_NO_USER_ATTACHED"), $msgType='message');
     }
+
+    $db->setQuery('select `id` from #__users where `id`="'.($result[0]?$result[0]:0).'"');
+    $user_id = $db->loadColumn();
+    if(empty($user_id))
+    {
+      $app->redirect( JRoute::_('index.php'), $msg=JText::_("RESEND_ACTIVATION_EMAIL_FAIL_NO_USER_FOUND"), $msgType='message');
+    }
+
+    $user = &JFactory::getUser($user_id[0]);
+    $url .= $user->get('activation');
+
+    if(DeveloperPortalApi::resendActiveEmail($user_id[0], $url)){
+      $app->redirect( JRoute::_('index.php'), $msg=JText::_("RESEND_ACTIVATION_EMAIL_SUCCESS"), $msgType='message');
+    }
+    else
+    {
+      $app->redirect( JRoute::_('index.php'), $msg=JText::_("RESEND_ACTIVATION_EMAIL_FAIL_TECHNICAL"), $msgType='message');
+    }
+  }
 	
     public function asgLogs(){
 
@@ -501,9 +595,11 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
 
       $log_item->log_type             = $_POST['log_type'];
       $log_item->is_show              = 0;
+      $log_item->org_id               = 0;
       $log_item->http_status          = $_POST['status'];
       $log_item->http_status_text     = addslashes($_POST['statusText']);
       $log_item->http_response_text   = addslashes('');
+      $log_item->summary              = addslashes($_POST['summary']);
       $log_item->content              = addslashes($_POST['content']);
       $log_item->entity_type          = $_POST['entity_type'];
       $log_item->entity_id            = $_POST['entity_id'];
@@ -515,7 +611,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
       $db->insertObject("asg_logs",$log_item,'id') ? AjaxHelper::send("") : AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_4'));
 
     }
-    
+
     /**
      * Archive an object by setting the "published" column to 2.
      * 
@@ -583,7 +679,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
       $record         =       ItemsStore::getRecord($record_id);
 
 
-      if(!in_array(3, $user->getAuthorisedViewLevels()))
+      if(!in_array(8, $user->getAuthorisedGroups()))
       {
           AjaxHelper::error(JText::_('ENVIRONMENT_REMOVE_FROM_PRODUCT_NOPERMISSION'));
       }
@@ -606,8 +702,10 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
       }
 
       //Update the record fields
+	  $fieldsValue = str_replace('\\','\\\\',$fields);
+	  $fieldsValue = str_replace("'","\'",$fieldsValue);
       $query = $db->getQuery(true);
-      $query->update($db->quoteName('#__js_res_record'))->set($db->quoteName('fields') . "='" . addcslashes($record->fields) ."'")->where($db->quoteName('id') . '=' . $record_id);
+	  $query->update($db->quoteName('#__js_res_record'))->set($db->quoteName('fields') . "='" .  $fieldsValue ."'")->where($db->quoteName('id') . '=' . $record_id);
       $db->setQuery($query);
 
       if($db->query()){
@@ -631,14 +729,21 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
      * field_id 78  => status
      * field_id 112 => uuid
      */
-    public function insertSub()
+  public function insertSub()
     {
+
+      $applications = JRequest::getVar("selected_apps","");
+      if($applications){
+        $applications = explode(",", $applications);
+      }
+
       $db = JFactory::getDbo();
       $sub = new stdClass();
       $fields = new stdClass();
       $user = JFactory::getUser();
       $lang   = JFactory::getLanguage();
       
+
 
       $config =& JFactory::getConfig();
       $offset = $config->get('offset');
@@ -667,9 +772,10 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
       $sub->id          =   null;
       $sub->title       =   trim($title);
       $sub->published   =   1;
-      $sub->access      =   10;
+      $sub->access      =   8;
       $sub->user_id     =   129;
       $sub->section_id  =   6;
+      $sub->parent_id   =   0;
       $sub->ctime       =   JFactory::getDate()->toSql();
       $sub->extime      =   '';
       $sub->mtime       =   JFactory::getDate()->toSql();
@@ -688,16 +794,32 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
       $sub->hidden      =   0;
       $sub->access_key  =   md5(time() . $_SERVER['REMOTE_ADDR'] . $sub->title);
       $sub->fields      =   json_encode($fields);
+      $sub->fieldsdata  =   $sub->title . " " . $sub->alias;
+      $sub->categories  =   "[]";
+
      
-      // pre($fields->{'73'});
+      
       if($db->insertObject("#__js_res_record",$sub,'id'))
       {
         $record_id = CreateSubscriptionApi::getSubscription($sub->access_key);
         if($record_id){
           if(CreateSubscriptionApi::insertFields($record_id,$fields))
           {
-            $result = array("record_id"=>$record_id, "msg"=>JText::_('AUTO_CREATE_SUBSCRIPTION_SUCCESS'));
-            AjaxHelper::send($result,"result");
+            
+            if($applications){
+              if($old_subscriptions = TibcoTibco::updateApplicationForPlan($applications, $fields->{'114'}, $record_id)){
+              	$result = array("record_id"=>$record_id,"appIds"=>$applications,"app_old_subscriptions"=>$old_subscriptions,"msg"=>JText::_('AUTO_CREATE_SUBSCRIPTION_SUCCESS'));
+            	
+                AjaxHelper::send($result,"result");
+
+              }else{
+                AjaxHelper::error(JText::_('AUTO_CREATE_SUBSCRIPTION_FAILED'));
+              }
+
+            }else{
+              $result = array("record_id"=>$record_id, "msg"=>JText::_('AUTO_CREATE_SUBSCRIPTION_SUCCESS'));
+              AjaxHelper::send($result,"result");
+            }
           }
           else
           {
@@ -706,6 +828,10 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
         }
       }
     }
+     /**
+     * if the user login from Ping system, will build a form this user login to joomla with out password.
+     * @author Owen
+     */
     function answerPing(){
       $isSuccessFromPing = $_SESSION["isSuccessFromPing"];
       if ($isSuccessFromPing) {
@@ -733,6 +859,14 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
         $app->redirect('index.php/component/users/?view=login', JText::_("JGLOBAL_AUTH_FAIL"));
       }
     }
+    /**
+     * create user profile for Ping user.
+     * if user does not have cobalt user profile
+     *   1. will get or create an organization for this user.
+     *   2. will create cobalt user profile and bind to the created organization.
+     *   3. re-login. Because of the user need to active the organization permission in browser session.
+     * @author Owen
+     */
     function createPingUserProfile(){
       $org_name   = $_REQUEST["org_name"];
       $user = JFactory::getUser();
@@ -783,18 +917,385 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
 
       }else{
         $db = JFactory::getDbo();
-        $query = $db->getQuery(true);
-
-        $userGroupItem = new stdClass();
-        $userGroupItem->user_id = $user_id;
-        $userGroupItem->group_id = $group_id;
-        if($db->insertObject("#__user_usergroup_map",$userGroupItem,'id'))
-        {
-          AjaxHelper::send("");
-        }else{
-          AjaxHelper::error(JText::_('ATTACH_USER_TO_ORGANIZATION_FAILED1'));
+        $sql = 'select record_id from #__js_res_record_values where field_value='.$user_id;
+        $db->setQuery($sql);
+        if ($result = $db -> loadObjectList()) {
+          foreach($result as $record) {
+            $db->setQuery('delete from #__js_res_record where id='.$record->record_id);
+            $db -> execute();
+            $db->setQuery('delete from #__js_res_record_values where record_id='.$record->record_id);
+            $db -> execute();
+          }
+        }
+        if(in_array(12, $user->getAuthorisedGroups())) { // User has already joined an organization.
+          $db->setQuery('select * from #__user_usergroup_map where user_id='.$user_id);
+          if ($result = $db -> loadObjectList()) {
+            foreach($result as $record) {
+              if ($record->group_id > 12) {
+                $db->setQuery('update #__user_usergroup_map set group_id='.$group_id.' where user_id='.$user_id.' and group_id='.$record->group_id);
+                if($db -> execute()) {
+                  AjaxHelper::send("");
+                } else {
+                  AjaxHelper::error(JText::_('ATTACH_USER_TO_ORGANIZATION_FAILED1'));
+                }
+              }
+            }
+          }
+        } else {
+          $db->setQuery('insert into #__user_usergroup_map values ('.$user_id.','.$group_id.')');
+          if($db -> execute()) {
+            AjaxHelper::send("");
+          } else {
+            AjaxHelper::error(JText::_('ATTACH_USER_TO_ORGANIZATION_FAILED1'));
+          }
         }
       }
     }
+    
+    
+
+    /**
+
+     * update joomla user group for a user when his userprofile user group get's updated.
+
+     *
+
+     * @author Sagar
+
+     */
+
+    function updateUsersGroup()
+
+    {
+
+    
+
+    	$user_id = JRequest::getVar("userId",0);
+
+    	$org_name = JRequest::getVar("jform",array());
+
+    	$org_name = $org_name['user_group_name'];
+
+    	$usergrouptoupdate = JRequest::getVar("jform",array());
+
+    	$usergrouptoupdate = $usergrouptoupdate['old_user_group_name'];
+
+    	 
+
+    	 
+
+    	if(!$user_id || !$org_name)
+
+    	{
+
+    		AjaxHelper::error(JText::_('ATTACH_USER_TO_ORGANIZATION_NO_USER_ORGANIZATION'));
+
+    	}
+
+    
+
+    	$user = JFactory::getUser($user_id);
+
+    
+
+    	$old_group_id = DeveloperPortalApi::getOrganizationIdByName($usergrouptoupdate);
+
+    	$group_id = DeveloperPortalApi::getOrganizationIdByName($org_name);
+
+    	 
+
+    	if (!$group_id)
+
+    	{
+
+    		AjaxHelper::error(JText::_("ATTACH_USER_NO_ORGANIZATION_FOUND"));
+
+    
+
+    	}
+
+    	 
+
+    	if(in_array(12, $user->getAuthorisedGroups())) { // if User belongs to partner
+
+    		$db = JFactory::getDbo();
+
+    		$db->setQuery('select * from #__user_usergroup_map where user_id='.$user_id.' and group_id='.$old_group_id);
+
+    		if ($result = $db -> loadObjectList()) {
+
+    
+
+    			foreach($result as $record) {
+
+    				if ($record->group_id > 12) {
+
+    					$db->setQuery('update #__user_usergroup_map set group_id='.$group_id.' where user_id='.$user_id.' and group_id='.$record->group_id);
+
+    					if($db -> execute()) {
+
+    						AjaxHelper::send("success",'result');
+
+    					} else {
+
+    						AjaxHelper::error(JText::_('ATTACH_USER_TO_ORGANIZATION_FAILED1'));
+
+    					}
+
+    				}
+
+    			}
+
+    		}else {
+
+    			AjaxHelper::error(JText::_('USERGROUP_OUTOFSYNC'));
+
+    		}
+
+    	}
+
+    }
+    
+    /**
+     * send email when an organization has passed their alert threshold value
+     * Example: /index.php?option=com_cobalt&task=ajaxmore.noticeAPILimitUsageThreshold&orgId=220&subId=238&usedPercentage=75
+     * @author Owen
+     */
+    public function noticeAPILimitUsageThreshold() {
+      $org_id  = $_REQUEST["orgId"];
+      $sub_id  = $_REQUEST["subId"];
+      $usedPercentage  = $_REQUEST["usedPercentage"];
+      $_domain = DeveloperPortalApi::getHostUrl();
+      
+      $config = JFactory::getConfig();
+      if ($org_id && $sub_id) {
+        $sub_url          = $_domain.JRoute::_('index.php?option=com_cobalt&view=record&Itemid=140&id='.$sub_id);
+        $organization_url = $_domain.JRoute::_('index.php?option=com_cobalt&view=record&Itemid=140&id='.$org_id);
+//         $organization     = TibcoTibco::getOrganizationDetailById($org_id);
+//         $organization_percentage = $organization[0];
+        
+        $results = $this->_getEmailTemplateByAlias("api_limit_usage_threshold");
+        if ($results -> subject && $results -> content) {
+          $title = $results -> subject;
+          $content = $results -> content;
+          $title = str_replace("{SUBSCRIPTION_URL}", $sub_url, $title);
+          $content = str_replace("{ORGANIZATION_URL}", $organization_url, $content);
+          $content = str_replace("{SUBSCRIPTION_URL}", $sub_url, $content);
+          $content = str_replace("{USED_PERCENTAGE}", $usedPercentage, $content);
+  
+          $org_admin_email_group = array_merge(DeveloperPortalApi::getEmailsOfOrganizationAdmin($org_id), DeveloperPortalApi::getEmailsOfOrganizationContact($org_id));
+          if (DeveloperPortalApi::send_email($org_admin_email_group, $title, $content, $results -> isHTML)) {
+            $result = array(
+              'mail_to_list' => $org_admin_email_group,                
+              'mail_content' => $content,                
+            );
+            AjaxHelper::send($result, "result");
+          }else{
+            AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_2'));
+          }
+        }
+      }else{
+        AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_4'));
+      }
+    }
+    /**
+     * send email when they have completely used up their quota.
+     * Example: /index.php?option=com_cobalt&task=ajaxmore.noticeAPILimitUsageFull&orgId=220&subId=238
+     * @author Owen
+     */
+    public function noticeAPILimitUsageFull() {
+      $org_id  = $_REQUEST["orgId"];
+      $sub_id  = $_REQUEST["subId"];
+      $_domain = DeveloperPortalApi::getHostUrl();
+      
+      $config = JFactory::getConfig();
+      if ($org_id && $sub_id) {
+        $sub_url          = $_domain.JRoute::_('index.php?option=com_cobalt&view=record&Itemid=140&id='.$sub_id);
+        $organization_url = $_domain.JRoute::_('index.php?option=com_cobalt&view=record&Itemid=140&id='.$org_id);
+//         $organization     = TibcoTibco::getOrganizationDetailById($org_id);
+//         $organization_percentage = $organization[0];
+    
+        $results = $this->_getEmailTemplateByAlias("api_limit_usage_full");
+        if ($results -> subject && $results -> content) {
+          $title = $results -> subject;
+          $content = $results -> content;
+          $title = str_replace("{SUBSCRIPTION_URL}", $sub_url, $title);
+          $content = str_replace("{ORGANIZATION_URL}", $organization_url, $content);
+          $content = str_replace("{SUBSCRIPTION_URL}", $sub_url, $content);
+    
+          $org_admin_email_group = array_merge(DeveloperPortalApi::getEmailsOfOrganizationAdmin($org_id), DeveloperPortalApi::getEmailsOfOrganizationContact($org_id));
+          if (DeveloperPortalApi::send_email($org_admin_email_group, $title, $content, $results -> isHTML)) {
+            $result = array(
+              'mail_to_list' => $org_admin_email_group,                
+              'mail_content' => $content,                
+            );
+            AjaxHelper::send($result, "result");
+          }else{
+            AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_2'));
+          }
+        }
+      }else{
+        AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_4'));
+      }
+    }
+    /**
+     * change user's password
+     * Example: /index.php?option=com_cobalt&task=ajaxmore.changePassword&old_password=charper&new_password=charper_new
+     * @author Owen
+     */
+    public function changePassword() {
+      $old_password  = $_REQUEST["old_password"];
+      $new_password  = $_REQUEST["new_password"];
+    
+      $user = JFactory::getUser($user_id);
+
+      if ($old_password && $new_password) {
+        // below confirm password logic is as same as "plugins/authentication/joomla/joomla.php, onUserAuthenticate()" 
+        $db		= JFactory::getDbo();
+        $query	= $db->getQuery(true)
+        ->select('id, password')
+        ->from('#__users')
+        ->where('id=' . $user->id);
+        
+        $db->setQuery($query);
+        $result = $db->loadObject();
+        
+        if ($result) {
+          $parts	= explode(':', $result->password);
+          $crypt	= $parts[0];
+          $salt	= @$parts[1];
+          $testcrypt = JUserHelper::getCryptedPassword($old_password, $salt);
+        
+          //if the old password is correct.
+          if ($crypt == $testcrypt){
+            // Generate the new password hash.
+            $salt = JUserHelper::genRandomPassword(32);
+            $crypted = JUserHelper::getCryptedPassword($new_password, $salt);
+            $new_password_hash = $crypted . ':' . $salt;
+            
+            $sql = 'UPDATE #__users SET password="'.$new_password_hash.'" WHERE id='.$user->id;
+            $db->setQuery($sql);
+            $db -> execute();
+            AjaxHelper::send("");
+          }else{
+            AjaxHelper::error(JText::_('ERROR_CHANGE_PASSWORD'));
+          }
+        }else{
+          AjaxHelper::error(JText::_('ERROR_CHANGE_PASSWORD'));
+        }
+      }else{
+        AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_4'));
+      }
+    }
+
+    public function approvepublish() {
+      $product_id  = $_REQUEST["record_id"];
+      $flag = (boolean) $_REQUEST["is_to_show"];
+      $flag = (int) !$flag;
+
+      $db = JFactory::getDbo();
+      $query = $db->getQuery(true);
+      $query->update($db->quoteName('asg_product_show_map'))->set($db->quoteName('is_show') . '="' . $flag . '"')->where($db->quoteName('product_id') . '=' . $product_id);
+      $db->setQuery($query);
+      $flag = $db->query();
+      if($flag){
+        AjaxHelper::send("");
+      }else{
+        AjaxHelper::error(JText::_('failed!'));
+      }
+    }
+
+    public function checkvalidate() {
+      if(JRequest::getVar("code",'') == $_SESSION['code']){
+        AjaxHelper::send("");
+      }else{
+        AjaxHelper::error(JText::_(''));
+      }
+      
+    }
+
+    public function checkEnvironmentsUsedByProduct(){
+       $origEnvs = explode(",", JRequest::getVar('origEnvs', ''));
+       $currEnvs = explode(",", JRequest::getVar('currEnvs', ''));
+       $record_id = JRequest::getVar('record_id', 0);
+
+
+       $diff = array_intersect($origEnvs,$currEnvs);
+       $deletedEnvs = array();
+
+
+       if(count($diff)<count($origEnvs))
+       {
+        $deletedEnvs = array_diff($origEnvs, $diff);
+       }
+
+       $db = JFactory::getDbo();
+       $query = $db->getQuery(true);
+
+       $query->select("e.field_value AS product_id, e.record_id AS environment_id")->from("#__js_res_record_values AS e")
+             ->where("e.record_id IN (" . implode(",", $deletedEnvs) . ")")
+             ->where("e.field_id = 34")
+             ->where('e.field_value IN ( SELECT a.field_value from #__js_res_record_values AS a where a.field_id = 6 and a.record_id = ' . $record_id . ')' );
+
+      $db->setQuery($query);
+
+      $result = $db->loadObjectList();
+
+      if(count($result)){
+        $errorMsg = array();
+        foreach ($result as $key => $envInProduct) {
+          $errMsg = JText::sprintf("ENVIRONMENT_USED_BY_THE_PRODUCT",ItemsStore::getRecord($envInProduct->environment_id)->title,ItemsStore::getRecord($envInProduct->product_id)->title);    
+          $errorMsg[] = $errMsg;
+        }
+        AjaxHelper::error(implode("<br/>", $errorMsg));
+      }else{
+        AjaxHelper::send("");
+      }       
+    }
+
+    public function resetWorkThrough(){
+      $user_id = JFactory::getUser()->id;
+      $db = JFactory::getDbo();
+      $query = $db->getQuery(true);
+
+      $app = JFactory::getApplication();
+      // $return = $_POST['return'];
+      $return = JRequest::getVar("return",base64_encode(JRoute::_("index.php")),"post");
+      $return = base64_decode($return);
+
+
+      $query->delete()->from("#__user_profiles")->where($db->quoteName('user_id') . '=' . $user_id . ' and ' . $db->quoteName('profile_key') . 'IN (' . $db->quote("guide.show") . " , " . $db->quote("guide.step") . ")");
+
+      $db->setQuery($query);
+      $db->query();
+
+      $userProfile_guide_flag = new stdClass();
+      $userProfile_guide_flag->user_id = $user_id;
+      $userProfile_guide_flag->profile_key = "guide.show";
+      $userProfile_guide_flag->profile_value = 1;
+
+      $userProfile_guide_step = new stdClass();
+      $userProfile_guide_step->user_id = $user_id;
+      $userProfile_guide_step->profile_key = "guide.step";
+      $userProfile_guide_step->profile_value = 1;
+
+      $db->insertObject("#__user_profiles",$userProfile_guide_flag,'id');
+      $db->insertObject("#__user_profiles",$userProfile_guide_step,'id');
+
+      if($db->getErrorNum())
+      {
+        $app->redirect($return, JText::_('RESET_WORK_THROUGH_FAILED'));
+      }else{
+      	$cookieName= $user_id."_guide_step";
+      	if (isset($_COOKIE[$cookieName]))
+      	{
+      		unset($_COOKIE[$cookieName]);
+      		setcookie($cookieName, "", time()-3600, '/');
+      	}
+      	 
+        $app->redirect($return, JText::_('RESET_WORK_THROUGH_SUCCESSFULLY'));
+      }
+    }
+
 }
 ?>

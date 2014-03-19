@@ -14,9 +14,9 @@
 .get-started-page .trial-guide{
 	margin-top: -40px;
 	z-index: 10;
-	position: absolute;
+	position: relative;
 	padding-left: 70px;
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 .get-started-page .trial-guide a {
     color: #006699;
@@ -158,3 +158,14 @@
     padding: 0;
 }
 
+.start-button{
+	margin-left: 110px;
+    margin-top: -150px;
+    position: relative;
+    z-index: 10;
+	padding:8px 17px;
+}
+
+a.start-button:after{
+  content: " \0000a0\25ba";
+}

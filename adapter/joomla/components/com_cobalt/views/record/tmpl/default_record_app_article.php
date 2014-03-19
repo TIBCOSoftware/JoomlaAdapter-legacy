@@ -17,6 +17,8 @@ defined('_JEXEC') or die();
 require_once JPATH_BASE . "/includes/api.php";
 require_once JPATH_BASE . "/components/com_cobalt/library/php/helpers/developerportal.php";
 $item = $this->item;
+
+$app_id = $item->id;
 $params = $this->tmpl_params['record'];
 $icons = array();
 $category = array();
@@ -27,6 +29,7 @@ $orgId = DeveloperPortalApi::valueForKeyFromJson($jsonStr, 60, $this->item->id);
 $subscriptions = DeveloperPortalApi::subscriptionsOfOrgnazions($orgId);
 $groupedItems = DeveloperPortalApi::classify_subscriptions($subscriptions);
 $ownedSubscriptions = DeveloperPortalApi::subscriptionsInApplication($this->item->id);
+$ownedProducts = DeveloperPortalApi::getProductIdsInApplication($this->item->id);
 $started = FALSE;
 $i = $o = 0;
 $fields = array();
@@ -36,6 +39,15 @@ $app_info = DeveloperPortalApi::getApplicationInformation($this->item->id);
 $app_oauth = DeveloperPortalApi::getAppOAuth($this->item->id);
 $user = JFactory::getUser();
 $active_key = count($app_oauth) > 0 && $app_oauth[0]->use_oauth == 1 ? DeveloperPortalApi::getActiveOAuthKeyOfApp($this->item->id) : DeveloperPortalApi::getActiveKeyOfApplication($this->item->id);
+
+$app = JFactory::getApplication();
+$pathway  = $app->getPathway();
+$positions    = $pathway->getPathWay();
+if(count($positions)){
+  $positions = $positions[0];
+  $positions->name = stripslashes(htmlspecialchars($positions->name, ENT_COMPAT, 'UTF-8'));
+  $positions->link = JRoute::_($positions->link);
+}
 ?>
 <style>
 <?php echo $params->get('tmpl_params.css');?>
@@ -114,16 +126,55 @@ if($params->get('tmpl_core.item_follow_num'))
 		width:80px;
 		text-align: left;
 	}
-
+	
+	#prod-item-title{
+		float:left;
+	}
+	
+	#prod-item-title+span{
+		margin-left:10px;
+		font-weight:normal;
+	}
+	.requestKeyBtn{
+		float:left;
+		margin-left:9px;
+		margin-top:9px;
+	}
+	.toolbar{
+		height:45px;
+		margin-top:10px;
+		background-color:#eee;
+		margin-bottom:20px;
+		-webkit-box-shadow: inset 0 0 20px rgba(0,0,0,.1);
+		-moz-box-shadow: inset 0 0 20px rgba(0,0,0,.1);
+		box-shadow: inset 0 0 20px rgba(0,0,0,.1);
+	}
+	.toolbar .right-button{
+		margin-top:12px;
+		margin-right:10px;
+	}
+	.breadcrumb-app{
+		color:#006699;
+		margin:10px;
+	}
 </style>
-
+<span class="pull-left breadcrumb-app">Applications | <?php echo $item->title; ?></span>
+<div class="clearfix"></div>
 <article class="<?php echo $this->appParams->get('pageclass_sfx')?><?php if($item->featured) echo ' article-featured' ?>">
     <div class="app-details">
+	<div class="toolbar">
+	<button class="btn requestKeyBtn" <?php echo 'onclick="DeveloperPortal.requestKey(' . $this->item->id . ', ' . makeArrayString($old_keys) . ', ' . count($active_key) . ', function() {window.location.reload();}, function() {window.location.reload();})"'; ?>>Request Key</button>
+	<?php if($this->user->get('isRoot')):?>
+		<button class="btn requestKeyBtn btn-resync" onclick="DeveloperPortal.resync('<?php echo $this->item->id; ?>', 'Application');"><?php echo JText::_('RESYNC');?></button>
+    <div class="hidden"><div id="system-message" class="alert alert-info"><a class="close" data-dismiss="alert">&#215;</a><h4 class="alert-heading"><?php echo JText::_('INFO');?></h4><div><p><?php echo JText::_('RESYNC_COMPLETE');?></p></div></div></div>
+	<?php endif;?>
+	
 	<?php if(!$this->print):?>
-		<div class="pull-right controls">
+		<div class="pull-right controls right-button">
 			<div class="btn-group">
 				<?php if($this->user->get('id')):?>
-       						<button data-toggle="dropdown" class="btn">Action</button>
+						<a href="#" data-toggle="dropdown" class="dropdown-toggle btn-mini">
+								<?php echo HTMLFormatHelper::icon('gear.png');  ?></a>
 						<ul class="dropdown-menu" style="margin-left:-90px;">
 							<?php if($item->controls):?>
 							<?php echo DeveloperPortalApi::list_controls($item->controls, $tasks_to_hide, $this->item->id, $this->item->type_id); ?>
@@ -137,32 +188,28 @@ if($params->get('tmpl_core.item_follow_num'))
 							<li><?php echo HTMLFormatHelper::repost($item, $this->section);?></li>
 						</ul>
 				<?php endif;?>
-                       <button class="btn" <?php echo count($ownedSubscriptions) > 0 ? 'onclick="DeveloperPortal.requestKey(' . $this->item->id . ', ' . makeArrayString($old_keys) . ', ' . count($active_key) . ', function() {window.location.reload();}, function() {window.location.reload();})"' : 'disabled="disabled"'; ?>>Request Key</button>
 			</div>
 		</div>
 	<?php else:?>
-		<div class="pull-right controls">
+		<div class="pull-right controls right-button">
 			<a href="#" class="btn btn-mini" rel="tooltip" data-original-title="<?php echo JText::_('CPRINT');?>" onclick="window.print();return false;"><?php echo HTMLFormatHelper::icon('printer.png');  ?></a>
 		</div>
 	<?php endif;?>
-        <h3 class="pull-left">Applications > <?php echo $item->title; ?></h3>
-	<div class="clearfix"></div>
+    </div>
+
+		<div class="clearfix"></div>
 
         <div class="detail_panel">
             <div class="details_panel_left">
-            <div class="app-image-box primary-color<?php echo rand(1,7); ?>">
-                <?php echo $item->fields_by_id[119]->result;?>
-                <div class="newsflash-title"><?php echo $item->title; ?></div>
-            </div>
-            <div class="app-basic-details">
-                Partner: <span class="value"><?php echo $app_info[0]->org; ?> </span><br/>
-                Contact: <span class="value"><?php echo $app_info[0]->contact; ?></span>
-            </div>
+				<div class="app-image-box primary-color<?php echo rand(1,7); ?>">
+                <?php echo $item->fields_by_id[119]->result;?><br/>
+                <div class="newsflash-title" title="<?php echo $item->title; ?>"><?php echo $item->title; ?></div>
+            	</div>
             </div>
             <div class="details_panel_right">
             <?php if(count($app_oauth) == 0 || $app_oauth[0]->use_oauth == -1): ?>
     			<div class="keyinfo ">
-                    <span class="k_title">API key:</span><span id="span_api_key"><?php echo (isset($active_key[0]->apiKey) ? $active_key[0]->apiKey : JText::_("NO_ACTIVE_KEY")); ?></span>
+                    <span class="k_title">API key:</span><span id="span_api_key"><?php echo (isset($active_key[0]->apiKey) ? $active_key[0]->apiKey : JText::_("NO_ACTIVE_KEY")); ?></span><a href="javascript:void(0);" id="copyAction" data-clipboard-target="span_api_key" data-clipboard-text="API Key"><?php echo JText::_('APPLICATION_COPY_ACTION'); ?></a>
                 </div>
             <?php else: ?>
           <div class="clientinfo">
@@ -173,13 +220,21 @@ if($params->get('tmpl_core.item_follow_num'))
      				<span class="k_title">Client type:</span><span class="value">xxxxxx</span> -->
      			</div>
      		<?php endif; ?>
+			</div>
+			<div class="clearfix"></div>
+            <div class="app-basic-details">
+				<div>
+					Partner: <span class="value"><?php echo $app_info[0]->org; ?> </span><br/>
+					Contact: <span class="value"><?php echo $app_info[0]->contact; ?></span>
+				</div>
     			<div class="app-desc-full">
     				<?php echo $item->fields_by_id[57]->result; ?>
     			</div>
-			</div>
+            </div>
         </div>
     </div>
     <!--Scopes list goes here-->
+	<div style="display:none;">
     <?php $scopes = $item->fields_by_id['125'];?>
     <?php if($scopes):?>
       <?php if($scopes->params->get('core.show_lable') > 1):?>
@@ -190,97 +245,184 @@ if($params->get('tmpl_core.item_follow_num'))
       <?php endif;?>
       <?php echo $scopes->result; ?>
     <?php endif;?>
+	</div>
+	
+	<style>
+	.app-products-row{
+		padding:0;
+		width:100%;
+		border:none;
+		float:none;
+	}
+	
+	.app-products-row:last-child{
+		border-bottom:2px solid #ababab;
+	}
+	
+	.app-products-row div{
+		margin:0;
+		height:100px;
+	}
+	
+	.app-products-row div:first-child{
+		float:left;
+		width:25%;
+	}
+	
+	.app-products-row div:first-child .app-prod-title{
+		overflow:hidden;
+		border-top:2px solid #ababab;
+		width:100%;
+		margin:0 10px 0 0;
+	}
+	
+	.app-products-row div:first-child .app-prod-title div:first-child{
+		float:left;
+		width:30%;
+		height:100px;
+		overflow:hidden;
+		line-height:100px;
+		text-align:center;
+	}
+	
+	.app-products-row div:first-child .app-prod-title div:last-child{
+		border:none;
+		float:right;
+		width:65%;
+		overflow:hidden;
+	}
+	
+	.app-products-row div:nth-child(2){
+		float:right;
+		width:72%;
+	}
+	
+	.app-products-row div:nth-child(2) div{
+		border-top:2px solid #ababab;
+		width:100%;
+	}
+	
+	.app-products-row div:nth-child(2) div span{
+		display:inline-block;
+		height:100%;
+		float:left;
+	}
+	
+	.app-products-row div:nth-child(2) div span:first-child{
+		width:40%;
+	}
+	
+	.app-products-row div:nth-child(2) div span:last-child{
+		width:60%;
+	}
+	
+	p.app-prod-detail{
+		height:40px;
+		line-height:20px;
+		overflow:hidden;
+		font-size:12px;
+		color:#666;
+	}
+	
+	#products-list p span{
+		text-transform:uppercase;
+		font-size:14px;
+		color:#777;
+		font-weight:bold;
+	}
+	
+	#products-list p span:last-child{
+		display:inline-block;
+		float:right;
+		width:72%;
+		height:100%;
+	}
+	</style>
 
 	<div id="list_panel">
 		<a id="edit_products" class="btn pull-right" href="<?php echo JURI::root(); ?>index.php/applications?task=form.edit&amp;id=<?php echo $this->item->id; ?>:<?php echo urlencode($this->item->title); ?>">Edit</a>
 		<h3>Products used by '<?php echo $item->title; ?>'</h3>
 		<div id="products-list">
-					<?php foreach($groupedItems as $key => $value): ?>
-						<?php if (!in_array($key,$this->item->fields[63])): ?>
-							<?php continue;?>
-						<?php endif ?>
-						<div class="inline-documents" style="width:100%;">
-							<div class="inline-doc">
-                                <?php
-                                    $prod = ItemsStore::getRecord($key);
-                                    $prod_url = JRoute::_(Url::record($prod));
-                                ?>
-								<h2><span id="prod-item-title"><?php echo CobaltApi::getArticleLink($key); ?></span></h2><h3><span><a href="<?php echo $prod_url; ?>">view</a></span></h3>
-								<div class="inline-doc-content">
-									<table  class="table app-products-table">
-										<thead>
-											<tr>
-												<th>Plan</th>
-												<th>Detail</th>
-												<th>Status</th>
-												<th>Enabled</th>
-											</tr>
-										</thead>
-										<tbody>
-											<?php foreach($value as $item): ?>
-												<?php
-													$plan = DeveloperPortalApi::getRecordById(DeveloperPortalApi::valueForKeyFromJson("", 69, $item->id));
-													$limit = DeveloperPortalApi::valueForKeyFromJson($plan->fields,80);
-													$burst = DeveloperPortalApi::valueForKeyFromJson($plan->fields,79);
-													$i ++;
-												?>
-											<tr>
-												<td>
-													<?php echo $plan->title; ?>
-												</td>
-												<td>
-													<p><?php echo $limit.' per second<br/>'.$burst.' per day'; ?></p>
-												</td>
-												<td>
-													<?php
-													$status = DeveloperPortalApi::valueForKeyFromJson("", 78, $item->id);
-													$endTime = DeveloperPortalApi::valueForKeyFromJson($item->fields,72);
-													if (!empty($endTime)) {
-														$curTimestamp = mktime(0,0,0,date("m"),date("d"),date("Y"));
-														$desTimestamp = mktime(0,0,0,((int)substr($endTime[0],5,2)),((int)substr($endTime[0],8,2)),((int)substr($endTime[0],0,4)));
-														if($curTimestamp-$desTimestamp>0){
-															$status = "Expired";
-														}
-													}
-													echo $status;
-													?>
-												</td>
-												<td>
-													<?php echo in_array($item->id,$ownedSubscriptions)?'&radic;':'&nbsp;'; ?>
-												</td>
-											</tr>
-											<?php endforeach; ?>
-										</tbody>
-									</table>
+			<p><span><?php echo JText::_('APPLICATION_PRODUCTS_TITLE_HEADER'); ?></span><span><?php echo JText::_('APPLICATION_PLANS_TITLE_HEADER'); ?></span></p>
+		<?php if (count($ownedProducts)==0): ?>
+			<div class="app-products-row">
+				<div><div class="app-prod-title"></div></div>
+				<div><div><h5><?php echo JText::_("EDIT_PRODUCT_NOTE");?></h5></div></div>
+				<div class="clearfix"></div>
+			</div>
+		</div>
+		<?php endif ?>
+			<?php foreach($groupedItems as $key => $value): ?>
+				<?php if (!in_array($key,$ownedProducts)): ?>
+					<?php continue;?>
+				<?php endif ?>
+				<div class="app-products-row">
+                            <?php
+                                $prod = ItemsStore::getRecord($key);
+                                $prod_url = Url::record($key);
+								$thumb = DeveloperPortalApi::valueForKeyFromJson($prod->fields,3);
+                            ?>
+							<div>
+								<div class="app-prod-title">
+									<div>
+										<?php echo "<a href='".$prod_url."'>"."<img src='".JURI::base().$thumb->image."' />"."</a>"; ?>
+									</div>
+									<div>
+										<h5>
+											<?php echo "<a href='".$prod_url."&app_id=".$app_id."'>".$prod->title."</a>"; ?>
+										</h5>
+										<p class="app-prod-detail"><?php echo $prod->fieldsdata; ?></p>
+									</div>
 								</div>
 							</div>
+							<div>
+								<?php foreach($value as $item): ?>
+									<?php if (!in_array($item->id,$ownedSubscriptions)): ?>
+										<?php continue; ?>
+									<?php endif ?>
+									<?php
+										$plan = DeveloperPortalApi::getRecordById(DeveloperPortalApi::valueForKeyFromJson("", 69, $item->id));
+										$limit = DeveloperPortalApi::valueForKeyFromJson($plan->fields,80);
+										$burst = DeveloperPortalApi::valueForKeyFromJson($plan->fields,79);
+										$i ++;
+									?>		
+								<div>
+									<span>
+										<h5 style="font-weight:normal"><?php echo $plan->title; ?></h5>
+										<p class="app-prod-detail"><?php echo 'Daily limit: '.$limit.JText::_('DASHBOARD_PLAN_UNIT_DAY').' <br/>Burst limit: '.$burst.JText::_('DASHBOARD_PLAN_UNIT_SECOND'); ?></p>
+									</span>
+									<span>
+										<h5 style="font-weight:normal">
+											<?php echo DeveloperPortalApi::valueForKeyFromJson($plan->fields,120).' <small style="color:#666;">'.JText::_('APPLICATION_UNIT_MONTH').'</small>'; ?>
+										</h5>
+										<p class="app-prod-detail">
+										<?php
+										$statusValue = DeveloperPortalApi::valueForKeyFromJson($item->fields, 78);
+										$startTime = DeveloperPortalApi::valueForKeyFromJson($item->fields, 71);
+										$endTime = DeveloperPortalApi::valueForKeyFromJson($item->fields, 72);
+										$status = $statusValue[0];
+										if (!empty($endTime)) {
+											$curTimestamp = mktime(0,0,0,date("m"),date("d"),date("Y"));
+											$startTimestamp = mktime(0,0,0,((int)substr($startTime[0],5,2)),((int)substr($startTime[0],8,2)),((int)substr($startTime[0],0,4)));
+											$desTimestamp = mktime(0,0,0,((int)substr($endTime[0],5,2)),((int)substr($endTime[0],8,2)),((int)substr($endTime[0],0,4)));
+											if($curTimestamp-$desTimestamp>0){
+												$status = "Expired";
+											}
+										
+											if ($startTimestamp-$curTimestamp>0){
+												$status = "Inactive";
+											}
+										}
+										echo $status;
+										?>
+										</p>
+									</span>
+								</div>
+								<?php endforeach; ?>
+							</div>
+							<div class="clearfix"></div>
 						</div>
-					<?php endforeach; ?>
-					<?php if (count($this->item->fields[63])==0): ?>
-						<div class="inline-doc">
-							<h2><span class="prod-item-title"><a href="javascript:void(0);"><?php echo JText::_("EDIT_PRODUCT_NOTE");?></a></span></h2>
-						</div>
-					<?php endif ?>
-					<div class="clearfix"></div>
-					<style>
-						.inline-doc h2{
-							cursor:pointer;
-							padding-left:10px;
-							font-size:14px;
-						}
-					</style>
-			    	<script type="text/javascript">
-			        (function ($) {
-			            $('.inline-doc h2').click(function (e) {
-			                if($(this).parent().hasClass("active")) {
-			                    $(this).parent().removeClass("active");
-			                }else {
-			                    $(this).parent().addClass("active");
-			                }
-			            });
-			        })(jQuery);
-			    	</script>
-				</div>
+			<?php endforeach; ?>
 	</div>
 
 
@@ -306,7 +448,6 @@ if($params->get('tmpl_core.item_follow_num'))
               var editAppHref = editAppLink.attr('href'), ret = editAppHref.substr(editAppHref.indexOf('return'));
               jQuery('#edit_products').attr('href', editAppHref + '&' + ret + '#2');
           }
-		  $('#prod-item-title a').attr('href','javascript:void(0)');
         });
       if(!$.trim($(".dropdown-menu").text()))
       {
@@ -320,10 +461,10 @@ if($params->get('tmpl_core.item_follow_num'))
       if(!(in_array(7, $user->getAuthorisedGroups()) || in_array(8, $user->getAuthorisedGroups())) && !in_array($app_organization, $belong_to_organization)):
       ?>
         $("[data-toggle='dropdown']").remove();
-      <?php endif; ?>
+      <?php endif; ?>      
 
+	
     }(jQuery));
-
 </script>
 
 <?php

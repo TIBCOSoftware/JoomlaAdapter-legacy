@@ -94,7 +94,7 @@ $current_user = JFactory::getUser($this->input->getInt('user_id', $this->user->g
 </div>
 
 <!--  Show description of the current category or section -->
-<?php if($this->description):?>
+<?php if(!$this->user->id && $this->description):?>
   <?php echo preg_replace("/<\/p>/","</div>",preg_replace("/<p>/","<div class=\"section-description\">",$this->description,1),1); ?>
 <?php endif;?>
 
@@ -106,9 +106,15 @@ $current_user = JFactory::getUser($this->input->getInt('user_id', $this->user->g
         <?php $has_allowed_types = false; ?>
         <?php foreach ($this->postbuttons AS $type)
               {
-                if(in_array($type->id, $type_ids_to_create)) {
+               if(in_array($type->id, $type_ids_to_create)) {
                       $has_allowed_types=true;
-                      echo '<a class="btn new-recorder pull-left"  href="'.Url::add($this->section, $type, $this->category).'">'.JText::_('CREATE_NEW').JText::_($type->name). '</a>';
+                      //check for application and switch create button copy to register
+                      if($type->id ==9){
+                      	$createButtonText=  JText::_('REGISTER_APP').JText::_($type->name);
+                      }else{ 
+                        $createButtonText=  JText::_('CREATE_NEW').JText::_($type->name);
+                      }
+                      echo '<a class="btn new-recorder pull-left"  href="'.Url::add($this->section, $type, $this->category).'">'.$createButtonText. '</a>';
                 }
               }
         ?>
@@ -116,7 +122,7 @@ $current_user = JFactory::getUser($this->input->getInt('user_id', $this->user->g
       <?php if(in_array($markup->get('menu.menu_ordering'), $this->user->getAuthorisedViewLevels()) && $this->items):?>
         <div class="dropdown order-by  pull-right">
           <a href="#" class="dropdown-toggle btn" data-toggle="dropdown">
-            <?php echo JText::_($markup->get('menu.menu_ordering_label', 'Sort By'))?>
+            <!-- <?php echo JText::_($markup->get('menu.menu_ordering_label', 'Sort By'))?> -->
           </a>
           <ul class="dropdown-menu">
             <?php if(@$this->items[0]->searchresult):?>
@@ -179,7 +185,7 @@ $current_user = JFactory::getUser($this->input->getInt('user_id', $this->user->g
           <span style="display: none;">Search box</span>
           <?php if(in_array($markup->get('filters.show_search'), $this->user->getAuthorisedViewLevels())):?>
           	
-            <input type="text" style="max-width: 300px; min-width: 50px;" placeholder="<?php echo JText::sprintf('ASG_CSEARCHPLACEHOLDER', $this->escape($this->title));  ?>" name="filter_search" value="<?php echo $this->state->get('records.search');?>" />
+            <input type="text" style="max-width: 300px; min-width: 50px;" placeholder="<?php echo JText::sprintf('ASG_CSEARCHPLACEHOLDER', $this->escape($this->title));  ?>" name="filter_search" value="<?php echo  htmlspecialchars($this->state->get('records.search'));?>" />
             <button  class="icon icon-search"></button>
             <a id="reset-search-keyword" style="position:relative;display:none; left:-25px;cursor:pointer;"><img src="<?php echo JURI::root(TRUE)?>/media/mint/icons/16/cross-circle.png" alt="<?php echo JText::_('P_STOP')?>" align="absmiddle"></a>
             <script type="text/javascript">

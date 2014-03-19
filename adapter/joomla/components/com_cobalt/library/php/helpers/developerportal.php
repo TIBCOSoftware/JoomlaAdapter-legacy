@@ -36,6 +36,34 @@ class DeveloperPortalFormatHelper {
             $record->id, $params->get('tmpl_core.bookmark_icons', 'star'), JRequest::getInt('section_id'), $out);
     }
     
+
+    /*
+     * Edit by Hank 2013.09.04
+     * Used for specified 'list' style in some template
+     */
+    public static function approve_publish($record, $is_to_show)
+    {
+        $user = JFactory::getUser();
+
+        if(! $user->get('id'))
+        {
+            return NULL;
+        }
+
+
+        $file = JURI::root() . 'media/mint/icons/16/auction-hammer.png';
+        $alt = ($record->bookmarked ? JText::_('CMSG_REMOVEBOOKMARK') : JText::_('CMSG_ADDBOOKMARK'));
+        $attr = array('data-original-title' => $alt, 'rel' => 'tooltip', 'id' => 'bookmark_' . $record->id);
+        $out = JHtml::image($file, $alt, $attr);
+        $result = '';
+        if($is_to_show){
+            $result = sprintf('<a href="javascript:void(0)" onclick="DeveloperPortal.approvePublish('.$record->id.',1)">%s Show</a>', $out);
+        }else{
+            $result = sprintf('<a href="javascript:void(0)" onclick="DeveloperPortal.approvePublish('.$record->id.',0)">%s Hide</a>', $out);
+        }
+        return $result;
+    }
+
     public static function follow_list($record, $section)
     {
         $user = JFactory::getUser();

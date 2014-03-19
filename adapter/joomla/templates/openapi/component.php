@@ -31,5 +31,13 @@ JHtmlBootstrap::loadCss($includeMaincss = false, $this->direction);
 <body class="contentpane modal">
 	<jdoc:include type="message" />
 	<jdoc:include type="component" />
+		<script>
+	jQuery(document).ready(function(){
+		jQuery("form").live("submit",function(){
+			jQuery(this).find("input[type='submit']").attr('disabled',true);
+			jQuery(this).find("input[type='submit']").val('<?php echo JText::_('DASHBOARD_PLACEHOLDER_LOADING');?>');
+	 	});
+	});
+	</script>
 </body>
 </html>

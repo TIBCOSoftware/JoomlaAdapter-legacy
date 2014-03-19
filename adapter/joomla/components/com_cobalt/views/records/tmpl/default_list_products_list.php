@@ -13,6 +13,7 @@
      * @license   GNU/GPL http://www.gnu.org/copyleft/gpl.html
      */
     defined('_JEXEC') or die;
+    include_once JPATH_BASE . "/includes/api.php"; 
 
     $k = $p1 = $j = $c = 0;
     $max_cat_num = 5;
@@ -28,11 +29,21 @@
     JHtml::_('dropdown.init');
 
     $this->items = array_filter($this->items, "getProductRecords");
-    usort($this->items, "cmp");
+    $user_org = DeveloperPortalApi::getUserOrganization();
+    $user_org = $user_org[0];
+
+    $isAdmin = in_array($this->user->id, DeveloperPortalApi::getIdsOfOrganizationAdmin(68)) || in_array(7, $this->user->getAuthorisedGroups()) || in_array(8, $this->user->getAuthorisedGroups());
+
+    foreach ($this->items as $key => $item) {
+        $toShow = TibcoTibco::getFlagForShow($item->id);
+        if($toShow && !$isAdmin){
+            unset($this->items[$key]);
+        }
+    }
     makeListForTab($this->items, $tab_list);
 
 ?>
-    <div class="products_cat_tab">
+    <div class="products_cat_tab hidden">
         <ul class="nav nav-tabs" id="myTab">
             <?php foreach (array_keys($tab_list) as $key => $val): ?>
                 <?php
@@ -55,7 +66,7 @@
                 $c++; ?>
                 <div class="tab-pane asg-products-list <?php echo "category-".str_replace(' ', '', $key); ?>" id="<?php echo str_replace(' ', '', $key); ?>">
                     <div class="nav-tab-title <?php echo "category-".str_replace(' ', '', $key); ?>"></div>
-                    <h3>Products grouped by <?php echo $key; ?></h3>
+                    <h3><?php echo $key; ?></h3>
                     <ul class="thumbnails products-list">
                         <?php $color = 0; ?>
                         <?php foreach ($items AS $item): ?>
@@ -101,7 +112,7 @@
     <div id="asg-view-by-cats" class="asg-products-list">
         <?php foreach ($tab_list as $key => $items): ?>
             <div class="list-by-category">
-                <h3>Products grouped by <?php echo $key; ?></h3>
+                <h3><?php echo $key; ?></h3>
                 <ul class="thumbnails products-list">
                     <?php $color = 0; ?>
                     <?php foreach ($items AS $item): ?>
@@ -165,6 +176,9 @@
                 $("#products-featured-product").hide();
                 return false;
             });
+            // NOTE: View all products for 2.1.0 version, previous category tabs are hidden.
+            $("#asg-view-by-cats").show();
+            $("#products-featured-product").hide();
         })(jQuery);
     </script>
 
@@ -180,39 +194,34 @@
         return (isset($item->type_id) && $item->type_id == 1);
     }
 
-    //user defined function
-    function cmp($a, $b) {
-        if ($a->category_id == $b->category_id)
-            return 0;
-        return ($a->category_id > $b->category_id) ? 1 : -1;
-    }
-
-    //makeList
+    //makeLists
     function makeListForTab(&$items = array(), &$destination = array()) {
         $show_fields = array("thumbnail", "name", "description");
         foreach ($items as $item) {
             $keys = array_values($item->categories);
-            if (!empty($keys[0])) {
-                $key = $keys[0];
+
+            if(empty($keys))
+            {
+                $keys = array("All Products");
             }
-            elseif (!empty($item->ucatname)) {
-                $key = $item->ucatname;
-            }
-            else {
-                $key = "All Products";
-            }
+
             if (!$item->field_show_list) {
                 $item->field_show_list = array();
             }
+
             foreach ($item->fields_by_id AS $field) {
                 if (in_array(strtolower($field->label), $show_fields)) {
                     $item->field_show_list[$field->label] = $field->result;
                 }
             }
-            if (!$destination[$key]) {
-                $destination[$key] = array();
+
+            foreach ($keys as $cat_name) {
+               if (!isset($destination[$cat_name])) {
+                   $destination[$cat_name] = array();
+               }
+               $destination[$cat_name][] = $item;
             }
-            $destination[$key][] = $item;
+            
         }
     }
 

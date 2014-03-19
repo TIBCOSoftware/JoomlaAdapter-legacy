@@ -62,7 +62,7 @@ var DeveloperPortal = {};
     DeveloperPortal.REGEXP_JFORM_FIELDS_ID_ARRAY = /jform\[fields\]\[([0-9]+)\]\[\]/;
     DeveloperPortal.REGEXP_JFORM_FIELDS_ID_OTHERS = /jform\[fields\]\[([0-9]+)\]\[[^\]].+/;
     DeveloperPortal.PARENT_CONTENT_TYPES = [1, 2, 4, 5, 9, 10];
-    DeveloperPortal.NOTIFYING_CONTENT_TYPES = [1, 2, 3, 4, 7, 9, 10];
+    DeveloperPortal.NOTIFYING_CONTENT_TYPES = [1, 2, 3, 4, 5, 7, 9, 10];
     DeveloperPortal.ERROR_TYPE_PORTAL_EVENT = 'portal_event';
     DeveloperPortal.ERROR_TYPE_API_KEY = 'api_key';
     DeveloperPortal.KEY_HAS_ERRORS = 'has_errors';
@@ -165,6 +165,10 @@ var DeveloperPortal = {};
                             if(typeof fCallback === 'function') {
                                 fCallback(oJSON);
                             }
+                        } else {
+                          if(typeof fCallback === 'function') {
+                              fCallback(oJSON);
+                          }
                         }
                     } catch(oE) {
                         aErrMsg.push(oE.message);
@@ -188,6 +192,7 @@ var DeveloperPortal = {};
                         status: jqXHR.status,
                         statusText: jqXHR.statusText,
                         content: jqXHR.responseText,
+                        summary: sErrMsg,
                         entity_type: oData.objectType,
                         entity_id: oData.id,
                         event: oData.eventType,
@@ -397,6 +402,7 @@ var DeveloperPortal = {};
                         status: jqXHR.status,
                         statusText: jqXHR.statusText,
                         content: jqXHR.responseText,
+                        summary: sErrMsg,
                         entity_type: DeveloperPortal.PORTAL_OBJECT_TYPE_APPLICATION,
                         entity_id: nApplicationId,
                         event: DeveloperPortal.PORTAL_EVENT_TYPE_REQUEST_KEY,
@@ -815,22 +821,23 @@ var DeveloperPortal = {};
             dForm.find('input[name="task"]').val(sTask);
             dForm.attr('target', sIFrameId);
             dIFrame.on('load', function(oEvent) {
-				var isOrgs = false;
-				try {
-					isOrgs = dForm.context.location.pathname.indexOf('/organizations/') != -1;
-				}
-				catch(ex) {
-				}
+
+//				var isOrgs = false;
+//				try {
+//					isOrgs = (dForm.context.location.pathname.indexOf('/organizations/')!= -1) ||( dForm.context.location.pathname.indexOf('/dashboard/') != -1);  //	isOrgs = dForm.context.location.pathname.indexOf('/organizations/') != -1;
+//				}
+//				catch(ex) {
+//				}
                 dWindow = oEvent.target.contentWindow;
-				try {
-					if(isOrgs) {
-						document.domain = dForm.context.domain;
-					}
+//				try {
+//					if(isOrgs) {
+//						document.domain = dForm.context.domain;
+//					}
 					sRedirectUrl = dWindow.location.href;
-				}
-				catch(ex) {
-					
-				}
+//				}
+//				catch(ex) {
+//					
+//				}
 
                 if(DeveloperPortal._pathsMatch(dWindow.location, window.location) || !dWindow.RecordTemplate || dWindow.RecordTemplate.nRecordId === undefined) {
                     // The path of the iframe being identical to the one of the main window means the page was not redirected due to some errors occurred.
@@ -840,19 +847,42 @@ var DeveloperPortal = {};
 
                     if($.inArray(nTypeId, DeveloperPortal.NOTIFYING_CONTENT_TYPES) > -1) {
                         if(bCreation) {
-                            DeveloperPortal.sendCreateNotification(nRecordId, DeveloperPortal.CONTENT_TYPE_MAP[nTypeId], function(data) {
-                                if(fCallback) {
+                          if(nTypeId === 5) {
+                            sUserGroupUrl = GLOBAL_CONTEXT_PATH + 'index.php?option=com_cobalt&task=ajaxmore.createUserGroups&org_id=' + nRecordId;
+                            $.ajax({
+                              url: sUserGroupUrl,
+                              complete: function(jqXHR) {
+                                console.log(jqXHR.responseText);
+                                DeveloperPortal.sendCreateNotification(nRecordId, DeveloperPortal.CONTENT_TYPE_MAP[nTypeId], function(data) {
+                                  if(fCallback) {
                                     fCallback(nRecordId, sRedirectUrl);
-                                } else {
-                                    window.location.href = sRedirectUrl;
-                                }
-                            }, function(errorThrown) {
-                                if(fErrorback) {
-                                    fErrorback(sRedirectUrl);
-                                } else {
-                                   window.location.href = sRedirectUrl;
-                                }
+                                  } else {
+                                      window.location.href = sRedirectUrl;
+                                  }
+                                }, function(errorThrown) {
+                                  if(fErrorback) {
+                                      fErrorback(sRedirectUrl);
+                                  } else {
+                                     window.location.href = sRedirectUrl;
+                                  }
+                                });
+                              }
                             });
+                          } else {
+                            DeveloperPortal.sendCreateNotification(nRecordId, DeveloperPortal.CONTENT_TYPE_MAP[nTypeId], function(data) {
+                              if(fCallback) {
+                                fCallback(nRecordId, sRedirectUrl);
+                              } else {
+                                window.location.href = sRedirectUrl;
+                              }
+                            }, function(errorThrown) {
+                              if(fErrorback) {
+                                fErrorback(sRedirectUrl);
+                              } else {
+                                window.location.href = sRedirectUrl;
+                              }
+                            });
+                          }
                         } else {
                             if(nTypeId === 9 && oldOAuth !== newOAuth && nActiveKeyCount > 0) {
                                 DeveloperPortal._disableKeys(nRecordId, aOldKeys, function() {
@@ -900,7 +930,7 @@ var DeveloperPortal = {};
                                         });
                                     }
                                 });
-                            } else if(nTypeId === 6){
+                            } else if(nTypeId === 6) {
                                 //DeveloperPortal.sendUpdateNotification(parent_api_id,DeveloperPortal.PORTAL_OBJECT_TYPE_API,{'31':old_operation_of_api});
                                 if(typeof oUpdatedFields === 'undefined') {
                                     if(fCallback) {
@@ -948,24 +978,10 @@ var DeveloperPortal = {};
                             }
                         }
                     } else {
-                        if(nTypeId === 5) {
-                            sUserGroupUrl = GLOBAL_CONTEXT_PATH + 'index.php?option=com_cobalt&task=ajaxmore.createUserGroups&org_id=' + nRecordId;
-                            $.ajax({
-                                url: sUserGroupUrl,
-                                complete: function() {
-                                    if(fCallback) {
-                                        fCallback(nRecordId, sRedirectUrl);
-                                    } else {
-                                        window.location.href = sRedirectUrl;
-                                    }
-                                }
-                            });
+                        if(fCallback) {
+                            fCallback(nRecordId, sRedirectUrl);
                         } else {
-                            if(fCallback) {
-                                fCallback(nRecordId, sRedirectUrl);
-                            } else {
-                                window.location.href = sRedirectUrl;
-                            }
+                            window.location.href = sRedirectUrl;
                         }
                     }
                 }
@@ -985,49 +1001,46 @@ var DeveloperPortal = {};
      * @param {Number} nTypeId The id of the type of the object to be deleted.
      */
     DeveloperPortal.archiveRecord = function(nRecId, nTypeId) {
-        $.ajax({
-            url: GLOBAL_CONTEXT_PATH + 'index.php',
-            data: {
-                option: 'com_cobalt',
-                task: 'ajaxmore.archiveRecord',
-                rec_id: nRecId,
-                type_id:nTypeId
-            },
-            dataType: 'json',
-            success: function(data, textStatus, jqXHR) {
-                if(nTypeId === 8) {
-                    $.post('index.php?options=com_cobalt&task=ajaxmore.disabledUser', {
-                        userfile_id: nRecId
-                    }, function(res){
-                        if(!res.success){
-                            DeveloperPortal.storeErrMsgInCookie([FAILED_TO_DEACTIVATE_USER_AFTER_ARCHIVE_USERPROFILE]);
-                        }
-                        DeveloperPortal.sendDeleteNotification(nRecId, DeveloperPortal.CONTENT_TYPE_MAP[nTypeId], function(data) {
-                            window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
-                        }, function(errorThrown) {
-                            window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
-                        });
-                    },'json');
-                } else if (nTypeId === 5 ){
-                    window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
-                } else if (nTypeId === 6){
-                        DeveloperPortal.sendUpdateNotification(parent_api_id,DeveloperPortal.PORTAL_OBJECT_TYPE_API,{'31':[]}, function(data) {
-                            window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
-                        }, function(errorThrown) {
-                            window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
-                        } );
-                }else{
-                  DeveloperPortal.sendDeleteNotification(nRecId, DeveloperPortal.CONTENT_TYPE_MAP[nTypeId], function(data) {
-                    window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
-                  }, function(errorThrown) {
-                    window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
-                  });
-                }
-            },
-            error: function(jqXHR, textStatus, errorThrow) {
-                Joomla.showError([ARCHIVE_FAILED]);
-            }
-        });
+    	// confirm dialog box
+    	if (confirm('This will permanently delete the record, are you sure?') == true) {
+	       $.ajax({
+	            url: GLOBAL_CONTEXT_PATH + 'index.php',
+	            data: {
+	                option: 'com_cobalt',
+	                task: 'ajaxmore.archiveRecord',
+	                rec_id: nRecId,
+	                type_id:nTypeId
+	            },
+	            dataType: 'json',
+	            success: function(data, textStatus, jqXHR) {
+	                if(nTypeId === 8) {
+	                    $.post('index.php?options=com_cobalt&task=ajaxmore.disabledUser', {
+	                        userfile_id: nRecId
+	                    }, function(res){
+	                        if(!res.success){
+	                            DeveloperPortal.storeErrMsgInCookie([FAILED_TO_DEACTIVATE_USER_AFTER_ARCHIVE_USERPROFILE]);
+	                        }
+                          window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
+	                    }, 'json');
+	                } else if (nTypeId === 6){
+	                        DeveloperPortal.sendUpdateNotification(parent_api_id,DeveloperPortal.PORTAL_OBJECT_TYPE_API,{'31':[]}, function(data) {
+	                            window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
+	                        }, function(errorThrown) {
+	                            window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
+	                        } );
+	                }else{
+	                  DeveloperPortal.sendDeleteNotification(nRecId, DeveloperPortal.CONTENT_TYPE_MAP[nTypeId], function(data) {
+	                    window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
+	                  }, function(errorThrown) {
+	                    window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
+	                  });
+	                }
+	            },
+	            error: function(jqXHR, textStatus, errorThrow) {
+	                Joomla.showError([ARCHIVE_FAILED]);
+	            }
+	        });
+        };
     };
     
     /**
@@ -1166,4 +1179,31 @@ var DeveloperPortal = {};
         return rv;
     };
 
+    DeveloperPortal.approvePublish = function(record_id,is_to_show) {
+
+        $.post('index.php?option=com_cobalt&task=ajaxmore.approvepublish',{"record_id":record_id,"is_to_show":is_to_show},
+          function(res){
+              if(res.success == 1){
+                window.location.reload();
+              }else{
+                window.location.reload();
+              }
+          },'json');
+    };
+
+    DeveloperPortal.resync = function(id, objectType) {
+      var oData = {
+          'id': id,
+          'eventType': "Resync",
+          'objectType': objectType
+        },
+        alert = jQuery('.btn.btn-resync').next().html();
+      DeveloperPortal._portalEvent(oData, 
+        function(){
+          jQuery("#system-message-container").html(alert).fadeIn();
+        }, function(){
+          jQuery("#system-message-container").html(alert).fadeIn();
+        }
+      );
+    };
 })(jQuery);
