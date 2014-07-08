@@ -138,7 +138,7 @@ ASG-4963
 TIBCO API Exchange Manager now allows users to search error messages using uuid 
 in the logs.
 
-AS-5096
+ASG-5096
 The message that the portal displays when there is an error in parsing
 a JSON spec now informs the user that the invalid spec can be replaced
 or operations updated manually.
