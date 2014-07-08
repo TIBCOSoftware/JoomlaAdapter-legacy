@@ -286,13 +286,18 @@ where type_id=10)');
         $rv = array();
             $db = JFactory::getDbo();
             $user_profile_id = DeveloperPortalApi::getUserProfileId();
-            $sql = "SELECT * FROM #__js_res_record WHERE id IN ";
-            $sql .= "(SELECT field_value FROM #__js_res_record_values WHERE record_id IN ";
-            $sql .= "(SELECT record_id FROM #__js_res_record_values WHERE type_id=10 AND IF(field_id=72, DATEDIFF(field_value, CURDATE()) >= 0, 1=1) AND record_id IN ";
-            $sql .= "(SELECT record_id FROM #__js_res_record_values WHERE type_id=10 AND field_id=71 AND DATEDIFF(CURDATE(), field_value) >= 0 AND record_id IN ";
-            $sql .= "(SELECT record_id FROM #__js_res_record_values WHERE type_id=10 AND field_id=73 AND field_value IN ";
-            $sql .= "(SELECT field_value FROM #__js_res_record_values WHERE record_id=" . $user_profile_id . " AND field_id=47 AND type_id=8)))) ";
-            $sql .= "AND field_id=114 AND type_id=10)";
+//             $sql = "SELECT * FROM #__js_res_record WHERE id IN ";
+//             $sql .= "(SELECT field_value FROM #__js_res_record_values WHERE record_id IN ";
+//             $sql .= "(SELECT record_id FROM #__js_res_record_values WHERE type_id=10 AND IF(field_id=72, DATEDIFF(field_value, CURDATE()) >= 0, 1=1) AND record_id IN ";
+//             $sql .= "(SELECT record_id FROM #__js_res_record_values WHERE type_id=10 AND field_id=71 AND DATEDIFF(CURDATE(), field_value) >= 0 AND record_id IN ";
+//             $sql .= "(SELECT record_id FROM #__js_res_record_values WHERE type_id=10 AND field_id=73 AND field_value IN ";
+//             $sql .= "(SELECT field_value FROM #__js_res_record_values WHERE record_id=" . $user_profile_id . " AND field_id=47 AND type_id=8)))) ";
+//             $sql .= "AND field_id=114 AND type_id=10)";
+
+            $sql= "SELECT * FROM #__js_res_record as productRecord, #__js_res_record_values AS product, #__js_res_record_values AS activeSubsEnd, #__js_res_record_values AS activeSubsStart, #__js_res_record_values AS subs, #__js_res_record_values AS org ";
+            $sql.= " WHERE productRecord.id = product.field_value AND product.field_id=114 AND product.record_id = activeSubsEnd.record_id AND activeSubsEnd.type_id=10 AND activeSubsEnd.field_id=72 AND DATEDIFF(activeSubsEnd.field_value, CURDATE()) >= 0 AND activeSubsEnd.record_id = activeSubsStart.record_id ";
+            $sql.= " AND activeSubsStart.type_id=10 AND activeSubsStart.field_id=71 AND DATEDIFF(CURDATE(), activeSubsStart.field_value) >= 0 AND activeSubsStart.record_id = subs.record_id ";
+            $sql.=" AND subs.type_id=10 AND subs.field_id=73 AND subs.field_value = org.field_value AND  org.record_id=".$user_profile_id." AND org.field_id=47 AND org.type_id=8";
             $db -> setQuery($sql);
             if ($result = $db -> loadObjectList()) {
                 return $result;

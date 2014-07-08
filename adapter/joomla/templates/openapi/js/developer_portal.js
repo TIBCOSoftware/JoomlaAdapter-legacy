@@ -144,24 +144,19 @@ var DeveloperPortal = {};
                 },
                 type: 'post',
                 success: function(data, textStatus, jqXHR) {
-                    var oJSON = {}, aErrMsg = [], aWarningMsg = [];
+                    var oJSON = {}, aErrMsg = [], aWarningMsg = [], sSummary = '';
                     try {
                         oJSON = $.parseJSON(data);
-                        if(oJSON.status === DeveloperPortal.SERVER_STATUS_SUCCESS) {
-                            if(typeof fCallback === 'function') {
-                                fCallback(oJSON);
-                            }
-                        } else if(oJSON.status === DeveloperPortal.SERVER_STATUS_COMPLETED) {
-//                            aWarningMsg = aWarningMsg.concat(DeveloperPortal._parsePortalRespWarnings(oJSON));
-//                            DeveloperPortal.storeWarningMsgInCookie(aWarningMsg);
-                            aErrMsg = aErrMsg.concat(DeveloperPortal._parsePortalRespErrors(oJSON));
-                            DeveloperPortal.storeErrMsgInCookie(aErrMsg);
+                        if(oJSON.status === DeveloperPortal.SERVER_STATUS_SUCCESS || oJSON.status === DeveloperPortal.SERVER_STATUS_COMPLETED) {
                             if(typeof fCallback === 'function') {
                                 fCallback(oJSON);
                             }
                         } else if(oJSON.status === DeveloperPortal.SERVER_STATUS_PARTIALLY_COMPLETED || oJSON.status === DeveloperPortal.SERVER_STATUS_ERROR) {
-                            aErrMsg = aErrMsg.concat(DeveloperPortal._parsePortalRespErrors(oJSON));
-                            DeveloperPortal.storeErrMsgInCookie(aErrMsg);
+                            sSummary = DeveloperPortal._parsePortalRespSummary(oJSON);
+                            if(sSummary !== '') {
+                              sSummary += (DeveloperPortal._urlifySupport(oJSON.uuid, PORTAL_RESP_SUMMARY_POSTFIX_UUID) + oJSON.uuid);
+                            }
+                            DeveloperPortal.storeErrMsgInCookie(sSummary);
                             if(typeof fCallback === 'function') {
                                 fCallback(oJSON);
                             }
@@ -181,10 +176,12 @@ var DeveloperPortal = {};
                     }
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
-                    var sErrMsg = errorThrown;
+                    var sUUID = UUID.generate(),
+                        sErrMsg = errorThrown + DeveloperPortal._urlifySupport(sUUID, PORTAL_RESP_SUMMARY_POSTFIX_UUID) + sUUID;
+
                     if(textStatus === 'timeout') {
                         sErrMsg = PORTAL_TIMEOUT_ERROR_MESSAGE;
-                    } else if(jqXHR.status === 404 || jqXHR.status === 503) {
+                    } else if(jqXHR.status === 404 || jqXHR.status === 503 || jqXHR.status=== 0) {
                         sErrMsg = PORTAL_UNREACHABLE_ERROR_MESSAGE;
                     }
                     DeveloperPortal._saveLogInDatabase({
@@ -196,7 +193,8 @@ var DeveloperPortal = {};
                         entity_type: oData.objectType,
                         entity_id: oData.id,
                         event: oData.eventType,
-                        event_status: 'error'
+                        event_status: 'error',
+                        uuid: sUUID
                     }, function(sErrMsg) {
                         DeveloperPortal.storeErrMsgInCookie([sErrMsg]);
                         if ( typeof fErrorback === 'function') {
@@ -204,12 +202,27 @@ var DeveloperPortal = {};
                         } else {
                             window.location.reload();
                         }
-                    }, [sErrMsg]);
+                    }, [DeveloperPortal._urlifySupport(sUUID, sErrMsg) + sUUID]);
                 }
             });
         } else {
             return 'The record id must be provided.';
         }
+    };
+
+    /**
+     * Urlify the word "support" in the summary's postfix string.
+     *
+     * @author Kevin Li<huali@tibco-support.com>
+     * @param {String} sUUID The UUID to be used to identify an error message.
+     * @param {String} sTemplateStr The template string which contains the place holders to get replaced.
+     * @returns {String} A new postfix string with the word "support" being urlified.
+     * @private
+     */
+    DeveloperPortal._urlifySupport = function(sUUID, sTemplateStr) {
+      return sTemplateStr.replace(/support/, function(match) {
+        return DeveloperPortal._urlify(match, SUPPORT_PAGE_URL + '?prepopulate=1&uuid=' + sUUID, true);
+      });
     };
 
     DeveloperPortal._parseFieldId = function(sFieldName) {
@@ -241,11 +254,11 @@ var DeveloperPortal = {};
     };
     
     /**
-     * Get out all the error messages out from the portal response including the error messages inside the nested results.
+     * Get all the error messages out of the portal response including the error messages inside the nested results.
      * 
      * @author Kevin Li<huali@tibco-support.com>
      * @param {Object} oPortalResp - The portal response which is a JSON object.
-     * @returns {Array} An array of error message strings. 
+     * @returns {Array} An array of error message strings.
      */
     DeveloperPortal._parsePortalRespErrors = function(oPortalResp) {
         var rv = [];
@@ -261,9 +274,27 @@ var DeveloperPortal = {};
         }
         return rv;
     };
+
+    /**
+     * Get the summary out of the portal response.
+     *
+     * @author Kevin Li<huali@tibco-support.com>
+     * @param {Object} oPortalResp - The portal response which is a JSON object.
+     * @returns {string} The summary string if the summary is found. Otherwise, an empty string will be returned.
+     * @private
+     */
+    DeveloperPortal._parsePortalRespSummary = function(oPortalResp) {
+        var rv = '';
+        if(oPortalResp) {
+          if(oPortalResp.summary && oPortalResp.summary.length > 0) {
+              rv = oPortalResp.summary;
+          }
+        }
+        return rv;
+    };
     
     /**
-     * Get out all the warning messages out from the portal response including the warning messages inside the nested results.
+     * Get all the warning messages out of the portal response including the warning messages inside the nested results.
      * 
      * @author Kevin Li<huali@tibco-support.com>
      * @param {Object} oPortalResp - The portal response which is a JSON object.
@@ -391,7 +422,8 @@ var DeveloperPortal = {};
                     }
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
-                    var sErrMsg = errorThrown;
+                    var sUUID = UUID.generate(),
+                        sErrMsg = errorThrown + DeveloperPortal._urlifySupport(sUUID, PORTAL_RESP_SUMMARY_POSTFIX_UUID) + sUUID;
                     if(textStatus === 'timeout') {
                         sErrMsg = PORTAL_TIMEOUT_ERROR_MESSAGE;
                     } else if(jqXHR.status === 404 || jqXHR.status === 503) {
@@ -406,7 +438,8 @@ var DeveloperPortal = {};
                         entity_type: DeveloperPortal.PORTAL_OBJECT_TYPE_APPLICATION,
                         entity_id: nApplicationId,
                         event: DeveloperPortal.PORTAL_EVENT_TYPE_REQUEST_KEY,
-                        event_status: 'error'
+                        event_status: 'error',
+                        uuid: sUUID
                     }, function(sErrMsg) {
                         DeveloperPortal.storeErrMsgInCookie([sErrMsg]);
                         if ( typeof fErrorback === 'function') {
@@ -414,7 +447,7 @@ var DeveloperPortal = {};
                         } else {
                             window.location.reload();
                         }
-                    }, [sErrMsg]);
+                    }, [DeveloperPortal._urlifySupport(sUUID, sErrMsg) + sUUID]);
                 }
             });
         } else {
@@ -578,6 +611,24 @@ var DeveloperPortal = {};
                 }
             }
         }
+    };
+
+    /**
+     * Make an HTML hyper link out of a plain text.
+     *
+     * @author Kevin Li<huali@tibco-support.com>
+     * @param {String} sText The text to be used as the label of the hyper link.
+     * @param {String} sUrl The URL of the hyper link.
+     * @param {String} bSameWindow True to open the hyper link in the same window. False to open it in a new window.
+     * @returns {String} The HTML hyper link.
+     * @private
+     */
+    DeveloperPortal._urlify = function(sText, sUrl, bSameWindow) {
+      if(sText && sUrl) {
+          return '<a href="' + sUrl + '"' + (bSameWindow ? '' : ' target="_blank"') + '>' + sText + '</a>';
+      } else {
+          return ''
+      }
     };
 
     /**
@@ -852,7 +903,6 @@ var DeveloperPortal = {};
                             $.ajax({
                               url: sUserGroupUrl,
                               complete: function(jqXHR) {
-                                console.log(jqXHR.responseText);
                                 DeveloperPortal.sendCreateNotification(nRecordId, DeveloperPortal.CONTENT_TYPE_MAP[nTypeId], function(data) {
                                   if(fCallback) {
                                     fCallback(nRecordId, sRedirectUrl);

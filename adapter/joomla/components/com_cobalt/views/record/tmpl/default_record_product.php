@@ -20,7 +20,7 @@ require_once JPATH_BASE . "/components/com_cobalt/controllers/ajaxmore.php";
 $app = JFactory::getApplication();
 $app_id = $app->input->getInt('app_id');
 $item = $this->item;
-
+JFactory::getDocument()->setTitle($item->title);
 
 $product_id = JRequest::getVar("id");
 
@@ -40,7 +40,11 @@ $details = array();
 $started = FALSE;
 $i = $o = 0;
 $fields = array();
-$tasks_to_hide = DeveloperPortalApi::isReferencedByDownstreamSubs($this->item->id, "product") ? array(DeveloperPortalApi::TASK_ARCHIVE) : array();
+if(JComponentHelper::getParams('com_emails')->get('enable_archiving_objects') == 1) {
+  $tasks_to_hide = DeveloperPortalApi::isReferencedByDownstreamSubs($this->item->id, "product") ? array(DeveloperPortalApi::TASK_ARCHIVE) : array();
+} else {
+  $tasks_to_hide = array(DeveloperPortalApi::TASK_ARCHIVE);
+}
 $item_contact_email = '';
 if(isset($item->fields_by_id)) {
     foreach($item->fields_by_id as $field_id => $field) {

@@ -22,6 +22,11 @@ $author = array();
 $details = array();
 $started = FALSE;
 $i = $o = 0;
+if(JComponentHelper::getParams('com_emails')->get('enable_archiving_objects') == 1) {
+  $tasks_to_hide = array();
+} else {
+  $tasks_to_hide = array(DeveloperPortalApi::TASK_ARCHIVE);
+}
 ?>
 <style>
 	.dl-horizontal dd {
@@ -153,7 +158,7 @@ if($params->get('tmpl_core.item_follow_num'))
 						<a href="#" data-toggle="dropdown" class="dropdown-toggle btn-mini">
 							<?php echo HTMLFormatHelper::icon('gear.png');  ?></a>
 						<ul class="dropdown-menu">
-							<?php echo DeveloperPortalApi::list_controls($item->controls, array(), $this->item->id, $this->item->type_id);?>
+							<?php echo DeveloperPortalApi::list_controls($item->controls, $tasks_to_hide, $this->item->id, $this->item->type_id);?>
 						</ul>
 					<?php endif;?>
 				<?php endif;?>

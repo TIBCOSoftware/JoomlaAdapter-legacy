@@ -181,6 +181,8 @@ class UsersControllerAutoreg extends UsersController
 			AutoregHelper::send($newuser,'userid');
 		}
 		
+		$newOrganizationId = $app->getUserState('com_users.registration.new_org_id',0);
+		
 		// Redirect to the profile screen.
 		if ($return === 'adminactivate'){
 			$this->setMessage(JText::_('COM_USERS_REGISTRATION_COMPLETE_VERIFY'));
@@ -189,7 +191,7 @@ class UsersControllerAutoreg extends UsersController
 		elseif ($return === 'useractivate')
 		{
 			// $this->setMessage(JText::_('COM_USERS_REGISTRATION_COMPLETE_ACTIVATE'));
-			$this->setRedirect(JRoute::_('index.php?option=com_users&view=registration&layout=complete'.($userFirstName?'&uname='.$userFirstName:''), false));
+		$this->setRedirect(JRoute::_('index.php?option=com_users&view=registration&layout=complete&id='.$newuser[0].($userFirstName?'&uname='.$userFirstName:'').($newOrganizationId?'&organization='.$newOrganizationId:''), false));
 		}
 		else
 		{

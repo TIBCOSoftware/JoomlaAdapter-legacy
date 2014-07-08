@@ -452,7 +452,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
 		
 		if (!empty($orgID)) {
 			$db = JFactory::getDbo();
-			$db -> setQuery('SELECT event, http_status_text, log_type, summary,event_status,entity_type, create_time FROM  `asg_logs` WHERE (event_status in ("Error","Partially Completed") and uid = '.$curUser->id.') or org_id ='.$orgID.' ORDER BY create_time desc LIMIT 0,'.$limitCount);
+			$db -> setQuery('SELECT event, http_status_text, log_type, summary,event_status,entity_type, create_time FROM  `asg_logs` WHERE org_id ='.$orgID.' or (uid = '.$curUser->id.' and event_status in ("Error","Partially Completed")) ORDER BY id desc LIMIT 0,'.$limitCount);
 			$result = $db->loadObjectList();
 			AjaxHelper::send($result);
 		} else {
@@ -606,6 +606,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
       $log_item->event                = $_POST['event'];
       $log_item->event_status         = $_POST['event_status'];
       $log_item->uid                  = $user->id ? $user->id : 0;
+      $log_item->uuid                 = $_POST['uuid'];
       
 
       $db->insertObject("asg_logs",$log_item,'id') ? AjaxHelper::send("") : AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_4'));

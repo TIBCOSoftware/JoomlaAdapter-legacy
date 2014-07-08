@@ -358,6 +358,12 @@
             if ((response.basePath != null) && response.basePath.replace(/\s/g, '').length > 0) {
                 this.basePath = response.basePath;
             }
+    // Patch to read resourcepath from the apiresource json file instead of the initial spec file if the resourcepath's in 2 files are different
+   //this patch is to support ASG-5032 solution
+   		 if ((response.resourcePath != null) && response.resourcePath!=this.path) {
+             this.path = response.resourcePath;
+				this.name = response.resourcePath;
+         } 
             this.addModels(response.models);
             if (response.apis) {
                 _ref = response.apis;

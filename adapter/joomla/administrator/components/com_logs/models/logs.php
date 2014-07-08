@@ -146,13 +146,13 @@ class LogsModelLogs extends JModelList
 			if (stripos($search, 'id:') === 0)
 			{
 				$query->where('a.id = '.(int) substr($search, 3));
-			} else {
+			} else if (stripos($search, 'uid:') === 0){
+				$query->where('a.uid = '.(int) substr($search, 4));
+			} else if (stripos($search, 'uuid:') === 0){
+        $query->where('a.uuid = '. $db->quote(substr($search, 5)));
+      } else {
 				$search = $db->Quote('%'.$db->escape($search, true).'%');
-				$query->where(
-					'('.$db->quoteName('content').' LIKE '.$search.
-					' OR '.$db->quoteName('a.uid').' LIKE '.$search.')'
-					
-				);
+				$query->where($db->quoteName('summary').' LIKE '.$search);
 			}
 		}
 

@@ -22,7 +22,11 @@ $author = array();
 $details = array();
 $started = FALSE;
 $i = $o = 0;
-$tasks_to_hide = array();
+if(JComponentHelper::getParams('com_emails')->get('enable_archiving_objects') == 1) {
+  $tasks_to_hide = array();
+} else {
+  $tasks_to_hide = array(DeveloperPortalApi::TASK_ARCHIVE);
+}
 ?>
 <style>
 	.dl-horizontal dd {

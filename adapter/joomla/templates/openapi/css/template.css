@@ -8662,3 +8662,28 @@ div.login fieldset div.control-group .controls a{
 .modal .selected_apps_for_plan{
     margin-bottom: 30px;
 }
+
+#content #comments #adminForm {
+    background-color: transparent;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+}
+
+#content #comments #adminForm .control-group:first-of-type,
+.modal #adminForm .control-group:first-of-type {
+    margin-top: 10px;
+}
+
+#content #comments h2 {
+    padding: 40px 0 10px 0;
+}
+
+#comment2-container .span2 img {
+    display: none;
+}
+
+#commentmodal td:first-child {
+    display: block;
+}
+

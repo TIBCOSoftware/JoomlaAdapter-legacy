@@ -289,8 +289,8 @@ function guide(){
 
     if(_USER_ID){
       jQuery(".guide-component").remove();
-      this.cookieName = _USER_ID  + "_guide_step";
-      that = this;
+      this.cookieName = guide_cookie_name;
+      var that = this;
       
       this.setUpTotalSteps().setUpCurrentStep();
 
@@ -334,10 +334,10 @@ function showTips(){
 
   jQuery(window).load(function(){
 
-//    DeveloperPortal.setCookieValue("129_guide_step",7,365);
+//    DeveloperPortal.setCookieValue(guide_cookie_name,7,365);
     var cookieValue =  DeveloperPortal.getCookieValues();
         _USER_ID    = _USER_ID || 0;
-    var cookieStep = parseInt(cookieValue[_USER_ID  + "_guide_step"]) || 0;
+    var cookieStep = parseInt(cookieValue[guide_cookie_name]) || 0;
     var fps = 1000/4;
     if(cookieStep){
       if(cookieStep == 6){

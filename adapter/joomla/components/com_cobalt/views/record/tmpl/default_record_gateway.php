@@ -22,7 +22,11 @@ $author = array();
 $details = array();
 $started = FALSE;
 $i = $o = 0;
-$tasks_to_hide = DeveloperPortalApi::isReferencedByDownstreamSubs($this->item->id, "gateway") ? array(DeveloperPortalApi::TASK_ARCHIVE) : array();
+if(JComponentHelper::getParams('com_emails')->get('enable_archiving_objects') == 1) {
+  $tasks_to_hide = DeveloperPortalApi::isReferencedByDownstreamSubs($this->item->id, "gateway") ? array(DeveloperPortalApi::TASK_ARCHIVE) : array();
+} else {
+  $tasks_to_hide = array(DeveloperPortalApi::TASK_ARCHIVE);
+}
 /**
  * the comment line is for disabled deleting button
  */

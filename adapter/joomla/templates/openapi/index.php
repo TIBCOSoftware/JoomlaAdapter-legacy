@@ -36,13 +36,16 @@ $titlePosition = $app->getCfg('sitename_pagetitles');
 $sitename = $app->getCfg('sitename');
 
 $title = $currentMenu->params->page_title?$currentMenu->params->page_title:$currentMenu->title;
-$doc->title = $title;
+//skip adding title if this is product detials page
+if($view == "records"){
+    $doc->title = $title;
+}
 
 $menu = $app->getMenu();
 if($active = $menu->getActive())
 {
    $title = $active->params->get('page_title');
-   $doc->title = $title ? $title : $active->title;
+  // $doc->title = $title ? $title : $active->title;
 }
 
 if ((int)$titlePosition===1) {
@@ -117,6 +120,7 @@ else
 }
 $doc->addScript($this->baseurl . '/templates/' . $this->template . '/js/public.js', 'text/javascript');
 $doc->addScript($this->baseurl . '/templates/' . $this->template . '/js/vendor/jquery.als-1.1.min.js', 'text/javascript');
+$doc->addScript($this->baseurl . '/templates/' . $this->template . '/js/vendor/uuid.core.js', 'text/javascript');
 
 $doc->addScript($this->baseurl . '/templates/' . $this->template . '/js/developer_portal.js', 'text/javascript');
 $doc->addScript($this->baseurl . '/templates/' . $this->template . '/js/support.js', 'text/javascript');
@@ -166,12 +170,15 @@ $oauthState = $comEmail->params->get('enable_oauth');
 			SUPPORT_INPUT_EMAIL = '<?php echo JText::_("SUPPORT_INPUT_EMAIL"); ?>',
 			SUPPORT_USER_NAME = '<?php echo JFactory::getUser()->name;?>',
 			SUPPORT_USER_EMAIL = '<?php echo JFactory::getUser()->email; ?>',
+            SUPPORT_PREPOPULATED_TEXT_UUID = '<?php echo JText::_("SUPPORT_PREPOPULATED_TEXT_UUID"); ?>',
             ARCHIVE_FAILED = '<?php echo JText::_("ARCHIVE_FAILED"); ?>',
             DISABLE_KEYS_FAILED = '<?php echo JText::_("DISABLE_KEYS_FAILED"); ?>',
             FAILED_TO_DEACTIVATE_USER_AFTER_ARCHIVE_USERPROFILE = '<?php echo JText::_("FAILED_TO_DEACTIVATE_USER_AFTER_ARCHIVE_USERPROFILE"); ?>',
             INVALID_SUBSCRIPTION_END_DATE = '<?php echo JText::_("INVALID_SUBSCRIPTION_END_DATE"); ?>',
             ERROR_GETTING_API_KEY = '<?php echo JText::_("ERROR_GETTING_API_KEY"); ?>',
-            PORTAL_UUID = '<?php echo getUuid();?>';
+            PORTAL_RESP_SUMMARY_POSTFIX_UUID = '<?php echo JText::_("PORTAL_RESP_SUMMARY_POSTFIX_UUID"); ?>',
+            PORTAL_UUID = '<?php echo getUuid();?>',
+            SUPPORT_PAGE_URL = GLOBAL_CONTEXT_PATH + 'index.php/support';
   </script>
   <jdoc:include type="head" />
   <?php

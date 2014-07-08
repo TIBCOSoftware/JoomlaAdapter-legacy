@@ -23,7 +23,11 @@ $author = array();
 $details = array();
 $started = FALSE;
 $i = $o = 0;
-$tasks_to_hide = array();
+if(JComponentHelper::getParams('com_emails')->get('enable_archiving_objects') == 1) {
+  $tasks_to_hide = array();
+} else {
+  $tasks_to_hide = array(DeveloperPortalApi::TASK_ARCHIVE);
+}
 $user_profile_org_id = TibcoTibco::getOrgIdByUserProfileId($this->item->id);
 $current_user_org_id = TibcoTibco::getCurrentUserOrgId();
 $auth_group_ids = $this->user->getAuthorisedGroups();

@@ -34,7 +34,7 @@ if(strpos($path,'userprofile') || strpos($path, 'dashboard')){
    return;
   }
 }
-if(!in_array(8, $auth_group_ids)) {
+if(!in_array(8, $auth_group_ids) || JComponentHelper::getParams("com_emails")->get("enable_archiving_objects") != 1) {
   $tasks_to_hide = array(DeveloperPortalApi::TASK_ARCHIVE);
 }
 $membersValue = (object)null;
@@ -65,6 +65,16 @@ if(isset($this->item->fields_by_groups[null])){
 	}
 }
 ?>
+
+<?php
+	$comEmail = JComponentHelper::getComponent('com_emails');
+	$spotfire_domain = $comEmail->params->get('spotfire_domain');
+	if(!$spotfire_domain){
+		$spotfire_domain = '';
+	}
+	$spotfire_url = rtrim(JURI::root(), "/");
+?>
+
 <script type="text/javascript">
 var hasJoomlaRoot=false;
 </script>
@@ -394,7 +404,7 @@ button.resync-org{
 }
 <?php echo $params->get('tmpl_params.css');?>
 </style>
-<?php if(($current_user_org_id == $this->item->id && in_array($org_admin_group_id, $auth_group_ids)) || in_array(7, $auth_group_ids) || in_array(8, $auth_group_ids)): ?>
+
 <div class="menu-bar">
 	<?php if(!$this->print):?>
 		<?php if($this->user->get('isRoot')):?>
@@ -406,6 +416,13 @@ button.resync-org{
 			<a href="#" class="btn btn-mini" rel="tooltip" data-original-title="<?php echo JText::_('CPRINT');?>" onclick="window.print();return false;"><?php echo HTMLFormatHelper::icon('printer.png');  ?></a>
 		</div>
 	<?php endif;?>
+	<form action="<?php echo $spotfire_url;?>/spotfire.php" method="POST" target="_blank">
+		<input type="hidden" name="domain" value="<?php echo $spotfire_domain;?>" />
+		<input type="hidden" name="rooturl" value="<?php echo rtrim(JURI::root(), "/");?>" />
+		<input type="hidden" name="group" value="<?php echo implode('-',JFactory::getUser()->groups);?>" />
+		<input type="hidden" name="sid" value="<?php echo JSession::getInstance(null,null)->getId();?>" />
+		<input type='submit' value="<?php echo JText::_('Show Statistics');?>" class="btn btn-statistics pull-left" style="margin:10px;" />
+	</form>
 <div class="pull-right controls ctrl-org">
 	<div class="btn-group">
 		<?php if($params->get('tmpl_core.item_print')):?>
@@ -429,7 +446,7 @@ button.resync-org{
 	</div>
 </div>
 		</div>
-	<?php endif;?>
+
 <div id="app-list">
 	<div class="org-container alert-container">
 		<div class="inline-doc active">
@@ -514,30 +531,6 @@ button.resync-org{
     <?php echo $subscriptionsValue->result; ?>
 	</div>
 	<div class="clearfix"></div>
-	<div class="org-container">
-		<div class="inline-doc">
-			<h2>
-				<span><?php echo JText::_('DASHBOARD_STATISTICS');?></span>
-			</h2>
-			<div class="inline-doc-content">
-				<div class="org-detail-table">
-					<div id="analytics" style="display:block;">
-					<div id="analytics-control" style="display:inline-block; width:100%;">
-					<button id="btnShowHideDashboard" title="Toggle Dashboard Display" class="btn btn-small pull-left" style="margin: 1px 5px;">Show dashboard</button>
-					<?php if(in_array(7, JFactory::getUser()->groups) || in_array(8, JFactory::getUser()->groups)): //If user is an Administrator or a SuperUser... ?>
-					<select id="selectDashboardMode" title="Select Dashboard Type to Display" class="pull-left" style="margin-left:585px;margin-top:-85px; padding: 0; width: 125px; height: 24px;position:absolute;">
-					<option value="/ASG/Host">Host</option>
-					<option value="/ASG/Partner">Partner</option>
-					</select>
-					<?php endif;?>
-					<div id="btnReloadDashboard" title="Refresh Dashboard" class="icon-refresh pull-left" style="visibility:hidden; margin: 5px; cursor: pointer; display:inline-block"></div>
-					</div>
-					<div id="analytics-content" style="display: none; clear: both; height:600px;"></div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
 
 	<div class="org-container">
 		<div class="inline-doc active">
@@ -672,120 +665,7 @@ button.resync-org{
 	</script>
 <?php endif;?>
 
-<?php
-	$comEmail = JComponentHelper::getComponent('com_emails');
-	$spotfire_domain = $comEmail->params->get('spotfire_domain');
-	if(!$spotfire_domain){
-		$spotfire_domain = '';
-	}
-	$spotfire_url = rtrim(JURI::root(), "/");
-	$spotfire_app_url = $spotfire_url . "/Analytics/";
-	$spotfire_script_url = $spotfire_app_url . "GetJavaScriptApi.ashx?Version=3.1";
-?>
-
-<script type="text/javascript" src="<?php echo $spotfire_script_url ?>"></script>
 <script type="text/javascript">
-	if(typeof window.console !== 'object'){
-		window.console = {
-			log: function(message){alert(message)},
-			error: function(message){alert(message)}
-		};
-	}
-
-	function analyticsErrorHandler(errorCode, description){
-		console.error("Error loading analtyics: code(" + errorCode + ")\n\t" + description);
-	}
-
-	jQuery(document).ready(function(){
-		var appStarted = false,
-			analyticsContent = jQuery('#analytics-content'),
-			reloadBtn = jQuery('#btnReloadDashboard'),
-			showHideBtn = jQuery('#btnShowHideDashboard'),
-			dbModeSelect = jQuery('#selectDashboardMode');
-
-		function buildAnalyticsDashboard(){
-			var customization = new spotfire.webPlayer.Customization();
-			customization.showClose = false;
-			var app = new spotfire.webPlayer.Application('<?php echo $spotfire_app_url; ?>', customization);
-			app.onError(analyticsErrorHandler);
-			return app;
-		}
-
-		function loadAnalyticsDashboard(app){
-			analyticsContent.css({
-				'background-color':'#EFEFEF',
-				'left':'0',
-				'position':'relative',
-				'height':'600',
-				'width':'%100',
-				'margin': '0'
-			});
-			app.open(dbModeSelect.length ? dbModeSelect.val():'/ASG/Partner', 'analytics-content', 'partner="anon";');
-			appStarted = true;
-		}
-
-		function clearAnalyticsDashboard(keepHidden){
-			appStarted = false;
-			analyticsContent.remove();
-			analyticsContent = jQuery('<div/>', { id: 'analytics-content', style: (keepHidden ? 'display:none':'') });
-			jQuery('#analytics').append(analyticsContent);
-		}
-
-		function reloadAnalyticsDashboard(){
-			clearAnalyticsDashboard();
-			loadAnalyticsDashboard(buildAnalyticsDashboard());
-		}
-
-		//set the document domain according to the configuration setting to enable cross-site, same domain scripting
-		try{
-			document.domain = '<?php echo $spotfire_domain;?>';
-		}
-		catch(err){
-			analyticsErrorHandler(0, 'Failed setting of analytics domain to "<?php echo $spotfire_domain;?>". Please check your settings and try again. [' + err + ']');
-			return;
-		}
-
-		//ensure analytics api script was successfully fetched and the expected api element is available
-		if(typeof spotfire === 'undefined' || !spotfire){
-			analyticsErrorHandler(1, 'Spotfire JavaScript API failed to load.');
-			return;
-		};
-
-		//show analytics section since the script was successfully fetched
-		jQuery('#analytics').show();
-
-		//set the cookie value for the analytics authentication proxy
-		document.cookie = 'session-id=<?php echo JSession::getInstance(null,null)->getId(); ?>; path=/';
-
-		reloadBtn.bind('click', reloadAnalyticsDashboard);
-		showHideBtn.bind('click', function(){
-			if(analyticsContent.is(':hidden')){
-				if(!appStarted){
-					loadAnalyticsDashboard(buildAnalyticsDashboard());
-				}
-				analyticsContent.slideDown('slow');
-				reloadBtn.css('visibility','visible');
-				showHideBtn.text('Hide dashboard');
-			}
-			else{
-				analyticsContent.slideUp('slow');
-				reloadBtn.css('visibility','hidden');
-				showHideBtn.text('Show dashboard');
-			}
-		});
-		if(dbModeSelect.length){ //only add change handler if the element exists
-			dbModeSelect.bind('change', function(){
-				if(analyticsContent.is(':hidden')){
-					clearAnalyticsDashboard(true);
-					appStarted = false;
-				}
-				else{
-					reloadAnalyticsDashboard();
-				}
-			});
-		}
-	});
-
     (function ($) {
         $('.inline-doc h2').click(function (e) {
             if($(this).parent().hasClass("active")) {

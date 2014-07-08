@@ -1,7 +1,7 @@
 ==================================================================================
 Project Name    : Adapter Code for TIBCO API Exchange and Joomla!
-Release Version : 2.1.0
-Release Date    : February 2014
+Release Version : 2.1.0_HF-004
+Release Date    : July 2014
 ==================================================================================
 DISCLAIMER
 
@@ -23,7 +23,7 @@ The distribution zip file contains the following folders:
           Code for API Exchange Manager and Joomla! Installation and 
           Configuration Guide.
    
-/joomla - Contains the basic Joomla distribution (Joomla 3.1.1)
+/joomla -  Contains the basic Joomla distribution (Joomla 3.1.1)
 
 /adapter - Contains code developed for Joomla and MySQL to support
            integration with TIBCO(R) API Exchange Manager.
@@ -38,22 +38,11 @@ Contents of the /adapter Directory:
 /sql-scripts - Contains a full SQL copy of the entire Joomla database.
                The SQL files include:
 
-               - asg-openapi.sql        - A full SQL dump of the entire Joomla
-                                          database.
-               - install.mysql.utf8.sql - A SQL dump of only Joomla tables
-                                          the project has modified.
-
-	       This script may be used to migrate content to a fresh
-	       installation of 2.0.0 for testing and staging. It is
-	       not recommended for production deployments.
-               - build.php              - PHP script that exports selected
-                                          database tables and builds a Joomla
-                                          extension installer.
-               - file_openapi.db.zip    - Template used by build.php
-               - file_openapi.db_v1.zip - A full Joomla installation for the open
-                                          API database that defines the developer
-                                          portal. You must install this as an 
-                                          extension to Joomla.  
+               - asg-openapi.sql                - A full SQL dump of the entire 
+                                                  Joomla database.
+               - upgrade_2.1.0_to_2.1.0-hf4.sql - A migration script to upgrade
+                                                  the database schema changes.
+ 
 ==================================================================================
 DOCUMENTATION
 
@@ -82,16 +71,77 @@ includes the following:
      https://github.com/API-Exchange/JoomlaAdapter/wiki
     
 ==================================================================================
-INSTRUCTIONS
+Installation Instructions
 
 On UNIX, for example, from the directory where you unzipped 
-this distribution, on a UNIX system you can copy the files as follows:
+this distribution, you can copy the files as follows:
 
 cp -r ./joomla/* $APACHE_HOME/htdocs
 cp -r ./adapter/joomla/* $APACHE_HOME/htdocs
 
-For detailed instructions, see the Adapter Code for API Exchange Manager and 
+For detailed instructions, see the Adapter Code for TIBCO API Exchange Manager and 
 Joomla! Installation and Configuration document.
+
+TIBCO API Exchange Migration
+
+To migrate the database from 2.1.0 or a 2.1.0 hotfix version to
+2.1.0_HF-004, do the following:
+
+1. It is recommended to back up the database.
+2. Do one of the following:
+
+- Run the following script on the database:
+   
+/adapter/sql-scripts/upgrade_2.1.0_to_2.1.0-hf4.sql
+
+For example, at the SQL command line enter:
+mysql -u USERNAME -p DATABASE_NAME < /adapter/sql-scripts/upgrade_2.1.0_to_2.1.0-hf4.sql
+
+where USERNAME is  the username of the MySQL database, and DATABASE_NAME is the name
+of the database that holds your data.
+
+- Import the SQL file "/adapter/sql-scripts/upgrade_2.1.0_to_2.1.0-hf4.sql" from any
+  of the GUIs for the MySQL database, such as phpMyAdmin.
+
+  Note that phpMyAdmin is now a link in the software that you can select.
+
+==================================================================================
+Closed Issues in 2.1.0_HF-004 (This Release)
+
+ASG-4631
+The bubble walk-through now starts immediately after a self registered user
+logs in and changes their password.
+
+ASG-4839
+An index on the 'subscription_id' column has been added to the
+asg_subscription_usage table, in addition to the primary index on the 'id' column.
+
+ASG-4744
+Spotfire reports are now displayed on a full page.
+
+ASG-4899
+A column for storing the UUID in the asg_logs table has been added to
+errors logged by the portal engine.
+
+ASG-4900
+The data format of the access column has been changed to int(10). This
+allows storing any integer.
+
+ASG-4905
+TIBCO API Exchange Manager now displays appropriate (meaningful) error messages to 
+the end user for the errors returned from the portal engine.
+
+ASG-4926
+The Self Registration process is slow on TIBCO API Exchange Manager.
+
+ASG-4963
+TIBCO API Exchange Manager now allows users to search error messages using uuid 
+in the logs.
+
+AS-5096
+The message that the portal displays when there is an error in parsing
+a JSON spec now informs the user that the invalid spec can be replaced
+or operations updated manually.
 
 ==================================================================================
 COPYRIGHT & LICENSE INFORMATION
@@ -102,7 +152,7 @@ licenses are contained in a file titled "LICENSE.txt" that is included
 with this code distribution.
 
 TIBCO package:
-    * Copyright (c) 2013 TIBCO Software Inc. ALL RIGHTS RESERVED.
+    * Copyright (c) 2013-2014 TIBCO Software Inc. ALL RIGHTS RESERVED.
     * Copyright (c) 2011 - 2013  Wordnik, Inc. (licensed under the Apache
       License, version 2.0)
     * Copyright (c) 2009-2012 Jeremy Ashkenas, DocumentCloud
@@ -117,5 +167,5 @@ Joomla package:
 Swagger:
 
 Cobalt packages:
-     * Copyright (c) 2005 - 2013 MintJoomla
+     * Copyright (c) 2005 - 2014 MintJoomla
 ==================================================================================

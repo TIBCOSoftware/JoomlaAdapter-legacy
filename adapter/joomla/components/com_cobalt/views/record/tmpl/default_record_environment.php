@@ -14,7 +14,6 @@
 
 defined('_JEXEC') or die();
 require_once JPATH_ROOT . '/includes/api.php';
- //sdas;
 $item = $this->item;
 $params = $this->tmpl_params['record'];
 $icons = array();
@@ -23,7 +22,11 @@ $author = array();
 $details = array();
 $started = FALSE;
 $i = $o = 0;
-$tasks_to_hide = DeveloperPortalApi::isReferencedByDownstreamSubs($this->item->id, "environment") ? array(DeveloperPortalApi::TASK_ARCHIVE) : array();
+if(JComponentHelper::getParams('com_emails')->get('enable_archiving_objects') == 1) {
+  $tasks_to_hide = DeveloperPortalApi::isReferencedByDownstreamSubs($this->item->id, "environment") ? array(DeveloperPortalApi::TASK_ARCHIVE) : array();
+} else {
+  $tasks_to_hide = array(DeveloperPortalApi::TASK_ARCHIVE);
+}
 /**
  * the comment line is for disabled deleting button
  */

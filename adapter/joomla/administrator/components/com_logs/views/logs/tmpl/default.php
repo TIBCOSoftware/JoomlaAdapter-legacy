@@ -51,9 +51,13 @@ $listDirn	= $this->escape($this->state->get('list.direction'));
 					<th width="20" class="center">
 						<input type="checkbox" name="checkall-toggle" value="" title="<?php echo JText::_('JGLOBAL_CHECK_ALL'); ?>" onclick="Joomla.checkAll(this)" />
 					</th>
+
 					<th width="4%" class="nowrap center">
 						<?php echo JHtml::_('grid.sort', 'COM_LOGS_HEADING_ID', 'a.id', $listDirn, $listOrder); ?>
 					</th>
+          <th class="center">
+            <?php echo JHtml::_('grid.sort', 'COM_LOGS_HEADING_UUID', 'a.uuid', $listDirn, $listOrder); ?>
+          </th>
 					<th width="4%" class="nowrap center">
 						<?php echo JHtml::_('grid.sort', 'COM_LOGS_HEADING_UID', 'a.uid', $listDirn, $listOrder); ?>
 					</th>
@@ -99,15 +103,15 @@ $listDirn	= $this->escape($this->state->get('list.direction'));
 					</th>
 					<?php endif;?>
 
+          <th class="nowrap">
+            <?php echo JHtml::_('grid.sort', 'COM_LOGS_HEADING_SUMMARY', 'a.summary', $listDirn, $listOrder); ?>
+          </th>
+
 					<th class="nowrap">
 						<?php echo JHtml::_('grid.sort', 'COM_LOGS_HEADING_CREATED_DATE', 'a.create_time', $listDirn, $listOrder); ?>
 					</th>
 
-					<?php if($this->params->get('content', 1)): ?>
-					<th class="nowrap">
-						<?php echo JHtml::_('grid.sort', 'COM_LOGS_HEADING_CONTENT', 'a.content', $listDirn, $listOrder); ?>
-					</th>
-					<?php endif;?>
+
 			</tr>
 			</thead>
 			<tbody>
@@ -122,6 +126,9 @@ $listDirn	= $this->escape($this->state->get('list.direction'));
 				<td class="center">
 				 <?php echo $item->id; ?>
 				</td>
+        <td class="small">
+          <?php echo $item->uuid; ?>
+        </td>
 				<?php if($this->params->get('log_type', 1)): ?>
 				<td class="small">
 				 <?php	
@@ -137,9 +144,9 @@ $listDirn	= $this->escape($this->state->get('list.direction'));
 				<?php endif;?>
 				<?php if($this->params->get('log_type', 1)): ?>
 				<td class="small">
-				 <?php if ($canEdit) : ?>
-				  <a href="<?php echo JRoute::_('index.php?option=com_logs&task=log.edit&id='.$item->id);?>" title="<?php echo $this->escape($item->subject); ?>">
-				    <?php echo $this->escape(str_replace(JURI::root(), '', $item->log_type)); ?></a>
+          <?php if ($canEdit) : ?>
+				  <a href="<?php echo JRoute::_('index.php?option=com_logs&task=log.edit&id='.$item->id);?>" title="<?php echo $this->escape($item->subject); ?>"><?php echo $this->escape(str_replace(JURI::root(), '', $item->log_type)); ?></a>
+				  
 				 <?php else : ?>
 				    <?php echo $this->escape(str_replace(JURI::root(), '', $item->log_type)); ?>
 				 <?php endif; ?>
@@ -183,19 +190,21 @@ $listDirn	= $this->escape($this->state->get('list.direction'));
 				</td>
 				<?php endif;?>
 
+        <td class="small">
+          <?php echo $this->escape($item->summary); ?>
+        </td>
+
 				<td class="small">
 				  <?php echo JHtml::_('date', $item->create_time, JText::_('COM_LOGS_HEADING_CREATED_DATE_FORMAT')); ?>
 				</td>
-
-				<?php if($this->params->get('content', 1)): ?>
-				<td class="small">
-				  <?php echo $this->escape($item->content); ?>
-				</td>
-				<?php endif;?>
 				</tr>
 				<?php endforeach; ?>
 			</tbody>
 		</table>
+		
+		<div class="center">
+			<?php echo $this->pagination->getListFooter(); ?>
+		</div>
 
 		<input type="hidden" name="task" value="" />
 		<input type="hidden" name="boxchecked" value="0" />

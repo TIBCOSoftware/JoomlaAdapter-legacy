@@ -39,6 +39,7 @@ class JFormFieldOrdering extends JFormField
 	 */
 	protected function getInput()
 	{
+    /*
 		$html = array();
 		$attr = '';
 
@@ -72,5 +73,7 @@ class JFormFieldOrdering extends JFormField
 		}
 
 		return implode($html);
+    */
+    return "";
 	}
 }

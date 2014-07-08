@@ -73,23 +73,27 @@ class PlgSystemUseguide extends JPlugin
 					JText::Script("PLG_SYSTEM_USEGUIDE_GUIDE_CONTENT_STEP13",false,false);
 
 					$storedStep = $this->getCurrentGuideStep($user->id);
-					$stepNember = JRequest::getVar("{$user->id}_guide_step",0, "cookie");
+					$cookie_name = md5(strtotime($user->registerDate).$user->id."_guide_step");
+					$stepNumber = JRequest::getVar($cookie_name,0, "cookie");
 
+
+					$doc->addScriptDeclaration('var guide_cookie_name="'.$cookie_name.'";');
 					$doc->addScript(JURI::root(true) . '/templates/' . $app->getTemplate() . '/js/vendor/jqueryui/jquery-ui-1.10.3.custom.min.js', 'text/javascript');
 					$doc->addScript(JURI::root(true) . '/templates/' . $app->getTemplate() . '/js/guide.js', 'text/javascript','foot');
 					$doc->addStyleSheet(JURI::root(true) . '/templates/' . $app->getTemplate() . '/css/guide.css');
-					if ($stepNember < $storedStep)
+
+					if ($stepNumber < $storedStep)
 					{
 						$config = JFactory::getConfig();
 						$cookie_domain = $config->get('cookie_domain', '');
 						$cookie_path = $config->get('cookie_path', '/');
-						setcookie("{$user->id}_guide_step", $storedStep, time() + 365 * 86400, $cookie_path, $cookie_domain);
+						setcookie($cookie_name, $storedStep, time() + 365 * 86400, $cookie_path, $cookie_domain);
 
-					} else if ($stepNember <= $maxStep && $stepNember > $storedStep) {
+					} else if ($stepNumber <= $maxStep && $stepNumber > $storedStep) {
 
-						$this->saveCurrentGuideStep($user->id, $stepNember);
+						$this->saveCurrentGuideStep($user->id, $stepNumber);
 
-					} else if ($stepNember > $maxStep) {
+					} else if ($stepNumber > $maxStep) {
 
 						$this->guideIsDone($user->id);
 					}

@@ -96,6 +96,7 @@ class CreateOrganizationApi {
       {
         $db = JFactory::getDbo();
         $organization = new stdClass();
+        $app = JFactory::getApplication();
         $contact = new stdClass();
         $contact->address = (object) array("country"=>"US","state"=>"CA","city"=>"Palo Alto","zip"=>"94304","address1"=>"3303 Hillview Ave","address2"=>"");
         $contact->contacts = (object) array("tel"=>"000-000-0000");
@@ -160,19 +161,7 @@ class CreateOrganizationApi {
         }
 
 
-        if($record_id)
-        {
-          //Trigger portal event for creating organization
-
-          $http = JHttpFactory::getHttp();
-          $portalData = array('id'=>$record_id, "eventType"=>"Create","objectType"=>"Organization","userId"=>$user_id);
-          $registry = new JRegistry;
-          $registry->loadArray($portalData);
-          $data = (string) $registry;
-          $http->post(JURI::root().'portalEvent',$data);
-
-        }
-
+        $app->setUserState('com_users.registration.new_org_id', $record_id);
 
         return $record_id;
       }

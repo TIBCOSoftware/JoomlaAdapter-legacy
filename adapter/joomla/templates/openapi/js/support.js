@@ -78,5 +78,29 @@
 				}
 		    });
 		});
+
+        // parse the parameters in the URL to decide whether to pre-populate the query field or not
+        var sSearch = window.location.search,
+            aParameters = sSearch ? sSearch.substring(1).split('&') : [],
+            bPrepopulate = false,
+            sUUID, i, aKV, sK, sV,
+            fPrepopulate = function(sUUID) {
+                var dQuery = $('textarea[name="content"]');
+                dQuery.val(SUPPORT_PREPOPULATED_TEXT_UUID.replace(/<br\s*\/>/g, '\n\n').replace(/\{uuid\}/, sUUID));
+            };
+        for(i = 0; i < aParameters.length; i++) {
+            aKV = aParameters[i].split('=');
+            sK = aKV[0], sV = aKV[1];
+            if(sK === 'prepopulate' && sV === '1') {
+                bPrepopulate = true;
+            } else if(sK === 'uuid') {
+                sUUID = sV;
+            }
+        }
+
+        if(bPrepopulate && sUUID) {
+            fPrepopulate(sUUID);
+        }
+
 	});
 }(jQuery));

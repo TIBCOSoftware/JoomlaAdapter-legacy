@@ -929,21 +929,24 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
               rootPath+fileName,
               {},
               function(data){
-                specData = (data && data.apis && data.apis.length>0)?data:{};
+                specData = (data && data.apis)?data:{};
                 if ($('input[name="jform[fields][22]"]').val()==='' && specData.resourcePath.length>0) {
                   $("#adminForm").append('<input type="hidden" name="jform[fields][22]" value="' + specData.resourcePath + '" />');
                 }
                 createOperations(specData.apis,nObjectId,sRedirectUrl);
               },
               'json'
-            );
+            ).error(function(){
+				DeveloperPortal.storeErrMsgInCookie(["<?php echo JText::_('CREATE_PRODUCT_UPLOAD_SPEC_ERROR')?>"]);
+				window.location.href = GLOBAL_CONTEXT_PATH + 'index.php/apis/edit/'+nObjectId;
+            });
           }else{
             if(is_deleted_operations){
-              DeveloperPortal.sendUpdateNotification(API_ID,DeveloperPortal.PORTAL_OBJECT_TYPE_API,{'31':[]},
+              DeveloperPortal.sendUpdateNotification(nObjectId,DeveloperPortal.PORTAL_OBJECT_TYPE_API,{'31':[]},
                                                       function(){
-                                                        window.location.href = redirectURL;
+                                                        window.location.href = sRedirectUrl;
                                                       },function(){
-                                                        window.location.href = redirectURL;
+                                                        window.location.href = sRedirectUrl;
                                                       });
             }else{
               window.location.href = sRedirectUrl;
@@ -959,51 +962,62 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
   
     function createOperations(apis, API_ID, redirectURL){
     var counter = 0;
-    for (var i = 0; i < apis.length; i++) {
-      var api = apis[i];
-      var title = api.operations[0].nickname;
-          var dForm = $('<form id="keyForm" name="keyForm" enctype="multipart/form-data" method="post" style="display:none;"></form>').appendTo('body'),
-              sAction = GLOBAL_CONTEXT_PATH + 'index.php/apis/submit/2-apis/6?fand=' + API_ID + '&field_id=30',
-        restPath = api.path,
-        method = api.operations[0].httpMethod,
-        description = api.description+" : "+api.operations[0].summary,
-            tokenInput = $('input[value="1"]')[0],
-              sIFrameId = 'iframe_submission_for_'+title,
-              dIFrame = $('<iframe id="' + sIFrameId + i + '" name="' + sIFrameId + '"  style="display:none;" />').appendTo('body'),
-              dWindow, sRedirectUrl;
+	
+	try{
+	    for (var i = 0; i < apis.length; i++) {
+	      var api = apis[i];
+	      var title = api.operations[0].nickname;
+	          var dForm = $('<form id="keyForm" name="keyForm" enctype="multipart/form-data" method="post" style="display:none;"></form>').appendTo('body'),
+	              sAction = GLOBAL_CONTEXT_PATH + 'index.php/apis/submit/2-apis/6?fand=' + API_ID + '&field_id=30',
+	        restPath = api.path,
+	        method = api.operations[0].httpMethod,
+	        description = api.description+" : "+api.operations[0].summary,
+	            tokenInput = $('input[value="1"]')[0],
+	              sIFrameId = 'iframe_submission_for_'+title,
+	              dIFrame = $('<iframe id="' + sIFrameId + i + '" name="' + sIFrameId + '"  style="display:none;" />').appendTo('body'),
+	              dWindow, sRedirectUrl;
 
-          dForm.attr('action', sAction);
-          dForm.attr('target', sIFrameId);
-          dForm.append('<input type="hidden" name="task" value="form.save" />'+'<input type="hidden" name="' + tokenInput.name + '" value="1" />'+'<input type="hidden" name="jform[title]" value="' + title +'" />'+'<input type="hidden" name="jform[fields][27]" value="' + description + '" />'+'<input type="hidden" name="jform[fields][28]" value="' + restPath + '" />'+'<input type="hidden" name="jform[fields][29]" value="' + method + '" />'+'<input type="hidden" name="jform[fields][30]" value="' + API_ID + '" />'+'<input type="hidden" name="jform[ucatid]" value="0" />'+'<input type="hidden" name="jform[id]" value="0" />'+'<input type="hidden" name="jform[section_id]" value="2" />'+'<input type="hidden" name="jform[type_id]" value="6" />'+'<input type="hidden" name="jform[published]" value="1" />');
+	          dForm.attr('action', sAction);
+	          dForm.attr('target', sIFrameId);
+	          dForm.append('<input type="hidden" name="task" value="form.save" />'+'<input type="hidden" name="' + tokenInput.name + '" value="1" />'+'<input type="hidden" name="jform[title]" value="' + title +'" />'+'<input type="hidden" name="jform[fields][27]" value="' + description + '" />'+'<input type="hidden" name="jform[fields][28]" value="' + restPath + '" />'+'<input type="hidden" name="jform[fields][29]" value="' + method + '" />'+'<input type="hidden" name="jform[fields][30]" value="' + API_ID + '" />'+'<input type="hidden" name="jform[ucatid]" value="0" />'+'<input type="hidden" name="jform[id]" value="0" />'+'<input type="hidden" name="jform[section_id]" value="2" />'+'<input type="hidden" name="jform[type_id]" value="6" />'+'<input type="hidden" name="jform[published]" value="1" />');
 
-          dIFrame.on('load', function(oEvent) {
-              dWindow = dIFrame[0].contentWindow;
-              sRedirectUrl = dWindow.location.href;
+	          dIFrame.on('load', function(oEvent) {
+	              dWindow = dIFrame[0].contentWindow;
+	              sRedirectUrl = dWindow.location.href;
 
-              if(dWindow.location.href == window.location.href) {
-                  var sErrMsg = 'Operation:' + ' of API ' + API_ID + ' is not successfully stored in the database.';
-                  DeveloperPortal.storeErrMsgInCookie(GENERIC_ERROR_MESSAGE);
-                  if ( typeof fErrorback === 'function') {
-                      fErrorback([sErrMsg, GENERIC_ERROR_MESSAGE].join('<br />'));
-                  }
-              }
-              counter++;
-              if(counter == apis.length){
-                DeveloperPortal.sendUpdateNotification(API_ID,DeveloperPortal.PORTAL_OBJECT_TYPE_API,{'31':[]},
-                                                        function(){
-                                                          window.location.href = redirectURL;
-                                                        },function(){
-                                                          window.location.href = redirectURL;
-                                                        });
-              }
-          });
+	              if(dWindow.location.href == window.location.href) {
+	                  var sErrMsg = 'Operation:' + ' of API ' + API_ID + ' is not successfully stored in the database.';
+	                  DeveloperPortal.storeErrMsgInCookie(GENERIC_ERROR_MESSAGE);
+	                  if ( typeof fErrorback === 'function') {
+	                      fErrorback([sErrMsg, GENERIC_ERROR_MESSAGE].join('<br />'));
+	                  }
+	              }
+	              counter++;
+	              if(counter == apis.length){
+	                DeveloperPortal.sendUpdateNotification(API_ID,DeveloperPortal.PORTAL_OBJECT_TYPE_API,{'31':[]},
+	                                                        function(){
+	                                                          window.location.href = redirectURL;
+	                                                        },function(){
+	                                                          window.location.href = redirectURL;
+	                                                        });
+	              }
+	          });
           
-          dForm.submit();
+	          dForm.submit();
       
-    }
+	    }
+	}catch(e){
+		DeveloperPortal.storeErrMsgInCookie(["<?php echo JText::_('CREATE_PRODUCT_UPLOAD_SPEC_ERROR')?>"]);
+		window.location.href = GLOBAL_CONTEXT_PATH + 'index.php/apis/edit/'+API_ID;
+	}
   }
   }(jQuery));
   
+  function scrollToAttach(){
+	jQuery('html, body').animate({
+	         scrollTop: jQuery("#lbl-23").offset().top
+	     }, 300);
+  }
 </script>
 
 
