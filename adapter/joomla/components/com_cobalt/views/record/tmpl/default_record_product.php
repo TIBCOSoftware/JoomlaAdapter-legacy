@@ -22,6 +22,7 @@ $app_id = $app->input->getInt('app_id');
 $item = $this->item;
 JFactory::getDocument()->setTitle($item->title);
 
+
 $product_id = JRequest::getVar("id");
 
 if($product_id)
@@ -29,7 +30,11 @@ if($product_id)
   $product_id = explode(":",$product_id);
   if(count($product_id) == 2)
   {
-    $app->redirect(JRoute::_($item->url.'&app_id='.$app_id));
+      $url = $item->url;
+      if(isset($app_id)) {
+          $url = $url.'&app_id='.$app_id;
+      }
+      $app->redirect(JRoute::_($url));
   }
 }
 $params = $this->tmpl_params['record'];
@@ -467,15 +472,20 @@ if($params->get('tmpl_core.item_follow_num'))
                    </div>
                    <div class="clearfix"></div>
 			   </div>
-                <div id="swagger_ui_div" class="swagger-ui-div"></div>
+			   <div class="swagger-section">
+			    <div id="message-bar" class="swagger-ui-wrap message-success"></div>
+                <div id="swagger_ui_div" class="swagger-ui-wrap"></div>
+                </div>
                 <script type="text/javascript">
                 	jQuery(function () {
-                	    var swaggerUi = new SwaggerUi({
-                          url: GLOBAL_CONTEXT_PATH + 'asg/internal/product/<?php echo $item->id; ?>',
-                          dom_id: 'swagger_ui_div',
-                          supportHeaderParams: true,
-                          supportedSubmitMethods: ['get', 'post', 'put'],
-                          onComplete: function(swaggerApi, swaggerUi){
+                	    window.swaggerUi = new SwaggerUi({
+                            url: GLOBAL_CONTEXT_PATH + 'asg/internal/product/<?php echo $item->id; ?>',
+                            dom_id: 'swagger_ui_div',
+                            useJQuery: true,
+                            supportHeaderParams: true,
+                            supportedSubmitMethods: ['get', 'post', 'put'],
+                            highlightSizeThreshold: 1024 * 1024, // 1Mb
+                            onComplete: function(swaggerApi, swaggerUi){
                               <?php if($app_id):?>
                                   jQuery("#swagger_ui_div a[href^='#']").each(function(i,ele){
                                       var link = jQuery(ele).attr("href");
@@ -483,15 +493,15 @@ if($params->get('tmpl_core.item_follow_num'))
                                   });
                               <?php endif;?>
                             jQuery('pre code').each(function(i, e) {hljs.highlightBlock(e);});
-                          },
-                          onFailure: function(data) {
+                            },
+                            onFailure: function(data) {
                             if(console) {
                                   console.log('Unable to Load SwaggerUI');
                                   console.log(data);
                               }
                               jQuery('#tabs-list a[href="#tab-api-explorer"]').removeAttr('data-toggle').addClass("tab-disabled");
-                          },
-                          docExpansion: 'none'
+                            },
+                            docExpansion: 'none'
                       }), setKeyInHeader = function() {
                           var key = jQuery('#input_apiKey').val();
                           if(key && key.trim && key.trim() !== "") {
@@ -514,7 +524,6 @@ if($params->get('tmpl_core.item_follow_num'))
                         setKeyInHeader();
                       });
                       swaggerUi.load();
-                      window.swaggerUis && window.swaggerUis.splice ? window.swaggerUis.push(swaggerUi) : window.swaggerUis = [swaggerUi];
                       if(jQuery('#apps').length > 0 && jQuery('#apps')[0].options.length > 1) {
                         jQuery('#apps')[0].selectedIndex = 1;
                         jQuery('#input_apiKey').val(jQuery('#apps').val());

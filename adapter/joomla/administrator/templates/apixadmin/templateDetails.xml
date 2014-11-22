@@ -2,10 +2,10 @@
 <!DOCTYPE install PUBLIC "-//Joomla! 2.5//DTD template 1.0//EN" "http://www.joomla.org/xml/dtd/2.5/template-install.dtd">
 <extension version="3.1" type="template" client="administrator">
 	<name>apixadmin</name>
-	<version>1.0</version>
-	<creationDate>4/15/2014</creationDate>
-	<author>Tibco UX</author>
-	<authorEmail>sagdeshp@tibco.com</authorEmail>
+	<version>1.1</version>
+	<creationDate>9/18/2014</creationDate>
+	<author>Kevin Li</author>
+	<authorEmail>huali@tibco-support.com</authorEmail>
 	<copyright>Portions copyright © 2013, TIBCO Software Inc &amp; Copyright (C) 2005 - 2013 Open Source Matters, Inc. All rights reserved.</copyright>
 	<description>TPL_ISIS_XML_DESCRIPTION</description>
 	<files>
@@ -34,13 +34,14 @@
 		<position>icon</position>
 		<position>cp_shell</position>
 		<position>cpanel</position>
+		<position>bottom</position>
 		<position>footer</position>
 		<position>login</position>
 		<position>debug</position>
 	</positions>
 	<languages folder="language">
-		<language tag="en-GB">en-GB/en-GB.tpl_apixadmin.ini</language>
-		<language tag="en-GB">en-GB/en-GB.tpl_apixadmin.sys.ini</language>
+		<language tag="en-GB">en-GB/en-GB.tpl_apix211admin.ini</language>
+		<language tag="en-GB">en-GB/en-GB.tpl_apix211admin.sys.ini</language>
 	</languages>
 	<config>
 		<fields name="params">
@@ -56,12 +57,17 @@
 				label="TPL_ISIS_COLOR_HEADER_LABEL"
 				description="TPL_ISIS_COLOR_HEADER_DESC" />
 
+				<field name="sidebarColor" class="" type="color" default="#0088CC"
+				validate="color"
+				label="TPL_ISIS_COLOR_SIDEBAR_LABEL"
+				description="TPL_ISIS_COLOR_SIDEBAR_DESC" />
+
 				<field name="logoFile" class="" type="media" default=""
 				label="TPL_ISIS_LOGO_LABEL"
 				description="TPL_ISIS_LOGO_DESC" />
 
 				<field name="admin_menus" type="radio"
-				class="btn-group"
+				class="btn-group btn-group-yesno"
 				default="1"
 				label="TPL_ISIS_FIELD_ADMIN_MENUS_LABEL"
 				description="TPL_ISIS_FIELD_ADMIN_MENUS_DESC"
@@ -73,7 +79,7 @@
 				</field>
 
 				<field name="displayHeader" type="radio"
-				class="btn-group"
+				class="btn-group btn-group-yesno"
 				default="1"
 				label="TPL_ISIS_HEADER_LABEL"
 				description="TPL_ISIS_HEADER_DESC"
@@ -96,7 +102,7 @@
 				</field>
 
 				<field name="stickyToolbar" type="radio"
-				class="btn-group"
+				class="btn-group btn-group-yesno"
 				default="1"
 				label="TPL_ISIS_STICKY_LABEL"
 				description="TPL_ISIS_STICKY_DESC"

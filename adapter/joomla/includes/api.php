@@ -1061,26 +1061,12 @@ where type_id=10)');
 
         $results = $db->loadObject();
         if ($results->subject && $results->content) {
-          $password = JUserHelper::genRandomPassword();
-          $salt = JUserHelper::genRandomPassword(32);
-          $crypted = JUserHelper::getCryptedPassword($password, $salt);
-          $passwordHashed = $crypted . ':' . $salt;
-
-          $query->clear();
-
-          $query->update('#__users')
-          ->set($db->quoteName('password') . ' = ' . $db->quote($passwordHashed))
-          ->where('id='.$user_id);
-
-          $db->execute();
-
           $config = &JFactory::getConfig();
-
           $title   = $results->subject;
           $content = str_replace("{USER}", $user->name, $results->content);
           $content = str_replace("{ACTIVE_URL}", $active_url, $content);
           $content = str_replace("{USER_NAME}", $user->username, $content);
-          $content = str_replace("{PASSWORD}", $password, $content);
+          $content = str_replace("Password : {PASSWORD}", JText::_('ACTIVE_EMAIL_PROMPT_MESSAGE'), $content);
           return DeveloperPortalApi::send_email($user->email, $title, $content, $results->isHTML);
         }
         return false;

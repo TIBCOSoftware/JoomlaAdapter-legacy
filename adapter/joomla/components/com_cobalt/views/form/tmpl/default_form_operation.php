@@ -23,6 +23,7 @@ if($params->get('tmpl_params.form_grouping_type', 0))
 $k = 0;
 $app = JFactory::getApplication();
 $operation_id = $app->input->getInt('id', 0);
+$parent_api_create_proxy = "-1";
 
 if($operation_id)
 {
@@ -35,7 +36,7 @@ if($operation_id)
 
 if($api_id)
 {
-
+    $parent_api_create_proxy = TibcoTibco::getAPICreateProxyById($api_id);
 	$old_operations_of_api = DeveloperPortalApi::getOperationsOfApiByApiId($api_id);
 	$doc = JFactory::getDocument();
 	$old_operations_of_api_js = "var parent_api_id=".$api_id.";";
@@ -271,40 +272,42 @@ if($api_id)
 
 	<?php if(isset($this->sorted_fields[0])):?>
 		<?php foreach ($this->sorted_fields[0] as $field_id => $field):?>
-			<?php if (($api_type=='REST' && in_array($field->id, array(128)))): ?>
-				<?php continue; ?>
-			<?php endif ?>
-			<div id="fld-<?php echo $field->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo 'field-'.$field_id; ?> <?php echo $field->fieldclass;?>">
-				<?php if($field->params->get('core.show_lable') == 1 || $field->params->get('core.show_lable') == 3):?>
-					<label id="lbl-<?php echo $field->id;?>" for="field_<?php echo $field->id;?>" class="control-label <?php echo $field->class;?>" >
-						<?php if($field->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
-							<?php echo HTMLFormatHelper::icon($field->params->get('core.icon'));  ?>
-						<?php endif;?>
-							
-						
-						<?php if ($field->required): ?>
-							<span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
-						<?php endif;?>
+            <?php if($field->id != 149 || $parent_api_create_proxy == "1"): ?>
+                <?php if (($api_type=='REST' && in_array($field->id, array(128))) || ($parent_api_create_proxy == "1" && $api_type != "REST" && $field->id == 29)): ?>
+                    <?php continue; ?>
+                <?php endif ?>
+                <div id="fld-<?php echo $field->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo 'field-'.$field_id; ?> <?php echo $field->fieldclass;?>">
+                    <?php if($field->params->get('core.show_lable') == 1 || $field->params->get('core.show_lable') == 3):?>
+                        <label id="lbl-<?php echo $field->id;?>" for="field_<?php echo $field->id;?>" class="control-label <?php echo $field->class;?>" >
+                            <?php if($field->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
+                                <?php echo HTMLFormatHelper::icon($field->params->get('core.icon'));  ?>
+                            <?php endif;?>
+                                                
+                                        
+                            <?php if ($field->required): ?>
+                                <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
+                            <?php endif;?>
 
-						<?php if ($field->description):?>
-							<span class="pull-right" rel="tooltip" style="cursor: help;"  data-original-title="<?php echo htmlentities(($field->translateDescription ? JText::_($field->description) : $field->description), ENT_COMPAT, 'UTF-8');?>">
-								<?php echo HTMLFormatHelper::icon('question-small-white.png');  ?>
-							</span>
-						<?php endif;?>
+                            <?php if ($field->description):?>
+                                <span class="pull-right" rel="tooltip" style="cursor: help;"  data-original-title="<?php echo htmlentities(($field->translateDescription ? JText::_($field->description) : $field->description), ENT_COMPAT, 'UTF-8');?>">
+                                    <?php echo HTMLFormatHelper::icon('question-small-white.png');  ?>
+                                </span>
+                            <?php endif;?>
 
-						<?php echo $field->label; ?>
-						
-					</label>
-					<?php if(in_array($field->params->get('core.label_break'), array(1,3))):?>
-						<div style="clear: both;"></div>
-					<?php endif;?>
-				<?php endif;?>
+                            <?php echo $field->label; ?>
+                                    
+                        </label>
+                        <?php if(in_array($field->params->get('core.label_break'), array(1,3))):?>
+                            <div style="clear: both;"></div>
+                        <?php endif;?>
+                    <?php endif;?>
 
-				<div class="controls<?php if(in_array($field->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($field->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $field->fieldclass  ?>">
-					<div id="field-alert-<?php echo $field->id?>" class="alert alert-error" style="display:none"></div>
-					<?php echo $field->result; ?>
-				</div>
-			</div>
+                    <div class="controls<?php if(in_array($field->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($field->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $field->fieldclass  ?>">
+                        <div id="field-alert-<?php echo $field->id?>" class="alert alert-error" style="display:none"></div>
+                        <?php echo $field->result; ?>
+                    </div>
+                </div>
+			<?php endif; ?>
 		<?php endforeach;?>
 		<?php unset($this->sorted_fields[0]);?>
 	<?php endif;?>
@@ -336,33 +339,33 @@ if($api_id)
 				<?php echo $this->field_groups[$group_id]['descr'];?>
 			<?php endif;?>
 			<?php foreach ($fields as $field_id => $field):?>
-				<div id="fld-<?php echo $field->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo 'field-'.$field_id; ?> <?php echo $field->fieldclass;?>">
-					<?php if($field->params->get('core.show_lable') == 1 || $field->params->get('core.show_lable') == 3):?>
-						<label id="lbl-<?php echo $field->id;?>" for="field_<?php echo $field->id;?>" class="control-label <?php echo $field->class;?>" >
-							<?php if($field->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
-								<?php echo HTMLFormatHelper::icon($field->params->get('core.icon'));  ?>
-							<?php endif;?>
-							<?php if ($field->required): ?>
-								<span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
-							<?php endif;?>
+                <div id="fld-<?php echo $field->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo 'field-'.$field_id; ?> <?php echo $field->fieldclass;?>">
+                    <?php if($field->params->get('core.show_lable') == 1 || $field->params->get('core.show_lable') == 3):?>
+                        <label id="lbl-<?php echo $field->id;?>" for="field_<?php echo $field->id;?>" class="control-label <?php echo $field->class;?>" >
+                            <?php if($field->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
+                                <?php echo HTMLFormatHelper::icon($field->params->get('core.icon'));  ?>
+                            <?php endif;?>
+                            <?php if ($field->required): ?>
+                                <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
+                            <?php endif;?>
 
-							<?php if ($field->description):?>
-								<span class="pull-right" rel="tooltip" style="cursor: help;" data-original-title="<?php echo htmlspecialchars(($field->translateDescription ? JText::_($field->description) : $field->description), ENT_COMPAT, 'UTF-8');?>">
-									<?php echo HTMLFormatHelper::icon('question-small-white.png');  ?>
-								</span>
-							<?php endif;?>
-							<?php echo $field->label; ?>
-						</label>
-						<?php if(in_array($field->params->get('core.label_break'), array(1,3))):?>
-							<div style="clear: both;"></div>
-						<?php endif;?>
-					<?php endif;?>
+                            <?php if ($field->description):?>
+                                <span class="pull-right" rel="tooltip" style="cursor: help;" data-original-title="<?php echo htmlspecialchars(($field->translateDescription ? JText::_($field->description) : $field->description), ENT_COMPAT, 'UTF-8');?>">
+                                    <?php echo HTMLFormatHelper::icon('question-small-white.png');  ?>
+                                </span>
+                            <?php endif;?>
+                            <?php echo $field->label; ?>
+                        </label>
+                        <?php if(in_array($field->params->get('core.label_break'), array(1,3))):?>
+                            <div style="clear: both;"></div>
+                        <?php endif;?>
+                    <?php endif;?>
 
-					<div class="controls<?php if(in_array($field->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($field->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $field->fieldclass  ?>">
-						<div id="field-alert-<?php echo $field->id?>" class="alert alert-error" style="display:none"></div>
-						<?php echo $field->result; ?>
-					</div>
-				</div>
+                    <div class="controls<?php if(in_array($field->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($field->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $field->fieldclass  ?>">
+                            <div id="field-alert-<?php echo $field->id?>" class="alert alert-error" style="display:none"></div>
+                            <?php echo $field->result; ?>
+                    </div>
+                </div>
 			<?php endforeach;?>
 			<?php group_end($this);?>
 		<?php endforeach;?>
@@ -438,38 +441,75 @@ if($api_id)
 </script>
 
 <script>
-var operation_orignal_fields_value = {},operation_new_fields_value={},flag=true;
+var oOldValues = {},
+    oNewValues={};
 
 jQuery(function(){
-	jQuery(window).load(function(){
-		operation_orignal_fields_value.name=jQuery("#jform_title").val();
-		operation_orignal_fields_value.path=jQuery("#field_28").val();
-		operation_orignal_fields_value.method=jQuery("#form_field_list_29").val();
-	})
+        oOldValues.name = jQuery("#jform_title").val();
+        oOldValues.path = jQuery("#field_28").val();
+        oOldValues.targetPath = jQuery("#field_149").length > 0 ? jQuery("#field_149").val() : '';
+        oOldValues.method = jQuery("#form_field_list_29").val();
+        oOldValues.soapAction = jQuery("#field_128").length > 0 ? jQuery("#field_128").val() : '';
 });
 
   Joomla.beforesubmitform = function(fCallback, fErrorback) {
-    operation_new_fields_value.name=jQuery("#jform_title").val();
-    operation_new_fields_value.path=jQuery("#field_28").val();
-    operation_new_fields_value.method=jQuery("#form_field_list_29").val();
+        oNewValues.name = jQuery("#jform_title").val();
+        oNewValues.path = jQuery("#field_28").val();
+        oNewValues.targetPath = jQuery("#field_149").length > 0 ? jQuery("#field_149").val() : '';
+        oNewValues.method = jQuery("#form_field_list_29").val();
+        oNewValues.soapAction = jQuery("#field_128").length > 0 ? jQuery("#field_128").val() : '';
 
-    if(operation_new_fields_value.name !== operation_orignal_fields_value.name ||
-       operation_new_fields_value.method !== operation_orignal_fields_value.method ||
-       operation_new_fields_value.path !== operation_orignal_fields_value.path
-     ){
-      flag = false;
-    }
-    if(operation_new_fields_value.name !== operation_orignal_fields_value.name){
-    	validateOperationTitle(fCallback, fErrorback);
-    }else{
-    	fCallback();
-    }
+        if(oOldValues.name !== oNewValues.name) {
+            (window.oUpdatedFields &&
+                (window.oUpdatedFields['name'] = oOldValues.name)) ||
+                (window.oUpdatedFields = {
+                    'name': oOldValues.name
+                });
+        }
+
+        if(oOldValues.method !== oNewValues.method) {
+            (window.oUpdatedFields &&
+                (window.oUpdatedFields[29] = oOldValues.method)) ||
+            (window.oUpdatedFields = {
+                29: oOldValues.method
+            });
+        }
+
+        if(oOldValues.path !== oNewValues.path) {
+            (window.oUpdatedFields &&
+                (window.oUpdatedFields[28] = oOldValues.path)) ||
+            (window.oUpdatedFields = {
+                28: oOldValues.path
+            });
+        }
+
+        if(oOldValues.soapAction !== oNewValues.soapAction) {
+            (window.oUpdatedFields &&
+                (window.oUpdatedFields[128] = oOldValues.soapAction)) ||
+            (window.oUpdatedFields = {
+                128: oOldValues.soapAction
+            });
+        }
+       
+        if(oOldValues.targetPath !== oNewValues.targetPath) {
+            (window.oUpdatedFields &&
+                (window.oUpdatedFields[149] = oOldValues.targetPath)) ||
+            (window.oUpdatedFields = {
+                149: oOldValues.targetPath
+            });
+        }
+
+        if(oNewValues.name !== oOldValues.name){
+            validateOperationTitle(fCallback, fErrorback);
+        } else {
+            fCallback();
+        }
   }
   function validateOperationTitle(fCallback, fErrorback) {
     var data = {};
     data.options = 'com_cobalt';
     data.task = 'ajaxmore.validateOperationTitle';
-    data.operation_title = operation_new_fields_value.name;
+    data.operation_title = oNewValues.name;
     data.api_id = "<?php echo $api_id;?>";
     data.operation_id = jQuery("#adminForm input[name='id']").val();
     jQuery.ajax({

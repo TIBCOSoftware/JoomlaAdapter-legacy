@@ -20,6 +20,8 @@ if($params->get('tmpl_params.form_grouping_type', 0))
 	$started = true;
 }
 $k = 0;
+// pr($this->form);
+// pr($this->form->getInput("id"));
 ?>
 <style>
 	.licon {
@@ -90,6 +92,26 @@ $k = 0;
 #tabs-box {
   border-style: none;
 }	
+
+
+.managed_by_gateway .btn{
+  background-color: #006699;
+}
+
+
+#fld-144 .btn:active,
+#fld-144 .btn.active,
+#fld-142 .btn:active,
+#fld-142 .btn.active,
+#fld-132 .btn:active,
+#fld-132 .btn.active {
+ background-color:  #2E9ACF;
+}
+
+.view-form .container > .row-fluid #content > form .form-horizontal .tab-content .control-group.is_enabled_ssl{
+  display: none;
+}
+
 </style>
 
 <div class="form-horizontal">
@@ -316,7 +338,7 @@ $k = 0;
           </div>
         </div>
         <!-- basepath goes here -->
-        <?php $basepath = $this->sorted_fields[0][14]?>
+        <?php $basepath = $this->sorted_fields[0][14]; ?>
         <div id="fld-<?php echo $basepath->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo 'field-14'; ?> <?php echo $basepath->fieldclass;?>">
           <?php if($basepath->params->get('core.show_lable') == 1 || $basepath->params->get('core.show_lable') == 3):?>
             <label id="lbl-<?php echo $basepath->id;?>" for="field_<?php echo $basepath->id;?>" class="control-label <?php echo $basepath->class;?>" >
@@ -348,6 +370,450 @@ $k = 0;
             <?php echo $basepath->result; ?>
           </div>
         </div>
+
+        <!-- managed by gateway goes here -->
+        <?php $managed_by_gateway = $this->sorted_fields[0][132]?>
+        <div id="fld-<?php echo $managed_by_gateway->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo $managed_by_gateway->fieldclass;?>">
+          <?php if($managed_by_gateway->params->get('core.show_lable') == 1 || $managed_by_gateway->params->get('core.show_lable') == 3):?>
+            <label id="lbl-<?php echo $managed_by_gateway->id;?>" for="field_<?php echo $managed_by_gateway->id;?>" class="control-label <?php echo $managed_by_gateway->class;?>" >
+              <?php if($managed_by_gateway->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
+                <?php echo HTMLFormatHelper::icon($managed_by_gateway->params->get('core.icon'));  ?>
+              <?php endif;?>
+                
+              
+              <?php if ($managed_by_gateway->required): ?>
+                <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
+              <?php endif;?>
+
+              <?php if ($managed_by_gateway->description):?>
+                <span class="pull-right" rel="tooltip" style="cursor: help;"  data-original-title="<?php echo htmlentities(($managed_by_gateway->translateDescription ? JText::_($managed_by_gateway->description) : $managed_by_gateway->description), ENT_COMPAT, 'UTF-8');?>">
+                  <?php echo HTMLFormatHelper::icon('question-small-white.png');  ?>
+                </span>
+              <?php endif;?>
+
+              <?php echo $managed_by_gateway->label; ?>
+              
+            </label>
+            <?php if(in_array($managed_by_gateway->params->get('core.label_break'), array(1,3))):?>
+              <div style="clear: both;"></div>
+            <?php endif;?>
+          <?php endif;?>
+
+          <div class="controls<?php if(in_array($managed_by_gateway->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($managed_by_gateway->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $managed_by_gateway->fieldclass  ?>">
+            <div id="field-alert-<?php echo $managed_by_gateway->id?>" class="alert alert-error" style="display:none"></div>
+            <?php echo $managed_by_gateway->result; ?>
+          </div>
+        </div>
+        
+
+        <!-- organization goes here -->
+        <?php $organization = $this->sorted_fields[0][133]?>
+        <div id="fld-<?php echo $organization->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo $organization->fieldclass;?>">
+          <?php if($organization->params->get('core.show_lable') == 1 || $organization->params->get('core.show_lable') == 3):?>
+            <label id="lbl-<?php echo $organization->id;?>" for="field_<?php echo $organization->id;?>" class="control-label <?php echo $organization->class;?>" >
+              <?php if($organization->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
+                <?php echo HTMLFormatHelper::icon($organization->params->get('core.icon'));  ?>
+              <?php endif;?>
+                
+              
+              <?php if ($organization->required): ?>
+                <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
+              <?php endif;?>
+
+              <?php if ($organization->description):?>
+                <span class="pull-right" rel="tooltip" style="cursor: help;"  data-original-title="<?php echo htmlentities(($organization->translateDescription ? JText::_($organization->description) : $organization->description), ENT_COMPAT, 'UTF-8');?>">
+                  <?php echo HTMLFormatHelper::icon('question-small-white.png');  ?>
+                </span>
+              <?php endif;?>
+
+              <?php echo $organization->label; ?>
+              
+            </label>
+            <?php if(in_array($organization->params->get('core.label_break'), array(1,3))):?>
+              <div style="clear: both;"></div>
+            <?php endif;?>
+          <?php endif;?>
+
+          <div class="controls<?php if(in_array($organization->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($organization->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $organization->fieldclass  ?>">
+            <div id="field-alert-<?php echo $organization->id?>" class="alert alert-error" style="display:none"></div>
+            <?php echo $organization->result; ?>
+          </div>
+        </div>
+
+        <!-- User Name goes here -->
+        <?php $user_name = $this->sorted_fields[0][134]?>
+        <div id="fld-<?php echo $user_name->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo $user_name->fieldclass;?>">
+          <?php if($user_name->params->get('core.show_lable') == 1 || $user_name->params->get('core.show_lable') == 3):?>
+            <label id="lbl-<?php echo $user_name->id;?>" for="field_<?php echo $user_name->id;?>" class="control-label <?php echo $user_name->class;?>" >
+              <?php if($user_name->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
+                <?php echo HTMLFormatHelper::icon($user_name->params->get('core.icon'));  ?>
+              <?php endif;?>
+                
+              
+              <?php if ($user_name->required): ?>
+                <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
+              <?php endif;?>
+
+              <?php if ($user_name->description):?>
+                <span class="pull-right" rel="tooltip" style="cursor: help;"  data-original-title="<?php echo htmlentities(($user_name->translateDescription ? JText::_($user_name->description) : $user_name->description), ENT_COMPAT, 'UTF-8');?>">
+                  <?php echo HTMLFormatHelper::icon('question-small-white.png');  ?>
+                </span>
+              <?php endif;?>
+
+              <?php echo $user_name->label; ?>
+              
+            </label>
+            <?php if(in_array($user_name->params->get('core.label_break'), array(1,3))):?>
+              <div style="clear: both;"></div>
+            <?php endif;?>
+          <?php endif;?>
+
+          <div class="controls<?php if(in_array($user_name->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($user_name->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $user_name->fieldclass  ?>">
+            <div id="field-alert-<?php echo $user_name->id?>" class="alert alert-error" style="display:none"></div>
+            <?php echo $user_name->result; ?>
+          </div>
+        </div>
+        
+        <!-- Password goes here -->
+        <?php $password= $this->sorted_fields[0][135]?>
+        <div id="fld-<?php echo $password->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo $password->fieldclass;?>">
+          <?php if($password->params->get('core.show_lable') == 1 || $password->params->get('core.show_lable') == 3):?>
+            <label id="lbl-<?php echo $password->id;?>" for="field_<?php echo $password->id;?>" class="control-label <?php echo $password->class;?>" >
+              <?php if($password->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
+                <?php echo HTMLFormatHelper::icon($password->params->get('core.icon'));  ?>
+              <?php endif;?>
+                
+              
+              <?php if ($password->required): ?>
+                <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
+              <?php endif;?>
+
+              <?php if ($password->description):?>
+                <span class="pull-right" rel="tooltip" style="cursor: help;"  data-original-title="<?php echo htmlentities(($password->translateDescription ? JText::_($password->description) : $password->description), ENT_COMPAT, 'UTF-8');?>">
+                  <?php echo HTMLFormatHelper::icon('question-small-white.png');  ?>
+                </span>
+              <?php endif;?>
+
+              <?php echo $password->label; ?>
+              
+            </label>
+            <?php if(in_array($password->params->get('core.label_break'), array(1,3))):?>
+              <div style="clear: both;"></div>
+            <?php endif;?>
+          <?php endif;?>
+
+          <div class="controls<?php if(in_array($password->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($password->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $password->fieldclass  ?>">
+            <div id="field-alert-<?php echo $password->id?>" class="alert alert-error" style="display:none"></div>
+            <?php echo $password->result; ?>
+          </div>
+        </div>
+
+        <!-- Timeout goes here -->
+        <?php $timeout= $this->sorted_fields[0][136]?>
+        <div id="fld-<?php echo $timeout->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo $timeout->fieldclass;?>">
+          <?php if($timeout->params->get('core.show_lable') == 1 || $timeout->params->get('core.show_lable') == 3):?>
+            <label id="lbl-<?php echo $timeout->id;?>" for="field_<?php echo $timeout->id;?>" class="control-label <?php echo $timeout->class;?>" >
+              <?php if($timeout->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
+                <?php echo HTMLFormatHelper::icon($timeout->params->get('core.icon'));  ?>
+              <?php endif;?>
+                
+              
+              <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
+
+              <?php if ($timeout->description):?>
+                <span class="pull-right" rel="tooltip" style="cursor: help;"  data-original-title="<?php echo htmlentities(($timeout->translateDescription ? JText::_($timeout->description) : $timeout->description), ENT_COMPAT, 'UTF-8');?>">
+                  <?php echo HTMLFormatHelper::icon('question-small-white.png');  ?>
+                </span>
+              <?php endif;?>
+
+              <?php echo $timeout->label; ?>
+              
+            </label>
+            <?php if(in_array($timeout->params->get('core.label_break'), array(1,3))):?>
+              <div style="clear: both;"></div>
+            <?php endif;?>
+          <?php endif;?>
+
+          <div class="controls<?php if(in_array($timeout->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($timeout->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $timeout->fieldclass  ?>">
+            <div id="field-alert-<?php echo $timeout->id?>" class="alert alert-error" style="display:none"></div>
+            <?php echo $timeout->result; ?>
+          </div>
+        </div>
+
+        <!-- Retry Count goes here -->
+        <?php $retry_count= $this->sorted_fields[0][137]?>
+        <div id="fld-<?php echo $retry_count->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo $retry_count->fieldclass;?>">
+          <?php if($retry_count->params->get('core.show_lable') == 1 || $retry_count->params->get('core.show_lable') == 3):?>
+            <label id="lbl-<?php echo $retry_count->id;?>" for="field_<?php echo $retry_count->id;?>" class="control-label <?php echo $retry_count->class;?>" >
+              <?php if($retry_count->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
+                <?php echo HTMLFormatHelper::icon($retry_count->params->get('core.icon'));  ?>
+              <?php endif;?>
+                
+              
+              <?php if ($retry_count->required): ?>
+                <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
+              <?php endif;?>
+
+              <?php if ($retry_count->description):?>
+                <span class="pull-right" rel="tooltip" style="cursor: help;"  data-original-title="<?php echo htmlentities(($retry_count->translateDescription ? JText::_($retry_count->description) : $retry_count->description), ENT_COMPAT, 'UTF-8');?>">
+                  <?php echo HTMLFormatHelper::icon('question-small-white.png');  ?>
+                </span>
+              <?php endif;?>
+
+              <?php echo $retry_count->label; ?>
+              
+            </label>
+            <?php if(in_array($retry_count->params->get('core.label_break'), array(1,3))):?>
+              <div style="clear: both;"></div>
+            <?php endif;?>
+          <?php endif;?>
+
+          <div class="controls<?php if(in_array($retry_count->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($retry_count->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $retry_count->fieldclass  ?>">
+            <div id="field-alert-<?php echo $retry_count->id?>" class="alert alert-error" style="display:none"></div>
+            <?php echo $retry_count->result; ?>
+          </div>
+        </div>
+
+        <!-- Retry Interval goes here -->
+        <?php $retry_interval= $this->sorted_fields[0][138]?>
+        <div id="fld-<?php echo $retry_interval->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo $retry_interval->fieldclass;?>">
+          <?php if($retry_interval->params->get('core.show_lable') == 1 || $retry_interval->params->get('core.show_lable') == 3):?>
+            <label id="lbl-<?php echo $retry_interval->id;?>" for="field_<?php echo $retry_interval->id;?>" class="control-label <?php echo $retry_interval->class;?>" >
+              <?php if($retry_interval->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
+                <?php echo HTMLFormatHelper::icon($retry_interval->params->get('core.icon'));  ?>
+              <?php endif;?>
+                
+              
+              <?php if ($retry_interval->required): ?>
+                <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
+              <?php endif;?>
+
+              <?php if ($retry_interval->description):?>
+                <span class="pull-right" rel="tooltip" style="cursor: help;"  data-original-title="<?php echo htmlentities(($retry_interval->translateDescription ? JText::_($retry_interval->description) : $retry_interval->description), ENT_COMPAT, 'UTF-8');?>">
+                  <?php echo HTMLFormatHelper::icon('question-small-white.png');  ?>
+                </span>
+              <?php endif;?>
+
+              <?php echo $retry_interval->label; ?>
+              
+            </label>
+            <?php if(in_array($retry_interval->params->get('core.label_break'), array(1,3))):?>
+              <div style="clear: both;"></div>
+            <?php endif;?>
+          <?php endif;?>
+
+          <div class="controls<?php if(in_array($retry_interval->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($retry_interval->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $retry_interval->fieldclass  ?>">
+            <div id="field-alert-<?php echo $retry_interval->id?>" class="alert alert-error" style="display:none"></div>
+            <?php echo $retry_interval->result; ?>
+          </div>
+        </div>
+
+        <!-- Retry Timeout (ms) goes here -->
+        <?php $retry_timeout= $this->sorted_fields[0][139]?>
+        <div id="fld-<?php echo $retry_timeout->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo $retry_timeout->fieldclass;?>">
+          <?php if($retry_timeout->params->get('core.show_lable') == 1 || $retry_timeout->params->get('core.show_lable') == 3):?>
+            <label id="lbl-<?php echo $retry_timeout->id;?>" for="field_<?php echo $retry_timeout->id;?>" class="control-label <?php echo $retry_timeout->class;?>" >
+              <?php if($retry_timeout->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
+                <?php echo HTMLFormatHelper::icon($retry_timeout->params->get('core.icon'));  ?>
+              <?php endif;?>
+                
+              
+              <?php if ($retry_timeout->required): ?>
+                <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
+              <?php endif;?>
+
+              <?php if ($retry_timeout->description):?>
+                <span class="pull-right" rel="tooltip" style="cursor: help;"  data-original-title="<?php echo htmlentities(($retry_timeout->translateDescription ? JText::_($retry_timeout->description) : $retry_timeout->description), ENT_COMPAT, 'UTF-8');?>">
+                  <?php echo HTMLFormatHelper::icon('question-small-white.png');  ?>
+                </span>
+              <?php endif;?>
+
+              <?php echo $retry_timeout->label; ?>
+              
+            </label>
+            <?php if(in_array($retry_timeout->params->get('core.label_break'), array(1,3))):?>
+              <div style="clear: both;"></div>
+            <?php endif;?>
+          <?php endif;?>
+
+          <div class="controls<?php if(in_array($retry_timeout->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($retry_timeout->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $retry_timeout->fieldclass  ?>">
+            <div id="field-alert-<?php echo $retry_timeout->id?>" class="alert alert-error" style="display:none"></div>
+            <?php echo $retry_timeout->result; ?>
+          </div>
+        </div>
+
+        <!-- Headers To Forward goes here -->
+        <?php $headers_to_fowards = $this->sorted_fields[0][140]?>
+        <div id="fld-<?php echo $headers_to_fowards->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo $headers_to_fowards->fieldclass;?>">
+          <?php if($headers_to_fowards->params->get('core.show_lable') == 1 || $headers_to_fowards->params->get('core.show_lable') == 3):?>
+            <label id="lbl-<?php echo $headers_to_fowards->id;?>" for="field_<?php echo $headers_to_fowards->id;?>" class="control-label <?php echo $headers_to_fowards->class;?>" >
+              <?php if($headers_to_fowards->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
+                <?php echo HTMLFormatHelper::icon($headers_to_fowards->params->get('core.icon'));  ?>
+              <?php endif;?>
+                
+              
+              <?php if ($headers_to_fowards->required): ?>
+                <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
+              <?php endif;?>
+
+              <?php if ($headers_to_fowards->description):?>
+                <span class="pull-right" rel="tooltip" style="cursor: help;"  data-original-title="<?php echo htmlentities(($headers_to_fowards->translateDescription ? JText::_($headers_to_fowards->description) : $headers_to_fowards->description), ENT_COMPAT, 'UTF-8');?>">
+                  <?php echo HTMLFormatHelper::icon('question-small-white.png');  ?>
+                </span>
+              <?php endif;?>
+
+              <?php echo $headers_to_fowards->label; ?>
+              
+            </label>
+            <?php if(in_array($headers_to_fowards->params->get('core.label_break'), array(1,3))):?>
+              <div style="clear: both;"></div>
+            <?php endif;?>
+          <?php endif;?>
+
+          <div class="controls<?php if(in_array($headers_to_fowards->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($headers_to_fowards->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $headers_to_fowards->fieldclass  ?>">
+            <div id="field-alert-<?php echo $headers_to_fowards->id?>" class="alert alert-error" style="display:none"></div>
+            <?php echo $headers_to_fowards->result; ?>
+          </div>
+        </div>
+
+
+        <!-- Operation Features goes here -->
+        <?php $operation_features = $this->sorted_fields[0][141]?>
+        <div id="fld-<?php echo $operation_features->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo $operation_features->fieldclass;?>">
+          <?php if($operation_features->params->get('core.show_lable') == 1 || $operation_features->params->get('core.show_lable') == 3):?>
+            <label id="lbl-<?php echo $operation_features->id;?>" for="field_<?php echo $operation_features->id;?>" class="control-label <?php echo $operation_features->class;?>" >
+              <?php if($operation_features->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
+                <?php echo HTMLFormatHelper::icon($operation_features->params->get('core.icon'));  ?>
+              <?php endif;?>
+                
+              
+              <?php if ($operation_features->required): ?>
+                <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
+              <?php endif;?>
+
+              <?php if ($operation_features->description):?>
+                <span class="pull-right" rel="tooltip" style="cursor: help;"  data-original-title="<?php echo htmlentities(($operation_features->translateDescription ? JText::_($operation_features->description) : $operation_features->description), ENT_COMPAT, 'UTF-8');?>">
+                  <?php echo HTMLFormatHelper::icon('question-small-white.png');  ?>
+                </span>
+              <?php endif;?>
+
+              <?php echo $operation_features->label; ?>
+              
+            </label>
+            <?php if(in_array($operation_features->params->get('core.label_break'), array(1,3))):?>
+              <div style="clear: both;"></div>
+            <?php endif;?>
+          <?php endif;?>
+
+          <div class="controls<?php if(in_array($operation_features->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($operation_features->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $operation_features->fieldclass  ?>">
+            <div id="field-alert-<?php echo $operation_features->id?>" class="alert alert-error" style="display:none"></div>
+            <?php echo $operation_features->result; ?>
+          </div>
+        </div>
+
+        <!-- SSL Enabled goes here -->
+        <?php $ssl_enabled = $this->sorted_fields[0][142]?>
+        <div id="fld-<?php echo $ssl_enabled->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo $ssl_enabled->fieldclass;?>">
+          <?php if($ssl_enabled->params->get('core.show_lable') == 1 || $ssl_enabled->params->get('core.show_lable') == 3):?>
+            <label id="lbl-<?php echo $ssl_enabled->id;?>" for="field_<?php echo $ssl_enabled->id;?>" class="control-label <?php echo $ssl_enabled->class;?>" >
+              <?php if($ssl_enabled->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
+                <?php echo HTMLFormatHelper::icon($ssl_enabled->params->get('core.icon'));  ?>
+              <?php endif;?>
+                
+              
+              <?php if ($ssl_enabled->required): ?>
+                <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
+              <?php endif;?>
+
+              <?php if ($ssl_enabled->description):?>
+                <span class="pull-right" rel="tooltip" style="cursor: help;"  data-original-title="<?php echo htmlentities(($ssl_enabled->translateDescription ? JText::_($ssl_enabled->description) : $ssl_enabled->description), ENT_COMPAT, 'UTF-8');?>">
+                  <?php echo HTMLFormatHelper::icon('question-small-white.png');  ?>
+                </span>
+              <?php endif;?>
+
+              <?php echo $ssl_enabled->label; ?>
+              
+            </label>
+            <?php if(in_array($ssl_enabled->params->get('core.label_break'), array(1,3))):?>
+              <div style="clear: both;"></div>
+            <?php endif;?>
+          <?php endif;?>
+
+          <div class="controls<?php if(in_array($ssl_enabled->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($ssl_enabled->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $ssl_enabled->fieldclass  ?>">
+            <div id="field-alert-<?php echo $ssl_enabled->id?>" class="alert alert-error" style="display:none"></div>
+            <?php echo $ssl_enabled->result; ?>
+          </div>
+        </div>
+
+
+        <!-- Property File goes here -->
+        <?php $property_file = $this->sorted_fields[0][143]?>
+        <div id="fld-<?php echo $property_file->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo $property_file->fieldclass;?>">
+          <?php if($property_file->params->get('core.show_lable') == 1 || $property_file->params->get('core.show_lable') == 3):?>
+            <label id="lbl-<?php echo $property_file->id;?>" for="field_<?php echo $property_file->id;?>" class="control-label <?php echo $property_file->class;?>" >
+              <?php if($property_file->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
+                <?php echo HTMLFormatHelper::icon($property_file->params->get('core.icon'));  ?>
+              <?php endif;?>
+                
+              
+              <?php if ($property_file->required): ?>
+                <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
+              <?php endif;?>
+
+              <?php if ($property_file->description):?>
+                <span class="pull-right" rel="tooltip" style="cursor: help;"  data-original-title="<?php echo htmlentities(($property_file->translateDescription ? JText::_($property_file->description) : $property_file->description), ENT_COMPAT, 'UTF-8');?>">
+                  <?php echo HTMLFormatHelper::icon('question-small-white.png');  ?>
+                </span>
+              <?php endif;?>
+
+              <?php echo $property_file->label; ?>
+              
+            </label>
+            <?php if(in_array($property_file->params->get('core.label_break'), array(1,3))):?>
+              <div style="clear: both;"></div>
+            <?php endif;?>
+          <?php endif;?>
+
+          <div class="controls<?php if(in_array($property_file->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($property_file->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $property_file->fieldclass  ?>">
+            <div id="field-alert-<?php echo $property_file->id?>" class="alert alert-error" style="display:none"></div>
+            <?php echo $property_file->result; ?>
+          </div>
+        </div>
+
+        <!-- is SSL Anonymous goes here -->
+        <?php $is_ssl_anonymous = $this->sorted_fields[0][144]?>
+        <div id="fld-<?php echo $is_ssl_anonymous->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo $is_ssl_anonymous->fieldclass;?>">
+          <?php if($is_ssl_anonymous->params->get('core.show_lable') == 1 || $is_ssl_anonymous->params->get('core.show_lable') == 3):?>
+            <label id="lbl-<?php echo $is_ssl_anonymous->id;?>" for="field_<?php echo $is_ssl_anonymous->id;?>" class="control-label <?php echo $is_ssl_anonymous->class;?>" >
+              <?php if($is_ssl_anonymous->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
+                <?php echo HTMLFormatHelper::icon($is_ssl_anonymous->params->get('core.icon'));  ?>
+              <?php endif;?>
+                
+              
+              <?php if ($is_ssl_anonymous->required): ?>
+                <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
+              <?php endif;?>
+
+              <?php if ($is_ssl_anonymous->description):?>
+                <span class="pull-right" rel="tooltip" style="cursor: help;"  data-original-title="<?php echo htmlentities(($is_ssl_anonymous->translateDescription ? JText::_($is_ssl_anonymous->description) : $is_ssl_anonymous->description), ENT_COMPAT, 'UTF-8');?>">
+                  <?php echo HTMLFormatHelper::icon('question-small-white.png');  ?>
+                </span>
+              <?php endif;?>
+
+              <?php echo $is_ssl_anonymous->label; ?>
+              
+            </label>
+            <?php if(in_array($is_ssl_anonymous->params->get('core.label_break'), array(1,3))):?>
+              <div style="clear: both;"></div>
+            <?php endif;?>
+          <?php endif;?>
+
+          <div class="controls<?php if(in_array($is_ssl_anonymous->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($is_ssl_anonymous->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $is_ssl_anonymous->fieldclass  ?>">
+            <div id="field-alert-<?php echo $is_ssl_anonymous->id?>" class="alert alert-error" style="display:none"></div>
+            <?php echo $is_ssl_anonymous->result; ?>
+          </div>
+        </div>
+
         <!-- gateways goes here -->
         <?php $gateways = $this->sorted_fields[0][15]?>
         <div id="fld-<?php echo $gateways->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo 'field-15'; ?> <?php echo $gateways->fieldclass;?>">
@@ -631,37 +1097,192 @@ $k = 0;
 <script type="text/javascript">
   if (jQuery('#jform_id').val() != 0) {
     var environmentForm = {};
-    jQuery(function() {
-        environmentForm.oldBasepath = jQuery('#url-list14 .url-item.row-fluid input[name^="jform[fields][14][0][url]"]').val();
-        environmentForm.oldGateways = [];
-        jQuery('#adminForm input[name="jform[fields][15][]"]').each(function(index, item) {
-            environmentForm.oldGateways.push(jQuery(item).val());
-        });
-    });
 
-    Joomla.beforesubmitform = function(fCallback, fErrorback) {
-        environmentForm.newBasepath = jQuery('#url-list14 .url-item.row-fluid input[name^="jform[fields][14][0][url]"]').val();
-        environmentForm.newGateways = [];
-        jQuery('#adminForm input[name="jform[fields][15][]"]').each(function(index, item) {
-            environmentForm.newGateways.push(jQuery(item).val());
-        });
-        if(environmentForm.oldBasepath != environmentForm.newBasepath) {
-            window.oUpdatedFields = {
-              14: environmentForm.oldBasepath
-            };
-        }
-        if(!DeveloperPortal.arrayEqual(environmentForm.oldGateways, environmentForm.newGateways)) {
-          if(window.oUpdatedFields) {
-            window.oUpdatedFields['15'] = environmentForm.oldGateways;
-          } else {
-            window.oUpdatedFields = {
-              15: environmentForm.oldGateways
-            };
+    (function($) {
+        $(function() {
+          var manage_related_fields = $(".control-group.is_managed");
+          var field_timeout = $("#fld-136");
+
+          <?php if(!$this->item->id):?>
+            (function initForm(){
+              $("#bool-y132").addClass("active btn-success").prev("input").attr("checked",true);
+              enabled_manage();
+            }());
+          <?php else:?>
+            if($("input:checked[name='jform[fields][132]']").val() === "1") {
+              enabled_manage();
+              $("#fld-143,#fld-144").hide();
+            } else {
+              manage_related_fields.show();
+              if($("input:checked[name='jform[fields][142]']").val() === "1") {
+                $("#fld-143,#fld-144").show();
+              } else {
+                $("#fld-143,#fld-144").hide();
+              }
+            }
+          <?php endif;?>
+
+
+          //Do something after enabled manage by gateway
+          function enabled_manage(){
+            manage_related_fields.hide();
+            field_timeout.find("input").removeAttr("required");
+            clearHiddenFields();
           }
+
+
+          //Do something after disabled manage by gateway
+          function disabled_manage(){
+            manage_related_fields.show();
+            field_timeout.find("input").attr("required",true);
+            initShowUpFields();
+          }
+
+          // Hide the property file and is SSL Anonymous fields when the managed by gateway fields is changing
+          function resetSSLFields(){
+            $("#fld-142").find(".btn").removeClass("active btn-success btn-danger");
+            $("#fld-142").find("input:checked").removeAttr("checked");
+            $("#fld-143, #fld-144").hide();
+            $('#field-143').val('');
+            $('#fld-144').find('input:checked').removeAttr('checked');
+          }
+          
+          function initSSLFields() {
+              $("#bool-n142").addClass("active btn-danger").next("input").attr("checked", true);
+              $('#fld-143, #fld-144').hide();
+              $('#field-143').val('');
+              $('#fld-144').find('input:checked').removeAttr('checked');
+          }
+          
+          function initShowUpFields() {
+              $("#fld-136").find("input").val(20000);
+              $("#fld-137").find("input").val(0);
+              $("#fld-138").find("input").val(0);
+              $("#fld-139").find("input").val(0);
+              initSSLFields();
+          }
+          
+          function clearHiddenFields() {
+              $('input[name="jform[fields][134]"], input[name="jform[fields][135]"],#field_136, #field_137, #field_138, #field_139, #field_140, #field_141').val('');
+              resetSSLFields();
+          }
+
+          // This is for toggle the proxy fields
+          $("#fld-132 button").on("click",function(){
+
+            if(/^bool-y/.test(this.id)) {
+              enabled_manage();
+              $('#parent_list133 > div').remove();
+            } else {
+              disabled_manage();
+              // manage_related_fields.show();
+            }
+
+          });
+
+          $("#fld-142 button").on("click",function(){
+              var ssl_related_fields = $(".control-group.is_enabled_ssl");
+              if(/^bool-y/.test(this.id)) {
+                  ssl_related_fields.show();
+                  $('#bool-n144').addClass('active btn-danger').next('input').attr('checked', true);
+              } else {
+                  ssl_related_fields.hide();
+                  $('#field-143').val('');
+                  $('#fld-144').find('input:checked').removeAttr('checked');
+              }
+          });
+
+            environmentForm.oldBasepath = jQuery('#url-list14 .url-item.row-fluid input[name^="jform[fields][14][0][url]"]').val();
+            environmentForm.oldGateways = [];
+            jQuery('#adminForm input[name="jform[fields][15][]"]').each(function(index, item) {
+                environmentForm.oldGateways.push(jQuery(item).val());
+            });
+            environmentForm.oldManagedByGateway = jQuery('input:checked[name="jform[fields][132]"]').val();
+            environmentForm.oldHeadersToForward = jQuery('input[name="jform[fields][140]"]').val();
+            environmentForm.oldTimeouts = jQuery('input[name="jform[fields][136]"]').val();
+
+            Joomla.beforesubmitform = function(fCallback, fErrorback) {
+                window.oUpdatedFields = {};
+                environmentForm.newBasepath = jQuery('#url-list14 .url-item.row-fluid input[name^="jform[fields][14][0][url]"]').val();
+                environmentForm.newGateways = [];
+                environmentForm.newManagedByGateway = jQuery('input:checked[name="jform[fields][132]"]').val();
+                environmentForm.newHeadersToForward = jQuery('input[name="jform[fields][140]"]').val();
+                environmentForm.newTimeouts = jQuery('input[name="jform[fields][136]"]').val();
+                jQuery('#adminForm input[name="jform[fields][15][]"]').each(function(index, item) {
+                    environmentForm.newGateways.push(jQuery(item).val());
+                });
+                if(environmentForm.oldBasepath != environmentForm.newBasepath) {
+                  window.oUpdatedFields[14] = [environmentForm.oldBasepath];
+                }
+
+                if(environmentForm.oldManagedByGateway != environmentForm.newManagedByGateway)
+                {
+                  window.oUpdatedFields[132] = [environmentForm.oldManagedByGateway];
+                }
+
+                if(environmentForm.newManagedByGateway === "-1" && environmentForm.oldHeadersToForward != environmentForm.newHeadersToForward) {
+                  window.oUpdatedFields[140] = [environmentForm.oldHeadersToForward];
+                }
+
+                if(environmentForm.newManagedByGateway === "-1" && environmentForm.oldTimeouts !== environmentForm.newTimeouts) {
+                  window.oUpdatedFields[136] = [environmentForm.oldTimeouts];
+                }
+                if(!DeveloperPortal.arrayEqual(environmentForm.oldGateways, environmentForm.newGateways)) {
+                  window.oUpdatedFields[15] = environmentForm.oldGateways;
+                }
+                if(jQuery("input:checked[name='jform[fields][132]']").val() === "1") {
+                    clearHiddenFields();
+                }
+                fCallback();
+            };
+        });
+      }(jQuery));
+    }
+
+
+
+      jQuery('document').ready(function() {
+        addSSLCheckbox();
+        jQuery("#add-url14").bind("click",function(){
+          addSSLCheckbox();
+        });
+      });
+
+       
+      function addSSLCheckbox() {
+         jQuery('#url-list14 .url-item.row-fluid input[type="text"][name^="jform[fields][14]"]').each(function(index, item) {
+          if (jQuery(item).parent().find("label input[type='checkbox']").length==0) {
+            var checkbox = jQuery('<label style="vertical-align:text-bottom;margin-top:5px;"><input type="checkbox" id="ssl89" style="vertical-align:text-bottom;">&nbsp;SSL</label>');
+            checkbox.find("input").bind("click",function(){
+                var urlText = jQuery(item).val();
+                urlText = urlText.length===0?'http://':urlText;
+                if (jQuery(this).attr("checked")==="checked") {
+                  urlText = urlText.replace("http","https");
+                }else{
+                  urlText = urlText.replace("https","http");
+                }
+                jQuery(item).val(urlText);
+                
+                return;
+            });
+            if (jQuery(this).val().indexOf("https:")>=0) {
+              checkbox.find("input").attr("checked",true);
+            }
+            jQuery(item).after(checkbox);
+            jQuery(item).bind("blur",function(){
+              if (jQuery(this).val().indexOf("https:")<0) {
+                checkbox.find("input").attr("checked",false);
+              }else{
+                checkbox.find("input").attr("checked",true);
+              }
+              
+            });
         }
-        fCallback();
-    };
-  }
+      });
+    }
+
+
+
 </script>
 
 
@@ -737,3 +1358,5 @@ function total_end($data)
 		break;
 	}
 }
+
+

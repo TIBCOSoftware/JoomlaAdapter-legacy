@@ -122,40 +122,44 @@ class LogsModelLogs extends JModelList
 		$query	= $db->getQuery(true);
 
 		// Select the required fields from the table.
-		$query->select(
-			$this->getState(
-				'list.select',
-				'a.*'
-			)
-		);
-		$query->from($db->quoteName('asg_logs').' AS a');
+        $state = $this->getState(
+        			'list.select',
+        			'a.*'
+        		 );
+        echo $state;
+        $strQuery = $state.' FROM '.$db->quoteName('asg_logs').' AS a WHERE ';
+
 		// Filter by published state
 		$state = $this->getState('filter.state');
 		if (is_numeric($state))
 		{
-			$query->where('a.published = '.(int) $state);
-		} elseif ($state === '')
+            $strQuery = $strQuery.'a.published = '.(int) $state;
+		} else
 		{
-			$query->where('(a.published IN (0,1,2))');
+            $strQuery = $strQuery.'(a.published IN (0,1,2))';
 		}
 
 		// Filter the items over the search string if set.
 		$search = $this->getState('filter.search');
 		if (!empty($search))
 		{
-			if (stripos($search, 'id:') === 0)
-			{
-				$query->where('a.id = '.(int) substr($search, 3));
-			} else if (stripos($search, 'uid:') === 0){
-				$query->where('a.uid = '.(int) substr($search, 4));
-			} else if (stripos($search, 'uuid:') === 0){
-        $query->where('a.uuid = '. $db->quote(substr($search, 5)));
-      } else {
 				$search = $db->Quote('%'.$db->escape($search, true).'%');
-				$query->where($db->quoteName('summary').' LIKE '.$search);
-			}
+                  $strQuery = $strQuery.'AND ('.$db->quoteName('summary').' LIKE '.$search.
+                  ' OR '.$db->quoteName('uuid').' LIKE '.$search.
+                  ' OR '.$db->quoteName('http_status').' LIKE '.$search.
+                  ' OR '.$db->quoteName('http_status_text').' LIKE '.$search.
+                  ' OR '.$db->quoteName('content').' LIKE '.$search.
+                  ' OR '.$db->quoteName('entity_type').' LIKE '.$search.
+                  ' OR '.$db->quoteName('event').' LIKE '.$search.
+                  ' OR '.$db->quoteName('event_status').' LIKE '.$search.
+                  ' OR '.$db->quoteName('uid').' LIKE '.$search.
+                  ' OR '.$db->quoteName('id').' LIKE '.$search.')';
+
+
+
 		}
 
+        $query->select($strQuery);
 		// Add the list ordering clause.
 		$query->order($db->escape($this->getState('list.ordering', 'a.log_type')).' '.$db->escape($this->getState('list.direction', 'ASC')));
 

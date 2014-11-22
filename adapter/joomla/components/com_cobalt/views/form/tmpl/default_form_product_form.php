@@ -27,7 +27,7 @@ $user_profile_id = DeveloperPortalApi::getUserProfileId();
 
 $apisData = DeveloperPortalApi::valueForKeyFromJson($this->item->fields, 7);
 
-
+$archivedAPIs = array();
 $userOrgIds = DeveloperPortalApi::getUserOrganization();
 
 if(!empty($userOrgIds)){
@@ -467,6 +467,14 @@ if(!empty($userOrgIds)){
           <div class="controls<?php if(in_array($apis->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($apis->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $apis->fieldclass  ?>">
             <div id="apis-alert-<?php echo $apis->id?>" class="alert alert-error" style="display:none"></div>
             <?php echo $apis->result; ?>
+			<?php
+			foreach ($apis->value as $value) {
+				$apiRecord = ItemsStore::getRecord($value);
+				if ($apiRecord->published==2) {
+					$archivedAPIs[] = $value;
+				}
+			}
+			?>
           </div>
         </div>
         <table class="table">
@@ -744,8 +752,18 @@ jQuery(function(){
     };
     function renderAPITable() {
       var ids = [];
+	  var archivedIDs = '<?php echo implode(',',$archivedAPIs); ?>'.split(',');
       jQuery('#parent_list7').children().each(function(index, node) {
-        ids.push(jQuery(node).attr('rel'));
+		aid = jQuery(node).attr('rel');
+		flag = true;
+		for (var i = 0; i < archivedIDs.length; i++) {
+			if (archivedIDs[i] == aid) {
+				flag = false;
+			}
+		}
+		if (flag) {
+			ids.push(aid);
+		}
       });
       if (ids.length) {
         jQuery.ajax({
@@ -755,7 +773,7 @@ jQuery(function(){
           var html = [], i,
           result = JSON.parse(data).result;
           for (i=0;i<result.length;i++) {
-            html.push('<tr><td>' + result[i].title + '</br>' + (result[i].description || '') + '</td><td>' + result[i].mtime + '</td><td>' + result[i].author + '</td></tr>');
+            html.push('<tr api="'+ids[i]+'"><td>' + result[i].title + '</br>' + (result[i].description || '') + '</td><td>' + result[i].mtime + '</td><td>' + result[i].author + '</td></tr>');
           }
           jQuery('.asg-create-product-step2 table.table tbody').html(html.join());
           if (jQuery('.asg-create-product-step2 table.table').is(':hidden')) {
@@ -769,10 +787,10 @@ jQuery(function(){
         }
       }
     }
-    renderAPITable();
-    jQuery('#modal7').on('hide', function() {
-      renderAPITable();
-    });
+    // renderAPITable(); //hide this table for ticket-4445
+    // jQuery('#modal7').on('hide', function() {
+    //   renderAPITable();
+    // });
     jQuery('.asg-pro-step-title-container .asg-pro-step-title').on('click', '.icon-chevron-down', function() {
       jQuery(this).removeClass('icon-chevron-down').addClass('icon-chevron-right');
       jQuery(this).parent().parent().next().hide();
@@ -818,7 +836,15 @@ jQuery(function(){
         }
         fCallback();
     };
-    
+	
+	
+	jQuery(function() {
+		<?php foreach ($archivedAPIs as $apiID): ?>
+		jQuery('input[value="<?php echo $apiID; ?>"]').remove();
+		jQuery('div[rel="<?php echo $apiID; ?>"]').remove();
+		<?php endforeach;?>
+	});
+	
   // Commented out for published state
   // jQuery('document').ready(function() {
     // var published = <?php echo $this->item->published;?>;

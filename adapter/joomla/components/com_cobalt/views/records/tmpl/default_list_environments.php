@@ -22,7 +22,9 @@ settype($exclude, 'array');
 foreach ($exclude as &$value) {
 	$value = $this->fields_keys_by_id[$value];
 }
-$this->items = array_filter($this->items,"getEnvironmentRecords");
+$this->items = array_filter($this->items,function($item){
+	return (isset($item->type_id) && $item->type_id==4);
+});
 ?>
 <?php if($params->get('tmpl_core.show_title_index')):?>
 	<h2><?php echo JText::_('CONTHISPAGE')?></h2>
@@ -268,17 +270,3 @@ $this->items = array_filter($this->items,"getEnvironmentRecords");
 		<?php endforeach;?>
 	</tbody>
 </table>
-
-
-<?php
-/**
- * Get the right records which we need
- * @param array element $item
- * @return boolean
- */
-function getEnvironmentRecords($item){
-	return (isset($item->type_id) && $item->type_id==4);
-}
-
-
-?>

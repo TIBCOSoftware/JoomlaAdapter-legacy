@@ -124,6 +124,23 @@ $app = JFactory::getApplication();
             return errorText;
         }
     };
+	
+    Joomla.checkUploadState = function() {
+	  var uploadFlag = true;
+    	  jQuery("div.mooupload_listview").each(function(){
+		  var nodes = jQuery(this).find("ul li:not(:first-child)");
+		  if (nodes && nodes.length>0) {
+			  nodes.each(function(){
+				 var node = jQuery(this).find("div.result");
+			     if (node.html()=='') {
+					 uploadFlag = false;
+					 return uploadFlag;
+			     }
+			  });
+		  }
+    	  });
+	  return uploadFlag;
+    }
 
     Joomla.submitbutton = function(task) {
 
@@ -135,7 +152,15 @@ $app = JFactory::getApplication();
             return;
         }
 
-        var bValid = Joomla.validate();
+		var bValid = true;
+		
+		//check for attached files upload state
+		if (Joomla.checkUploadState() === false) {
+			bValid = ['<?php echo JText::_("CREATE_NEW_UPLOAD_NOT_READY"); ?>'];
+		}else {
+			bValid = Joomla.validate();
+		}
+		
         if(bValid === true) {
             //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             ////////// This "beforesubmitform" function is supposed to be used by individual form to do any supplementary data insertion to the form or validation. //////////
@@ -155,21 +180,7 @@ $app = JFactory::getApplication();
     };
 
     Joomla.submitform = function(task) {
-        <?php if((int)$this->type->id === 6):?>
-            if(!parseInt(operation_id) || (parseInt(operation_id) && !flag)){
-                DeveloperPortal.submitForm(task,function(nRecordId,sRedirectUrl){
-                    DeveloperPortal.sendUpdateNotification(parent_api_id,DeveloperPortal.PORTAL_OBJECT_TYPE_API,{'31':[]},function(){
-                       window.location.href = sRedirectUrl;
-                    },function(){
-                       window.location.href = sRedirectUrl;
-                    });
-                });
-            }else{
-                DeveloperPortal.submitForm(task);
-            }
-        <?php else:?>
-             DeveloperPortal.submitForm(task);
-        <?php endif;?>
+        DeveloperPortal.submitForm(task);
     }
 
 --></script>
@@ -205,7 +216,7 @@ $app = JFactory::getApplication();
 	<br />
 <?php endif;?>
 
-<form method="post" action="<?php echo JUri::getInstance()->toString()?>" name="adminForm" id="adminForm" class="form-validate" enctype="multipart/form-data">
+<form method="post" action="<?php echo JUri::getInstance()->toString()?>" name="adminForm" id="adminForm" class="form-validate" enctype="multipart/form-data" novalidate="novalidate">
 
 	<?php if($this->tmpl_params->get('tmpl_core.show_top_tab')):?>
 		<?php echo $this->loadTemplate('tab_'.$this->params->get('properties.tmpl_articleform'));?>

@@ -158,7 +158,7 @@ if($params->get('tmpl_core.item_follow_num'))
 		margin:10px;
 	}
 </style>
-<span class="pull-left breadcrumb-app">Applications | <?php echo $item->title; ?></span>
+<span class="pull-left breadcrumb-app"><a href="<?php echo JURI::root(); ?>index.php/applications">Applications</a> | <?php echo $item->title; ?></span>
 <div class="clearfix"></div>
 <article class="<?php echo $this->appParams->get('pageclass_sfx')?><?php if($item->featured) echo ' article-featured' ?>">
     <div class="app-details">
@@ -441,6 +441,7 @@ if($params->get('tmpl_core.item_follow_num'))
 
 <script type="text/javascript">
 
+    var _FORM_TOKEN = '<?php echo JFactory::getSession()->getFormToken(); ?>';
     (function($) {
         jQuery('document').ready(function() {
           var editAppLink = jQuery('.app-details .dropdown-menu li a[href*="form.edit"]');

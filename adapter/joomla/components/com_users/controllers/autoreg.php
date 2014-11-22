@@ -33,6 +33,7 @@ class UsersControllerAutoreg extends UsersController
 	 */
 	public function register()
 	{
+		
 		// Check for request forgeries.
 		JSession::checkToken() or AutoregHelper::error(JText::_('JINVALID_TOKEN'));
 
@@ -46,14 +47,12 @@ class UsersControllerAutoreg extends UsersController
 		$app	= JFactory::getApplication();
 		$model	= $this->getModel('Registration', 'UsersModel');
 		$is_self_register = false;
-
+		
 		// Get the user data.
 		$requestData = $this->input->post->get('jform', array(), 'array');
-		$requestData['password1'] = JUserHelper::genRandomPassword();
-		// $requestData['password1'] = 'TibcoOpenAPI';
-		$requestData['password2'] = $requestData['password1'];
+		$requestData['password1'] = $_POST['jform']['password1'];
+		$requestData['password2'] = $_POST['jform']['password2'];
 		
-
 		if($requestData["apiuser"] && is_array($requestData)){
 			$is_self_register = true;
 		}
@@ -73,12 +72,15 @@ class UsersControllerAutoreg extends UsersController
 		} else {
 		    $requestData['groups'] = array(2);
 		}
+		
 		// Validate the posted data.
 		$form	= $model->getForm();
 		if (!$form)
 		{
+			
 			// Get the validation messages.
 			$errors	= $model->getErrors();
+			
 			$msgv = array();
 			// Push up to three validation messages out to the user.
 			for ($i = 0, $n = count($errors); $i < $n && $i < 3; $i++)
@@ -94,7 +96,6 @@ class UsersControllerAutoreg extends UsersController
 			return false;
 		}
 		$data	= $model->validate($form, $requestData);
-
 		// Check for validation errors.
 		if ($data === false)
 		{
@@ -119,7 +120,6 @@ class UsersControllerAutoreg extends UsersController
 					}
 				}
 			}
-
 			if($is_self_register){
 				// Save the data in the session.
 				$app->setUserState('com_users.registration.data', $requestData);
@@ -191,7 +191,7 @@ class UsersControllerAutoreg extends UsersController
 		elseif ($return === 'useractivate')
 		{
 			// $this->setMessage(JText::_('COM_USERS_REGISTRATION_COMPLETE_ACTIVATE'));
-		$this->setRedirect(JRoute::_('index.php?option=com_users&view=registration&layout=complete&id='.$newuser[0].($userFirstName?'&uname='.$userFirstName:'').($newOrganizationId?'&organization='.$newOrganizationId:''), false));
+			$this->setRedirect(JRoute::_('index.php?option=com_users&view=registration&layout=complete&id='.$newuser[0].($userFirstName?'&uname='.$userFirstName:'').($newOrganizationId?'&organization='.$newOrganizationId:''), false));
 		}
 		else
 		{

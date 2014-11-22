@@ -28,7 +28,7 @@
         padding-top: 5px;
         line-height: 20px;
     }
-    
+
     input.agree_term[type="checkbox"]{
       margin-top: -5px;
     }
@@ -54,6 +54,13 @@
     input {
       ime-mode: disabled;
     }
+.community .plan_comment, .community .request_notify{
+    display: none;
+  }
+ #tabs-list .guide-component.step7{
+  top: -105px !important;
+  left: 2% !important;
+ }
 </style>
 
 <?php $color = 0; ?>
@@ -84,8 +91,8 @@
     <div class="plan plan_level_<?php echo $key; ?> planHover primary-color<?php echo $color; ?>">
       <!--For request form-->
       <?php if($this->user->id!==0):?>
-        <div id="request-plan-form-<?php echo $item->id;?>" class="modal hide fade" role="dialog" aria-hidden="true" width="540px;display:none;">
-          <form action="">
+        <div id="request-plan-form-<?php echo $item->id;?>" class="modal request-modal hide fade <?php  if($item->fields[123][0]){echo "community";} ?>" role="dialog" aria-hidden="true" width="540px;display:none;">
+          <form style="width: 690px;" action="">
             <div class="modal-header">
               <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
               <h3 id="myModalLabel"><?php echo JText::_("PLAN_REQUEST_BOX_TITLE_CONFIRMATION");?></h3>
@@ -93,7 +100,9 @@
             <div class="modal-body">
               <div class="span6 pull-left">
                 <div class="plan-title">
+
                   <h4><?php echo JText::_('PLAN_REQUEST_SELECTED_PLAN_TIPS'); ?></h4>
+
                   <span></span>
                 </div>
                 <div class="plan-body">
@@ -103,30 +112,27 @@
                   <div class="plan-limit"><?php echo $item->fields['80']; ?> <?php echo JText::_('PLAN_DAILY_LIMIT'); ?></div>
                   <div class="plan-burst"><?php echo $item->fields['79']; ?> <?php echo JText::_('PLAN_BURST'); ?></div>
                 </div>
+
+
+
                 <?php
                 $planname = $item->title;
                 $body = str_replace("+"," ",urlencode("Hello,\n\n We would like to place a request for a subscription to the following:\n\nProduct: ".$productname."\nPlan: ".$planname."\n\nPlease contact us at your earliest convenience."));
                 ?>
               </div>
               <div class="span6 pull-right">
-                <?php if(!empty($appsOfUser) && $item->fields[123][0]):?>
-                <label><?php echo JText::_("PLAN_REQUEST_ATTACHED_APPS"); ?></label>
-                <select class="selected_apps_for_plan" multiple>
-                <?php foreach ($appsOfUser as $appItem):?> 
-                <option value="<?php echo $appItem;?>"><?php echo ItemsStore::getRecord($appItem)->title;?></option>
-                <?php endforeach;?>
-                </select>
-                <?php endif ?>
+                <?php if(!empty($appsOfUser) ):?>
+                    <label><?php echo JText::_("PLAN_REQUEST_ATTACHED_APPS"); ?></label>
+                    <select class="selected_apps_for_plan" multiple>
+                    <?php foreach ($appsOfUser as $appItem):?>
+                    <option value="<?php echo $appItem;?>"><?php echo ItemsStore::getRecord($appItem)->title;?></option>
+                    <?php endforeach;?>
+                    </select>
+                <?php endif; ?>
                 <div class="control-group">
-                  <div>
-                    <input type="checkbox" name="agree_term" class="agree_term" value="1"/> <?php echo JText::_("PLAN_REQUEST_AGREEMENT_TIPS");?>
-                     <a class="termsToggle" style="cursor:pointer;">  <?php echo JText::_("PLAN_REQUEST_PRODUCT_SPECIFIC_TERMS");?></a>
-                    <div class="termsBlock" style="display:none;">
-                      <?php
-                      echo "<h1>Terms & Conditions</h1>";
-                      echo CobaltApi::renderField($product,129,"full");
-                      ?>
-                    </div>
+                  <div class="plan_comment">
+                   <label for=""><?php echo JText::_("PLAN_REQUEST_NOTES"); ?></label>
+                   <textarea name='additional_request' rows="3" style="max-width: 200px"></textarea>
                   </div>
                   <div style="display:none;margin-right:5px;margin-bottom:0;margin-top:10px;" class="alert alert-error"></div>
                   <input type="hidden" name="options" value="com_cobalt">
@@ -138,9 +144,25 @@
                   <input type="hidden" name="cname" value="<?php echo $record->id;?>"/>
                   <input type="hidden" name="task" value="ajaxMore.requestNormalPlan">
                 </div>
+
+                 <div class="control-group request-terms" style="margin-top: 20px;">
+                    <div>
+                      <input type="checkbox" name="agree_term" class="agree_term" value="1"/> <?php echo JText::_("PLAN_REQUEST_AGREEMENT_TIPS");?>
+                       <a class="termsToggle" style="cursor:pointer;">  <?php echo JText::_("PLAN_REQUEST_PRODUCT_SPECIFIC_TERMS");?></a>
+                      <div class="termsBlock" style="display:none;">
+                          <h4>Terms &amp; Conditions</h4>
+                          <p>All trademarks are the property of their respective owners.</p>
+                      </div>
+                    </div>
+
+                    <div class="request_notify">
+                      <label><input type="checkbox" name="is_email" class="is_email" value="1"> <?php echo JText::_("PLAN_REQUEST_NOTIFY");?></label>
+                    </div>
+                </div>
+
                 <div class="control-group">
-                  <button class="btn cancel-submit-plan"><?php echo JText::_("PLAN_REQUEST_BUTTON_CANCLE"); ?></button>
                   <button class="btn btn-primary submit-plan-request"><?php echo JText::_("PLAN_PLACE_REQUEST"); ?></button>
+                    <button class="btn cancel-submit-plan"><?php echo JText::_("PLAN_REQUEST_BUTTON_CANCLE"); ?></button>
                 </div>
               </div>
             </div>
@@ -213,7 +235,7 @@
             <!-- <div class="plan-limit">??? <?php echo JText::_('PLAN_DAILY_LIMIT'); ?></div> -->
             <!-- <div class="plan-burst">??? <?php echo JText::_('PLAN_BURST'); ?></div> -->
         </div>
-        <a class="plan-modal pull-right" href="#request-plan-form" data-toggle="modal"><?php echo JText::_('PLAN_REQUEST'); ?></a>
+        <a class="plan-modal pull-right openapi-send-request" href="#request-plan-form" data-toggle="modal"><?php echo JText::_('PLAN_REQUEST'); ?></a>
         <?php
             $planname = "Custom";
             $body = str_replace("+"," ",urlencode("Hello,\n\n We would like to place a request for a subscription to the following:\n\nProduct: ".$productname."\nPlan: ".$planname."\n\nPlease contact us at your earliest convenience."));
@@ -229,14 +251,14 @@
 <br/>
 
 <!--For request form-->
-<div id="request-plan-form" class="modal hide fade" role="dialog" aria-hidden="true">
-  <form  action="" style="width:790px; margin:0 auto;">
+<div id="request-plan-form" class="modal request-modal hide fade" role="dialog" aria-hidden="true">
+  <form  action="" style="width:690px; margin:0 auto;">
     <div class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
       <h3 id="myModalLabel"><?php echo JText::_("PLAN_REQUEST_BOX_TITLE"); ?></h3>
     </div>
     <div class="modal-body">
-      <div class="span11">
+      <div>
         <p><?php echo JText::_("PLAN_REQUEST_BOX_DESC"); ?></p>
         <div class="control-group">
           <label>
@@ -260,18 +282,18 @@
         </div>
         <div class="control-group">
           <div class="row-fluid">
-            <div class="span6">
+            <div class="span6 pull-left">
               <label for="dlimit">
-                <?php echo JText::_("PLAN_REQUEST_PER_DAY"); ?>
+                <?php echo JText::_("PLAN_REQUEST_PER_SENCONDS"); ?>
               </label>
               <div class="row-fluid">
                   <input id="rate_limit" name="rate_limit" type="text" />
                   <div style="display:none;margin-right:5px;" class="alert alert-error"></div>
               </div>
             </div>
-            <div class="span6">
+            <div class="span6 pull-right">
               <label for="burst">
-                <?php echo JText::_("PLAN_REQUEST_PER_SENCONDS"); ?>
+                <?php echo JText::_("PLAN_REQUEST_PER_DAY"); ?>
               </label>
               <div class="row-fluid">
                   <input id="quota_limit" name="quota_limit" type="text" />
@@ -281,28 +303,40 @@
           </div>
         </div>
         <div class="control-group">
+          <?php if(!empty($appsOfUser) ):?>
+                    <label><?php echo JText::_("PLAN_REQUEST_ATTACHED_APPS"); ?></label>
+                    <select class="selected_apps_for_plan" multiple>
+                    <?php foreach ($appsOfUser as $appItem):?>
+                    <option value="<?php echo $appItem;?>"><?php echo ItemsStore::getRecord($appItem)->title;?></option>
+                    <?php endforeach;?>
+                    </select>
+            <?php endif ?>
           <label for="arequest">
             <?php echo JText::_("PLAN_REQUEST_EXTRA_INFO"); ?>
           </label>
           <textarea id="additional_request" name="additional_request"></textarea>
         </div>
-        <div class="control-group">
-           <div>
-             <input type="checkbox" name="agree_term" class="agree_term" value="1"/> <?php echo JText::_("PLAN_REQUEST_AGREEMENT_TIPS");?>
-             <a class="termsToggle" style="cursor:pointer;">Product-specific terms &amp; conditions</a>
-             <div class="termsBlock" style="display:none;">
-              <?php
-              echo "<h1>Terms & Conditions</h1>";
-              echo CobaltApi::renderField($product,129,"full");
-              ?>
-             </div>
-           </div>
+        <div class="clearfix"></div>
+        <div class="control-group request-terms pull-right" style="margin-top: 20px;">
+                    <div>
+                      <input type="checkbox" name="agree_term" class="agree_term" value="1"/> <?php echo JText::_("PLAN_REQUEST_AGREEMENT_TIPS");?>
+                       <a class="termsToggle" style="cursor:pointer;">  <?php echo JText::_("PLAN_REQUEST_PRODUCT_SPECIFIC_TERMS");?></a>
+                      <div class="termsBlock" style="display:none;">
+                          <h4>Terms &amp; Conditions</h4>
+                          <p>All trademarks are the property of their respective owners.</p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label><input type="checkbox" name="is_email" class="is_email" value="1"> <?php echo JText::_('PLAN_REQUEST_NOTIFY');?></label>
+                    </div>
         </div>
-        <div class="control-group">
+        <div class="clearfix"></div>
+        <div class="control-group pull-right">
           <input type="hidden" name="options" value="com_cobalt">
           <input type="hidden" name="task" value="ajaxMore.requestCustomPlan">
-          <button class="btn cancel-submit-plan"><?php echo JText::_("PLAN_REQUEST_BUTTON_CANCLE"); ?></button>
           <button class="btn btn-primary submit-plan-request"><?php echo JText::_("PLAN_PLACE_REQUEST"); ?></button>
+            <button class="btn cancel-submit-plan"><?php echo JText::_("PLAN_REQUEST_BUTTON_CANCLE"); ?></button>
         </div>
       </div>
     </div>
@@ -379,37 +413,46 @@
 
         function sendNotfyForCreatedSubscription(res, message_container){
 
-           //  console.log(res);
             DeveloperPortal.sendCreateNotification(res.result.record_id, DeveloperPortal.PORTAL_OBJECT_TYPE_SUBSCRIPTION, function(data){
               	if (res.result.appIds){
-              		sendNotfyForUpdatedApplication(res,message_container);  
+              		sendNotfyForUpdatedApplication(res,message_container);
                 }
                  else{
-                 	 showTip(res, message_container);	
+                    window.location.reload();
                  }
   				  }, function(error){
-              showTip({success:false,error:error}, message_container);
+              window.location.reload();
             });
           }
 
 
-          function sendNotfyForUpdatedApplication(res, message_container){
-             for(i = 0; i < res.result.appIds.length; i++) {
-               var appid=res.result.appIds[i],updatedfields='';
-               if(res.result.app_old_subscriptions){
-                 updatedfields = {115:res.result.app_old_subscriptions[appid]};
-               }else{
-                 updatedfields = {115:[]};
-               }
-            	 DeveloperPortal.sendUpdateNotification(appid, DeveloperPortal.PORTAL_OBJECT_TYPE_APPLICATION,updatedfields,function(data){
-               showTip(res, message_container);
-              }, function(error){
-               showTip({success:false,error:error}, message_container);
-              });
+        function sendNotfyForUpdatedApplication(res, message_container) {
+          var counter = 0, i;
+          for (i = 0; i < res.result.appIds.length; i++) {
+            var appid = res.result.appIds[i],
+              updatedfields = '';
+            if (res.result.app_old_subscriptions) {
+              updatedfields = {
+                115: res.result.app_old_subscriptions[appid]
+              };
+            } else {
+              updatedfields = {
+                115: []
+              };
             }
+            DeveloperPortal.sendUpdateNotification(appid, DeveloperPortal.PORTAL_OBJECT_TYPE_APPLICATION, updatedfields, function(data) {
+              if (++counter === res.result.appIds.length) {
+                window.location.reload();
+              }
+            }, function(error) {
+              if (++counter === res.result.appIds.length) {
+                window.location.reload();
+              }
+            });
           }
+        }
 
-        
+
         $(function(){
           var requestOrigiForm   =  $("#request-plan-form"),
               requestForm        =  $("[id^='request-plan-form']"),
@@ -427,10 +470,10 @@
               $(this).val("");
             }
           });
-          
+
           submitButton.live("click",function(e){
               var flag                =   true,
-                  requestForm         =   $(this).parent().parent().parent().parent().parent(),
+                  requestForm         =   $($(this).parents('[id^="request-plan-form"]')),
                   form_id             =   requestForm.attr("id");
                   dlimit              =   requestForm.find("input[name='rate_limit']"),
                   slimit              =   requestForm.find("input[name='quota_limit']"),
@@ -443,27 +486,38 @@
                   selected_apps       =   [],
                   agree_term         =  requestForm.find(".agree_term");
               if(!agree_term.get(0).checked){
-                console.log(agree_term);
                 requestForm.find('.modal-header').addClass('alert-error');
-                requestForm.find('#myModalLabel').text("<?php echo JText::_('PLAN_REQUEST_INVALID_AGREEMENT'); ?>")
+                requestForm.find('#myModalLabel').text("<?php echo JText::_('PLAN_REQUEST_INVALID_AGREEMENT'); ?>");
                 flag = false;
               }
+
+			  var compareFlag = true;
               if(dlimit.length && !/^[1-9]\d{0,}$/.test(dlimit.val()))
               {
-                console.log(dlimit.length);
                 requestForm.find('.modal-header').addClass('alert-error');
                 requestForm.find('#myModalLabel').text("<?php echo JText::_('PLAN_REQUEST_INVALID_DLIMIT'); ?>");
                 dlimit.next("div.alert").text("<?php echo JText::_('PLAN_REQUEST_INVALID_DLIMIT');?>").slideDown();
                 flag = false;
+                compareFlag = false;
               }
 
               if(slimit.length && !/^[1-9]\d{0,}$/.test(slimit.val()))
               {
-                console.log(slimit.length);
                 requestForm.find('.modal-header').addClass('alert-error');
                 requestForm.find('#myModalLabel').text("<?php echo JText::_('PLAN_REQUEST_INVALID_DLIMIT'); ?>");
                 slimit.next("div.alert").text("<?php echo JText::_('PLAN_REQUEST_INVALID_DLIMIT');?>").slideDown();
                 flag = false;
+                compareFlag = false;
+              }
+
+              if (compareFlag) {
+	              if(parseInt(dlimit.val()) > parseInt(slimit.val()))
+	              {
+	                requestForm.find('.modal-header').addClass('alert-error');
+	                requestForm.find('#myModalLabel').text("<?php echo JText::_('PLAN_REQUEST_INVALID_DLIMIT'); ?>");
+	                dlimit.next("div.alert").text("<?php echo JText::_('PLAN_REQUEST_COMPARATION'); ?>").slideDown();
+	                flag = false;
+	              }
               }
 
               if(!flag){return flag;}
@@ -494,27 +548,54 @@
 
 
                 $.post('index.php?option=com_cobalt&task=ajaxmore.insertSub',sub_data,
-                  function(res){
-                      if(res.success == 1){
-                        sendNotfyForCreatedSubscription(res, requestForm.find('.modal-header'));
-                      }else{
-                        showTip(res, requestForm.find('.modal-header'));
-                      }
+                function(res) {
+                  if (res.success == 1) {
+                    sendNotfyForCreatedSubscription(res, requestForm.find('.modal-header'));
+                    DeveloperPortal.storeSuccessMsgInCookie(['<?php echo JText::_("AUTO_CREATE_SUBSCRIPTION_SUCCESS");?>']);
+                  } else {
+                    DeveloperPortal.storeErrorsMsgInCookie(['<?php echo JText::_("AUTO_CREATE_SUBSCRIPTION_FAILED");?>']);
+                  }
+
                   },'json');
                 return false;
               }
               else
               {
+                var comment = requestForm.find("textarea[name='additional_request']").val();
+                var rate_limit = requestForm.find("input[name='rate_limit']").val();
+                var quota_limit = requestForm.find("input[name='quota_limit']").val();
+                var plan = requestForm.find("div[class='plan-name']").html();
+                var product = $('.newsflash-title').html();
+                var is_email = requestForm.find("input:checked[name='is_email']").prop('checked');
+                if(selected_apps_box.length){
+                  selected_apps_box.find("option:selected").each(function(index, ele){
+                    var app_id = parseInt($(ele).val());
+                    if(app_id > 0){
+                      selected_apps.push(app_id);
+                    }
+                  });
+                  selected_apps = selected_apps.join();
+                }
+                if ( is_email )
+                    var email_status = 1;
+                else
+                    var email_status = 0;
+                var request_data = {'product_id' : product_id, 'is_email' : email_status, 'appliction' : selected_apps, 'product':product, 'plan':plan, 'plan_id' : plan_id, 'quota_limit' : quota_limit, 'rate_limit' : rate_limit, 'comment' : comment };
             	requestForm.find('.modal-header').removeClass('alert-error').find('#myModalLabel').text("<?php echo JText::_("PLAN_REQUEST_WAIT_MSG");?>");
-                $.post('',data,function(res) {
-                  showTip(res, requestForm.find('.modal-header'));
+                $.post('<?php echo JRoute::_('index.php?option=com_request&task=lists.insertRequest')?>',request_data,function(res) {
+                    if(res.success == 1){
+                    	DeveloperPortal.storeSuccessMsgInCookie(['<?php echo JText::_("REQUEST_SUBSCRIPTION_SUCCESS");?>']);
+                    }else{
+                    	DeveloperPortal.storeErrorsMsgInCookie(['<?php echo JText::_("REQUEST_SUBSCRIPTION_FAILED");?>']);
+                    }
+                    location.reload();
                 },'json');
               }
               return false;
           });
           cancelButton.live('click', function(e) {
             e.preventDefault();
-            var requestForm = $(this).parent().parent().parent().parent().parent();
+            var requestForm = $($(this).parents('[id^="request-plan-form"]'));
             requestForm.modal('hide');
           });
         });

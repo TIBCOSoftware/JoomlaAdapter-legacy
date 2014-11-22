@@ -7,7 +7,7 @@
 defined('_JEXEC') or die();
 
 jimport('joomla.application.component.controlleradmin');
-
+jimport('joomla.application.component.controllerusers');
 require_once JPATH_BASE . "/includes/api.php";
 require_once JPATH_BASE . "/includes/subcreate.php";
 
@@ -88,7 +88,9 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
 				$spec = json_decode($file);
 				$titlesArray = array();
 				foreach ($spec->apis as $key => $api) {
-					$titlesArray[] = '"'.$api->operations[0]->nickname.'"';
+					foreach ($api->operations as $operation) {
+						$titlesArray[] = '"'.$operation->nickname.'"';
+					}
 				}
 				
 				if (count($titlesArray)>0) {
@@ -365,7 +367,10 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
      * invoke when user click send in support page. 
      */
 	public function requestSupport() {
-	  $name = $_POST["fname"].' '.$_POST["lname"];
+	  $user_id = JFactory::getUser()->id;
+	  $name = $_POST["fname"];
+	  if ( $user_id == 0 )
+		$name = $_POST["fname"].' '.$_POST["lname"];
 	  $email = $_POST["email"];
 	  $user_content = $_POST["content"];
 	  
@@ -452,7 +457,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
 		
 		if (!empty($orgID)) {
 			$db = JFactory::getDbo();
-			$db -> setQuery('SELECT event, http_status_text, log_type, summary,event_status,entity_type, create_time FROM  `asg_logs` WHERE org_id ='.$orgID.' or (uid = '.$curUser->id.' and event_status in ("Error","Partially Completed")) ORDER BY id desc LIMIT 0,'.$limitCount);
+			$db -> setQuery('SELECT event, http_status_text, log_type, summary,event_status,entity_type, create_time FROM  `asg_logs` WHERE org_id ='.$orgID.' or (uid = '.$curUser->id.' and event_status in ("Error","Partially Completed","Request")) ORDER BY id desc LIMIT 0,'.$limitCount);
 			$result = $db->loadObjectList();
 			AjaxHelper::send($result);
 		} else {
@@ -557,33 +562,33 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
     $app = JFactory::getApplication();
     $url = '';
     $url .= JURI::root().'index.php/component/users/?task=registration.activate&token=';
-
-
+	$retunrUrl = $_GET['return'];
+	
     $res_id = $_REQUEST['id'];
     $db = JFactory::getDbo();
     $db->setQuery('select `field_value` from #__js_res_record_values where `field_id`=77 and `record_id`='.$res_id);
     $result = $db->loadColumn();
     if(empty($result))
     {
-      $app->redirect( JRoute::_('index.php'), $msg=JText::_("RESEND_ACTIVATION_EMAIL_FAIL_NO_USER_ATTACHED"), $msgType='message');
+      $app->redirect( $retunrUrl, $msg=JText::_("RESEND_ACTIVATION_EMAIL_FAIL_NO_USER_ATTACHED"), $msgType='message');
     }
 
     $db->setQuery('select `id` from #__users where `id`="'.($result[0]?$result[0]:0).'"');
     $user_id = $db->loadColumn();
     if(empty($user_id))
     {
-      $app->redirect( JRoute::_('index.php'), $msg=JText::_("RESEND_ACTIVATION_EMAIL_FAIL_NO_USER_FOUND"), $msgType='message');
+      $app->redirect( $retunrUrl, $msg=JText::_("RESEND_ACTIVATION_EMAIL_FAIL_NO_USER_FOUND"), $msgType='message');
     }
 
     $user = &JFactory::getUser($user_id[0]);
     $url .= $user->get('activation');
 
     if(DeveloperPortalApi::resendActiveEmail($user_id[0], $url)){
-      $app->redirect( JRoute::_('index.php'), $msg=JText::_("RESEND_ACTIVATION_EMAIL_SUCCESS"), $msgType='message');
+      $app->redirect( $retunrUrl, $msg=JText::_("RESEND_ACTIVATION_EMAIL_SUCCESS"), $msgType='message');
     }
     else
     {
-      $app->redirect( JRoute::_('index.php'), $msg=JText::_("RESEND_ACTIVATION_EMAIL_FAIL_TECHNICAL"), $msgType='message');
+      $app->redirect( $retunrUrl, $msg=JText::_("RESEND_ACTIVATION_EMAIL_FAIL_TECHNICAL"), $msgType='message');
     }
   }
 	
@@ -607,7 +612,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
       $log_item->event_status         = $_POST['event_status'];
       $log_item->uid                  = $user->id ? $user->id : 0;
       $log_item->uuid                 = $_POST['uuid'];
-      
+
 
       $db->insertObject("asg_logs",$log_item,'id') ? AjaxHelper::send("") : AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_4'));
 
@@ -730,7 +735,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
      * field_id 78  => status
      * field_id 112 => uuid
      */
-  public function insertSub()
+    public function insertSub()
     {
 
       $applications = JRequest::getVar("selected_apps","");
@@ -1162,22 +1167,20 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
         $result = $db->loadObject();
         
         if ($result) {
-          $parts	= explode(':', $result->password);
-          $crypt	= $parts[0];
-          $salt	= @$parts[1];
-          $testcrypt = JUserHelper::getCryptedPassword($old_password, $salt);
-        
           //if the old password is correct.
-          if ($crypt == $testcrypt){
-            // Generate the new password hash.
-            $salt = JUserHelper::genRandomPassword(32);
-            $crypted = JUserHelper::getCryptedPassword($new_password, $salt);
-            $new_password_hash = $crypted . ':' . $salt;
-            
-            $sql = 'UPDATE #__users SET password="'.$new_password_hash.'" WHERE id='.$user->id;
-            $db->setQuery($sql);
-            $db -> execute();
-            AjaxHelper::send("");
+         if (JUserHelper::verifyPassword($old_password,$result->password)){
+           	$new_password_status = $this->checkPasswordRules($new_password);
+            if ( $new_password_status == 1 ) {
+                // Generate the new password hash.
+                $crypted = JUserHelper::hashPassword($new_password);
+                $new_password_hash = $crypted;
+                $sql = 'UPDATE #__users SET password="'.$new_password_hash.'" WHERE id='.$user->id;
+                $db->setQuery($sql);
+                $db -> execute();
+                AjaxHelper::send("");
+            }else{
+                AjaxHelper::error($new_password_status);
+            }
           }else{
             AjaxHelper::error(JText::_('ERROR_CHANGE_PASSWORD'));
           }
@@ -1255,7 +1258,8 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
     }
 
     public function resetWorkThrough(){
-      $user_id = JFactory::getUser()->id;
+      $user = JFactory::getUser();
+      $user_id = $user->id;
       $db = JFactory::getDbo();
       $query = $db->getQuery(true);
 
@@ -1287,7 +1291,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
       {
         $app->redirect($return, JText::_('RESET_WORK_THROUGH_FAILED'));
       }else{
-      	$cookieName= $user_id."_guide_step";
+       $cookieName =  md5(strtotime($user->registerDate).$user->id."_guide_step");
       	if (isset($_COOKIE[$cookieName]))
       	{
       		unset($_COOKIE[$cookieName]);
@@ -1297,6 +1301,75 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
         $app->redirect($return, JText::_('RESET_WORK_THROUGH_SUCCESSFULLY'));
       }
     }
+	
+	public function addUserToGroup(){
+	        $org_id = $_POST['org_id']*1;
+	        $user_email = $_POST['user_email'];
+			$user_type = empty($_POST['user_type']) ? 'Member' : ucwords(strtolower($_POST['user_type']));
+			$group_name = 'Organization '.$org_id.' '.$user_type;
+	        $db = JFactory::getDbo();
+	        //get user id
+	        $userIdSql = "SELECT * FROM `#__users` WHERE `email` LIKE '".$user_email."' ORDER BY id DESC";
+	        $db->setQuery($userIdSql);
+	        $userObj = $db->loadObject();
+	        $user_id = $userObj->id;
+        
+	        //get group id
+	        $getGroupIdSql = 'SELECT `id` FROM `#__usergroups` WHERE title = "'.$group_name.'" LIMIT 1';
+	        $db->setQuery($getGroupIdSql);
+	        $groupObj = $db->loadObject();
+	        $group_id = $groupObj->id;
+        	
+	        //insert group map
+	        $insertSql = 'INSERT INTO `#__user_usergroup_map` (`user_id`, `group_id`) VALUES ("'.$user_id.'","'.$group_id.'")';
+	        $db->setQuery($insertSql);
+	        $result = $db->execute();
+	        return $result;
+	}
+    /*background function use validate password rules*/
+    private function checkPasswordRules( $passwd ) {
+    	$resArr = TibcoTibco::validatePassword( $passwd );
+        if ( $resArr['success'] == 0 ) {
+        	$msg = $this->getErrorMsg($resArr['errno']);
+        	return $msg;
+        } else {
+        	return 1;
+        }
+    }
+    /*javascript use validate password rules*/
+    public function validatePasswordRules(){
+    	$passwd = $_POST['password'];
+    	$check = 0;
+    	$resArr = TibcoTibco::validatePassword( $passwd );
+		if ( $resArr['success'] == 0 ) {
+			$msg = $this->getErrorMsg($resArr['errno']);
+			$check = 1;
+		}
+		if ($check == 1)
+			AjaxHelper::error($msg);
+    	else 
+    		AjaxHelper::send('');
+    }
+    /*return error messages.*/
+    private function getErrorMsg($errno) {
+    	$msg = '';
+    	if( isset($errno['len']) && !empty($errno['len']) ) {
+			$msg .= sprintf(JText::_("COM_AJAXMORE_LEN"),$errno['len']).'</br>';
+		}
+		if( isset($errno['int']) && !empty($errno['int']) ) {
+			$msg .= sprintf(JText::_("COM_AJAXMORE_INT"),$errno['int']).'</br>';
+		}
+		if( isset($errno['upp']) && !empty($errno['upp']) ) {
+			$msg .= sprintf(JText::_("COM_AJAXMORE_UPP"),$errno['upp']).'</br>';
+		}
+		if( isset($errno['sym']) && !empty($errno['sym']) ) {
+			$msg .= sprintf(JText::_("COM_AJAXMORE_SYM"),$errno['sym']).'</br>';
+		}
+		return $msg;
+    }
 
+    public function getFormToken() {
+    	AjaxHelper::send(JFactory::getSession()->getFormToken());
+    }
 }
 ?>

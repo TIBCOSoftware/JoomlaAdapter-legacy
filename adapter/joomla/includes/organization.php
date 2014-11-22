@@ -94,7 +94,7 @@ class CreateOrganizationApi {
     
       public function insertOrganization($options = array())
       {
-        $db = JFactory::getDbo();
+        $db = JFactory::getDbo();  
         $organization = new stdClass();
         $app = JFactory::getApplication();
         $contact = new stdClass();

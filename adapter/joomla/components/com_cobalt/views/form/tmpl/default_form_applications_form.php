@@ -386,20 +386,25 @@ $oauthState = $comEmail->params->get('enable_oauth');
 				if (node.html()!==undefined) {
 					node.remove();
 				}
-		  <?php else:?>
-		  	<?php if(count($old_keys) > 0): ?>
-					bUseOAuth	= jQuery('input[name="jform[fields][64]"][checked]').val();
-				<?php endif; ?>
+            <?php elseif($oauthState == 1): ?>
+			    <?php if(empty($this->item->id)): ?>
+                    jQuery('#bool-y64').addClass('active btn-success').prev('input').attr('checked', true);
+                <?php endif; ?>
+                <?php if(count($old_keys) > 0): ?>
+                    bUseOAuth = jQuery('input:checked[name="jform[fields][64]"]').val();
+                <?php endif; ?>
+		    <?php else:?>
+                <?php if(count($old_keys) > 0): ?>
+                    bUseOAuth = jQuery('input:checked[name="jform[fields][64]"]').val();
+                <?php endif; ?>
 			<?php endif;?>
 
 			<?php if($oauthState==2 && (empty($this->item->id)||$oauthValue==1)): ?>
-			jQuery('#bool-y64').click();
-			jQuery('#bool-y64').hide();
-			jQuery('#bool-n64').hide();
-			jQuery('#lbl-64').hide();
+                jQuery('#bool-y64').addClass('active btn-success').prev('input').attr('checked', true);
+                jQuery('#fld-64').hide();
 			<?php endif;?>
 
-  		ApplicationForm.aOldProducts = [];
+  	  ApplicationForm.aOldProducts = [];
       ApplicationForm.aOldScriptions = [];
       ApplicationForm.aOldScopes = [];
       jQuery('input[name="jform[fields][63][]"]').each(function(index, item) {
@@ -443,20 +448,20 @@ $oauthState = $comEmail->params->get('enable_oauth');
       if(!DeveloperPortal.arrayEqual(ApplicationForm.aOldScopes, ApplicationForm.aNewScopes)) {
 		  paramFields[125] = ApplicationForm.aOldScopes;
       }
-		  if ((63 in paramFields) || (115 in paramFields) || (125 in paramFields)) {
-		      window.oUpdatedFields = paramFields;
-		  }
-		  if(bUseOAuth !== jQuery('input[name="jform[fields][64]"][checked]').val()) {
-				jQuery.post(GLOBAL_CONTEXT_PATH + 'index.php?option=com_cobalt&task=ajaxmore.updateStatusOfKey', {
-					"keyList": <?php echo makeArrayString($old_keys); ?>
-				}).done(function(data) {
-					fCallback();
-				}).fail(function() {
-				  DeveloperPortal.showError([DISABLE_KEYS_FAILED]);
-				});
-		  } else {
+      if ((63 in paramFields) || (115 in paramFields) || (125 in paramFields)) {
+          window.oUpdatedFields = paramFields;
+      }
+      if(bUseOAuth !== undefined && bUseOAuth !== jQuery('input[name="jform[fields][64]"][checked]').val()) {
+        jQuery.post(GLOBAL_CONTEXT_PATH + 'index.php?option=com_cobalt&task=ajaxmore.updateStatusOfKey', {
+            "keyList": <?php echo makeArrayString($old_keys); ?>
+        }).done(function(data) {
+            fCallback();
+        }).fail(function() {
+            DeveloperPortal.showError([DISABLE_KEYS_FAILED]);
+        });
+      } else {
 	      fCallback();
-		  }
+      }
   };
 </script>
 

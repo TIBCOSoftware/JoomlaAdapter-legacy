@@ -36,6 +36,7 @@ $titlePosition = $app->getCfg('sitename_pagetitles');
 $sitename = $app->getCfg('sitename');
 
 $title = $currentMenu->params->page_title?$currentMenu->params->page_title:$currentMenu->title;
+
 //skip adding title if this is product detials page
 if($view == "records"){
     $doc->title = $title;
@@ -45,7 +46,7 @@ $menu = $app->getMenu();
 if($active = $menu->getActive())
 {
    $title = $active->params->get('page_title');
-  // $doc->title = $title ? $title : $active->title;
+   //$doc->title = $title ? $title : $active->title;
 }
 
 if ((int)$titlePosition===1) {
@@ -155,6 +156,7 @@ $oauthState = $comEmail->params->get('enable_oauth');
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<?php echo $this->language; ?>" lang="<?php echo $this->language; ?>" dir="<?php echo $this->direction; ?>">
 <head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script type="text/javascript">
       // Set a global variable for storing the context path of the current
@@ -172,6 +174,7 @@ $oauthState = $comEmail->params->get('enable_oauth');
 			SUPPORT_USER_EMAIL = '<?php echo JFactory::getUser()->email; ?>',
             SUPPORT_PREPOPULATED_TEXT_UUID = '<?php echo JText::_("SUPPORT_PREPOPULATED_TEXT_UUID"); ?>',
             ARCHIVE_FAILED = '<?php echo JText::_("ARCHIVE_FAILED"); ?>',
+            FORM_TOKENS_DIFFERENT = '<?php echo JText::_("FORM_TOKENS_DIFFERENT"); ?>',
             DISABLE_KEYS_FAILED = '<?php echo JText::_("DISABLE_KEYS_FAILED"); ?>',
             FAILED_TO_DEACTIVATE_USER_AFTER_ARCHIVE_USERPROFILE = '<?php echo JText::_("FAILED_TO_DEACTIVATE_USER_AFTER_ARCHIVE_USERPROFILE"); ?>',
             INVALID_SUBSCRIPTION_END_DATE = '<?php echo JText::_("INVALID_SUBSCRIPTION_END_DATE"); ?>',
@@ -186,7 +189,7 @@ $oauthState = $comEmail->params->get('enable_oauth');
   if ($this->params->get('googleFont'))
   {
   ?>
-    <link href='http://fonts.googleapis.com/css?family=<?php echo $this->params->get('googleFontName');?>' rel='stylesheet' type='text/css' />
+    <link href='<?php echo JURI::getInstance()->getScheme(); ?>://fonts.googleapis.com/css?family=<?php echo $this->params->get('googleFontName');?>' rel='stylesheet' type='text/css' />
 <!--    <style type="text/css">-->
 <!--      h1,h2,h3,h4,h5,h6,.site-title{-->
 <!--        font-family: '--><?php //echo str_replace('+', ' ', $this->params->get('googleFontName'));?><!--', sans-serif;-->
@@ -302,7 +305,7 @@ $oauthState = $comEmail->params->get('enable_oauth');
   					$params = new JRegistry;
   					$params->loadString($navmodule->params);
 					$alias = $app->getMenu()->getItem(140)->alias;
-					
+
 					if ($oauthState==3) {
 						$output = preg_replace('#<li class="item-126">(.*?)</li>#', '', $output);
 					}
@@ -374,6 +377,9 @@ $oauthState = $comEmail->params->get('enable_oauth');
   </script>
   <?php endif;?>
   <script type="text/javascript">
+      jQuery.ajaxSetup({
+          cache: false
+      });
     var _renderMessages = function(messages) {
       	Joomla.removeMessages();
       	var container = document.id('system-message-container');
@@ -412,7 +418,8 @@ $oauthState = $comEmail->params->get('enable_oauth');
 
     Joomla.JText.load({
         "error": "Error",
-        "warning": "Warning"
+        "warning": "Warning",
+        "success": "Success"
     });
 
     Joomla.showError = function(errorText) {
@@ -425,6 +432,18 @@ $oauthState = $comEmail->params->get('enable_oauth');
             "error": errorText
         });
     };
+    
+    Joomla.showWarning = function(warningText) {
+        _renderMessages({
+            "warning": warningText
+        });
+    };
+    
+    Joomla.showSuccess = function(successText) {
+        _renderMessages({
+            "success": successText
+        });
+    };
 
       var div = jQuery(".login-greeting");
       var user_profile_link = "<?php echo JURI::root().'index.php/userprofile';?>";
@@ -433,7 +452,7 @@ $oauthState = $comEmail->params->get('enable_oauth');
 
       jQuery(function() {
           if(window === window.top) {
-              var oCookieValues = DeveloperPortal.getCookieValues(), sErrMsgs, sWarningMsgs, oMsgs = {};
+              var oCookieValues = DeveloperPortal.getCookieValues(), sErrMsgs, sWarningMsgs, sSuccessMsgs, oMsgs = {};
               if(oCookieValues[DeveloperPortal.KEY_HAS_ERRORS] === 'true') {
                   sErrMsgs = oCookieValues[DeveloperPortal.KEY_ERROR_MESSAGES];
                   oMsgs.error = [sErrMsgs];
@@ -444,7 +463,12 @@ $oauthState = $comEmail->params->get('enable_oauth');
                   oMsgs.warning = [sWarningMsgs];
                   DeveloperPortal.removeWarningMsgFromCookie();
               }
-              if(sErrMsgs !== undefined || sWarningMsgs !== undefined) {
+              if(oCookieValues[DeveloperPortal.KEY_HAS_SUCCESS] === 'true') {
+                  sSuccessMsgs = oCookieValues[DeveloperPortal.KEY_SUCCESS_MESSAGES];
+                  oMsgs.success = [sSuccessMsgs];
+                  DeveloperPortal.removeSuccessMsgFromCookie();
+              }
+              if(sErrMsgs !== undefined || sWarningMsgs !== undefined || sSuccessMsgs !== undefined) {
                   _renderMessages(oMsgs);
               }
           }

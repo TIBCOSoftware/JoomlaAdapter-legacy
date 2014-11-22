@@ -25,6 +25,9 @@
  *  
  * *** These prefixes can be concatenated to indicate that the variable can hold the specified types of data ***
  */
+
+'use strict';
+
 var DeveloperPortal = {};
 
 (function($) {
@@ -62,7 +65,7 @@ var DeveloperPortal = {};
     DeveloperPortal.REGEXP_JFORM_FIELDS_ID_ARRAY = /jform\[fields\]\[([0-9]+)\]\[\]/;
     DeveloperPortal.REGEXP_JFORM_FIELDS_ID_OTHERS = /jform\[fields\]\[([0-9]+)\]\[[^\]].+/;
     DeveloperPortal.PARENT_CONTENT_TYPES = [1, 2, 4, 5, 9, 10];
-    DeveloperPortal.NOTIFYING_CONTENT_TYPES = [1, 2, 3, 4, 5, 7, 9, 10];
+    DeveloperPortal.NOTIFYING_CONTENT_TYPES = [1, 2, 3, 4, 5, 6, 7, 9, 10];
     DeveloperPortal.ERROR_TYPE_PORTAL_EVENT = 'portal_event';
     DeveloperPortal.ERROR_TYPE_API_KEY = 'api_key';
     DeveloperPortal.KEY_HAS_ERRORS = 'has_errors';
@@ -71,7 +74,10 @@ var DeveloperPortal = {};
     DeveloperPortal.KEY_HAS_WARNINGS = 'has_warnings';
     DeveloperPortal.KEY_WARNING_MESSAGES = 'warning_messages';
     DeveloperPortal.WARNING_MESSAGES_ARRAY = [];
-    DeveloperPortal.CONTENT_TYPE_MAP = [
+    DeveloperPortal.KEY_HAS_SUCCESS = 'has_success';
+    DeveloperPortal.KEY_SUCCESS_MESSAGES = 'success_messages';
+    DeveloperPortal.SUCCESS_MESSAGES_ARRAY = [];
+     DeveloperPortal.CONTENT_TYPE_MAP = [
         '',
         DeveloperPortal.PORTAL_OBJECT_TYPE_PRODUCT,
         DeveloperPortal.PORTAL_OBJECT_TYPE_API,
@@ -84,7 +90,7 @@ var DeveloperPortal = {};
         DeveloperPortal.PORTAL_OBJECT_TYPE_APPLICATION,
         DeveloperPortal.PORTAL_OBJECT_TYPE_SUBSCRIPTION,
         DeveloperPortal.PORTAL_OBJECT_TYPE_KEY
-    ],
+    ];
     DeveloperPortal.DELETION_REDIRECT_URI = [
         '',
         '/products',
@@ -178,7 +184,6 @@ var DeveloperPortal = {};
                 error: function(jqXHR, textStatus, errorThrown) {
                     var sUUID = UUID.generate(),
                         sErrMsg = errorThrown + DeveloperPortal._urlifySupport(sUUID, PORTAL_RESP_SUMMARY_POSTFIX_UUID) + sUUID;
-
                     if(textStatus === 'timeout') {
                         sErrMsg = PORTAL_TIMEOUT_ERROR_MESSAGE;
                     } else if(jqXHR.status === 404 || jqXHR.status === 503 || jqXHR.status=== 0) {
@@ -247,7 +252,7 @@ var DeveloperPortal = {};
             data: oData,
             dataType: 'json',
             type: 'POST',
-            complete: function(jqXHR, textStatus, jqXHR) {
+            complete: function(jqXHR, textStatus) {
                 fCallback.apply(null, aCallcackArgs);
             }
         });
@@ -462,8 +467,7 @@ var DeveloperPortal = {};
      * token to be retrieved is for the form on the front-end.
      */
     DeveloperPortal._getFormToken = function(bBackEnd) {
-        var tokenInput = $('input[value="1"]')[0];
-        return tokenInput.name;
+        return _FORM_TOKEN;
     };
 
     /**
@@ -579,7 +583,8 @@ var DeveloperPortal = {};
                 if(aOne.length === 0) {
                     rv = true;
                 } else {
-                    aOne.sort(), aTwo.sort();
+                    aOne.sort();
+                    aTwo.sort();
                     for ( i = 0; i < aOne.length; i++) {
                         if (aOne[i] === aTwo[i]) {
                             rv = true;
@@ -605,7 +610,9 @@ var DeveloperPortal = {};
             var p;
             for (p in oUpdatedFields) {
                 if (oUpdatedFields.hasOwnProperty(p)) {
-                    if (oUpdatedFields[p] && !$.isArray(oUpdatedFields[p])) {
+                    if (oUpdatedFields[p] === undefined || oUpdatedFields[p] === null) {
+                        oUpdatedFields[p] = [];
+                    } else if (!$.isArray(oUpdatedFields[p])) {
                         oUpdatedFields[p] = [oUpdatedFields[p]];
                     }
                 }
@@ -627,7 +634,7 @@ var DeveloperPortal = {};
       if(sText && sUrl) {
           return '<a href="' + sUrl + '"' + (bSameWindow ? '' : ' target="_blank"') + '>' + sText + '</a>';
       } else {
-          return ''
+          return '';
       }
     };
 
@@ -686,6 +693,26 @@ var DeveloperPortal = {};
         });
         return oFieldValues;
     };
+    
+    /**
+     * Verify the form token in order to tell whether the session is still valid.
+     * 
+     * @author Kevin Li<huali@tibco-support.com>
+     * @param {Function} fCallback The callback function invoked when the verification succeeded.
+     * @param {Function} fErrorback The callback function invoked when the verification failed.
+     */
+    DeveloperPortal.verifyFormToken = function(fCallback, fErrorback) {
+        var sOldToken = DeveloperPortal._getFormToken();
+        $.get(GLOBAL_CONTEXT_PATH + 'index.php/?option=com_cobalt&task=ajaxmore.getFormToken', null, function(data, textStatus, jqXHR) {
+            if(sOldToken === data.result) {
+                fCallback(data);
+            } else {
+                fErrorback(FORM_TOKENS_DIFFERENT);
+            }           
+        }, 'json').fail(function(jqXHR, textStatus, errorThrown) {
+            fErrorback(jqXHR.status + ', ' + jqXHR.statusText);
+        });
+    };
 
     /**
      * Request an API key for an application.
@@ -699,25 +726,29 @@ var DeveloperPortal = {};
      * receive one string argument which contains the error messages.
      */
     DeveloperPortal.requestKey = function(nApplicationId, aOldKeys, nActiveKeyCount, fCallback, fErrorback) {
-        if (nActiveKeyCount === 0 || confirm('If you continue, the old key will be disabled. Are you sure?', 'Are you sure?')) {
-            DeveloperPortal._requestKey(nApplicationId, function(data) {
-                if (data) {
-                    DeveloperPortal._disableKeys(nApplicationId, aOldKeys, function() {
-                        DeveloperPortal._storeKey(nApplicationId, aOldKeys, data.apiKey.key, data.apiKey.isOauth ? data.apiKey.secret : '', function(result) {
-                            if(typeof fCallback === 'function') {
-                                fCallback();
-                            }
+        DeveloperPortal.verifyFormToken(function(data) {
+            if (nActiveKeyCount === 0 || confirm('If you continue, the old key will be disabled. Are you sure?', 'Are you sure?')) {
+                DeveloperPortal._requestKey(nApplicationId, function(data) {
+                    if (data) {
+                        DeveloperPortal._disableKeys(nApplicationId, aOldKeys, function() {
+                            DeveloperPortal._storeKey(nApplicationId, aOldKeys, data.apiKey.key, data.apiKey.isOauth ? data.apiKey.secret : '', function(result) {
+                                if(typeof fCallback === 'function') {
+                                    fCallback();
+                                }
+                            }, fErrorback);
                         }, fErrorback);
-                    }, fErrorback);
-                } else {
-                    DeveloperPortal.storeErrMsgInCookie([NO_VALID_JSON_DATA]);
-                    if ( typeof fErrorback === 'function') {
-                        fErrorback(NO_VALID_JSON_DATA);
+                    } else {
+                        DeveloperPortal.storeErrMsgInCookie([NO_VALID_JSON_DATA]);
+                        if ( typeof fErrorback === 'function') {
+                            fErrorback(NO_VALID_JSON_DATA);
+                        }
+                        window.location.reload();
                     }
-                    window.location.reload();
-                }
-            }, fErrorback);
-        }
+                }, fErrorback);
+            }
+        }, function(errorThrown) {
+            Joomla.showError([errorThrown]);
+        });
     };
 
     /**
@@ -873,22 +904,8 @@ var DeveloperPortal = {};
             dForm.attr('target', sIFrameId);
             dIFrame.on('load', function(oEvent) {
 
-//				var isOrgs = false;
-//				try {
-//					isOrgs = (dForm.context.location.pathname.indexOf('/organizations/')!= -1) ||( dForm.context.location.pathname.indexOf('/dashboard/') != -1);  //	isOrgs = dForm.context.location.pathname.indexOf('/organizations/') != -1;
-//				}
-//				catch(ex) {
-//				}
                 dWindow = oEvent.target.contentWindow;
-//				try {
-//					if(isOrgs) {
-//						document.domain = dForm.context.domain;
-//					}
-					sRedirectUrl = dWindow.location.href;
-//				}
-//				catch(ex) {
-//					
-//				}
+                sRedirectUrl = dWindow.location.href;
 
                 if(DeveloperPortal._pathsMatch(dWindow.location, window.location) || !dWindow.RecordTemplate || dWindow.RecordTemplate.nRecordId === undefined) {
                     // The path of the iframe being identical to the one of the main window means the page was not redirected due to some errors occurred.
@@ -911,12 +928,28 @@ var DeveloperPortal = {};
                                   }
                                 }, function(errorThrown) {
                                   if(fErrorback) {
-                                      fErrorback(sRedirectUrl);
+                                      fErrorback(sRedirectUrl, errorThrown);
                                   } else {
                                      window.location.href = sRedirectUrl;
                                   }
                                 });
                               }
+                            });
+                          } else if(nTypeId === 6) {
+                            DeveloperPortal.sendUpdateNotification(parent_api_id, DeveloperPortal.PORTAL_OBJECT_TYPE_API, {
+                                31: []
+                            }, function(data) {
+                                if(fCallback) {
+                                    fCallback(nRecordId, sRedirectUrl);
+                                } else {
+                                    window.location.href = sRedirectUrl;
+                                }
+                            }, function(errorThrown) {
+                                if(fErrorback) {
+                                    fErrorback(sRedirectUrl);
+                                } else {
+                                    window.location.href = sRedirectUrl;
+                                }
                             });
                           } else {
                             DeveloperPortal.sendCreateNotification(nRecordId, DeveloperPortal.CONTENT_TYPE_MAP[nTypeId], function(data) {
@@ -927,7 +960,7 @@ var DeveloperPortal = {};
                               }
                             }, function(errorThrown) {
                               if(fErrorback) {
-                                fErrorback(sRedirectUrl);
+                                fErrorback(sRedirectUrl, errorThrown);
                               } else {
                                 window.location.href = sRedirectUrl;
                               }
@@ -951,7 +984,7 @@ var DeveloperPortal = {};
                                             }
                                         }, function(errorThrown) {
                                             if(fErrorback) {
-                                                fErrorback(sRedirectUrl);
+                                                fErrorback(sRedirectUrl, errorThrown);
                                             } else {
                                                 window.location.href = sRedirectUrl;
                                             }
@@ -973,36 +1006,13 @@ var DeveloperPortal = {};
                                             }
                                         }, function(errorThrown) {
                                             if(fErrorback) {
-                                                fErrorback(sRedirectUrl);
+                                                fErrorback(sRedirectUrl, errorThrown);
                                             } else {
                                                 window.location.href = sRedirectUrl;
                                             }
                                         });
                                     }
                                 });
-                            } else if(nTypeId === 6) {
-                                //DeveloperPortal.sendUpdateNotification(parent_api_id,DeveloperPortal.PORTAL_OBJECT_TYPE_API,{'31':old_operation_of_api});
-                                if(typeof oUpdatedFields === 'undefined') {
-                                    if(fCallback) {
-                                        fCallback(nRecordId, sRedirectUrl);
-                                    } else {
-                                        window.location.href = sRedirectUrl;
-                                    }
-                                } else {
-                                    DeveloperPortal.sendUpdateNotification(parent_api_id, DeveloperPortal.CONTENT_TYPE_MAP[2], oUpdatedFields, function(data) {
-                                        if(fCallback) {
-                                            fCallback(nRecordId, sRedirectUrl);
-                                        } else {
-                                            window.location.href = sRedirectUrl;
-                                        }
-                                    }, function(errorThrown) {
-                                        if(fErrorback) {
-                                            fErrorback(sRedirectUrl);
-                                        } else {
-                                            window.location.href = sRedirectUrl;
-                                        }
-                                    });
-                                }
                             } else {
                                 if(typeof oUpdatedFields === 'undefined') {
                                     if(fCallback) {
@@ -1019,7 +1029,7 @@ var DeveloperPortal = {};
                                         }
                                     }, function(errorThrown) {
                                         if(fErrorback) {
-                                            fErrorback(sRedirectUrl);
+                                            fErrorback(sRedirectUrl, errorThrown);
                                         } else {
                                             window.location.href = sRedirectUrl;
                                         }
@@ -1190,6 +1200,20 @@ var DeveloperPortal = {};
     };
     
     /**
+     * Store the success messages in the cookie of the browser.
+     * 
+     * @author Kevin Li<huali@tibco-support.com>
+     * @param {String} aSuccessMsg - An array of success messages to be saved in the cookie of the browser.
+     */
+    DeveloperPortal.storeSuccessMsgInCookie = function(aSuccessMsg) {
+        if(aSuccessMsg !== undefined && aSuccessMsg !== null && aSuccessMsg.length > 0) {
+            DeveloperPortal.SUCCESS_MESSAGES_ARRAY = DeveloperPortal.SUCCESS_MESSAGES_ARRAY.concat(aSuccessMsg);
+            DeveloperPortal.setCookieValue(DeveloperPortal.KEY_HAS_SUCCESS, 'true');
+            DeveloperPortal.setCookieValue(DeveloperPortal.KEY_SUCCESS_MESSAGES, DeveloperPortal.SUCCESS_MESSAGES_ARRAY.join('<br />'));
+        }
+    };
+    
+   /**
      * Remove the error messages from the cookie of the browser.
      * 
      * @author Kevin Li<huali@tibco-support.com>
@@ -1212,6 +1236,17 @@ var DeveloperPortal = {};
     };
     
     /**
+     * Remove the success messages from the cookie of the browser.
+     * 
+     * @author Kevin Li<huali@tibco-support.com>
+     */
+    DeveloperPortal.removeSuccessMsgFromCookie = function() {
+        DeveloperPortal.setCookieValue(DeveloperPortal.KEY_HAS_SUCCESS, 'false');
+        DeveloperPortal.removeCookieValue(DeveloperPortal.KEY_SUCCESS_MESSAGES);
+        DeveloperPortal.SUCCESS_MESSAGES_ARRAY = [];
+    };
+    
+   /**
      * Get all the error messages that are shown on the top of the page inside an iframe element.
      * 
      * @author Kevin Li<huali@tibco-support.com>
@@ -1256,4 +1291,33 @@ var DeveloperPortal = {};
         }
       );
     };
-})(jQuery);
+    
+    /**
+     * Initialize the Cobalt's boolean field with IE9 support.
+     * 
+     * @param {String} sYes The id of the "Yes" button.
+     * @param {String} sNo The id of the "No" button.
+     */
+    DeveloperPortal.yesno = function(sYes, sNo) {
+        var y = $(sYes), n = $(sNo);
+        y.on('click', function() {
+            y.addClass('btn-success');
+            n.removeClass('btn-danger');
+            n.next('input[type="radio"]').removeAttr('checked');
+            y.prev('input[type="radio"]').attr('checked', true);
+        });
+        n.on('click', function() {
+            n.addClass('btn-danger');
+            y.removeClass('btn-success');
+            y.prev('input[type="radio"]').removeAttr('checked');
+            n.next('input[type="radio"]').attr('checked', true);
+        });
+        
+        if(y.prev('input:checked[type="radio"]').length > 0) {
+            y.addClass('btn-success');
+        }
+        if(n.next('input:checked[type="radio"]').length > 0) {
+            n.addClass('btn-danger');
+        }
+    };
+}(jQuery));

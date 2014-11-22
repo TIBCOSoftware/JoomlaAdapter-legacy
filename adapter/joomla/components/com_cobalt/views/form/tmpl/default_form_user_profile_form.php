@@ -31,13 +31,13 @@ if(strpos($path,'userprofile') || strpos($path, 'dashboard')){
     $userprofile = true;
   }
   $users_userProfileID = DeveloperPortalApi::getUserProfileId();
-  
-  $userprofile_id = $this->item->id; 
+
+  $userprofile_id = $this->item->id;
 
   if(!($users_userProfileID == $userprofile_id || in_array(7, $auth_group_ids) || in_array(8, $auth_group_ids))){
-  	
+
   	JFactory::getApplication()->enqueueMessage(JText::_('USERPROFILE_CUSTOM_ACCESS_DENIED_ERROR'), 'error');
-  	
+
     return;
   }
 }
@@ -59,7 +59,7 @@ var asgUserOrganisation=false;
 <?php  if($userorganizations):?>
   <script type="text/javascript">
      asgUserOrganisation = true;
-      
+
   </script>
  <?php endif;?>
 <style>
@@ -85,13 +85,13 @@ var asgUserOrganisation=false;
 		-webkit-animation-iteration-count: 1;
 		-webkit-animation-direction: alternate;
 		-webkit-animation-timing-function: ease-out;
-		
+
 		-moz-animation-name: glow;
 		-moz-animation-duration: 1.5s;
 		-moz-animation-iteration-count: 1;
 		-moz-animation-direction: alternate;
 		-moz-animation-timing-function: ease-out;
-		
+
 		-ms-animation-name: glow;
 		-ms-animation-duration: 1.5s;
 		-ms-animation-iteration-count: 1;
@@ -99,18 +99,18 @@ var asgUserOrganisation=false;
 		-ms-animation-timing-function: ease-out;
 	}
 	<?php echo $params->get('tmpl_params.css');?>
-@-webkit-keyframes glow {	
+@-webkit-keyframes glow {
 	0% {
 		background-color: #fdd466;
-	}	
+	}
 	100% {
 		background-color: transparent;
 	}
 }
-@-moz-keyframes glow {	
+@-moz-keyframes glow {
 	0% {
 		background-color: #fdd466;
-	}	
+	}
 	100% {
 		background-color: transparent;
 	}
@@ -119,7 +119,7 @@ var asgUserOrganisation=false;
 @-ms-keyframes glow {
 	0% {
 		background-color: #fdd466;
-	}	
+	}
 	100% {
 		background-color: transparent;
 	}
@@ -130,9 +130,9 @@ var asgUserOrganisation=false;
 
 #tabs-box {
   border-style: none;
-}		
+}
 </style>
-	<?php 
+	<?php
  	$comEmail = JComponentHelper::getComponent('com_emails');
 	$spotfire_domain = $comEmail->params->get('spotfire_domain');
 	if(!$spotfire_domain){
@@ -143,6 +143,8 @@ var asgUserOrganisation=false;
 <script type="text/javascript">
 
 var old_usertype;
+var existUserFlag = false;
+var userProfileId = <?php echo $this->item->id ? $this->item->id : 0 ?>;
 (function($){
 	$(function(){
 		$(window).load(function(){
@@ -150,110 +152,155 @@ var old_usertype;
 		});
 	});
 })(jQuery);
-    
+
+Joomla.submitform = function(task) {
+  DeveloperPortal.submitForm(task,
+    function(nObjectId, sRedirectUrl) {
+        if (!existUserFlag && userProfileId === 0) {
+            var email = jQuery("#field_102").val();
+            var userType = ""+jQuery("#form_field_list_88").val();
+            jQuery.post(
+              GLOBAL_CONTEXT_PATH+"index.php?option=com_cobalt&task=ajaxMore.addUserToGroup",
+              {'org_id':''+nObjectId, 'user_email':email, 'user_type':userType},
+              function(data){
+				  window.location.href = sRedirectUrl;
+              },
+                'json'
+            ).fail(function(res){
+				window.location.href = sRedirectUrl;
+            });
+		}else{
+			window.location.href = sRedirectUrl;
+		}
+    },
+    function(sRedirectUrl) {
+      window.location.href = sRedirectUrl;
+    }
+  );
+};
+
     Joomla.beforesubmitform = function(callback, errorback) {
-        
+
         var joomla_user_id = jQuery("#77_id");
         var joomla_user_name = jQuery("#77_name");
         var record_id = jQuery("input[name='id'][type='hidden']").val();
         var username = jQuery("#field_101");
         var name = jQuery("#jform_title");
+        var password1 = jQuery("#jform_password1");
+        var password2 = jQuery("#jform_password2");
         var email = jQuery("#field_102");
         var token = jQuery("input:hidden[value='1']").last().attr("name");
         var userType = jQuery("#form_field_list_88");
         username.val(email.val());
         var new_userType_val=userType.val();
-        var data = {
-            "option" : "com_users",
-            "task" : "autoreg.register"
-        };
-        data.jform = {
-            "email1" : email.val(),
-            "email2" : email.val(),
-            "name" : name.val(),
-            "username" : email.val(),
-            "user_group_name" : "Organization <?php echo $this->fields[47]->value[0]; ?> " + userType.val(),
-            "old_user_group_name" : "Organization <?php echo $this->fields[47]->value[0]; ?> " + old_usertype
-        };
-        data[token]=1;
-        //Set domain for handling correct redirect to dashboard page
-        //console.log(profile_id);
-        if(profile_id){
-            
-    	function analyticsErrorHandler(errorCode, description){
-    		console.error("Error loading analtyics: code(" + errorCode + ")\n\t" + description);
-    	}
-    	jQuery(document).ready(function(){
-    	try{
-    		
-    		document.domain = '<?php echo $spotfire_domain;?>';
-    	}
-    	catch(err){
-    		analyticsErrorHandler(0, 'Failed setting of analytics domain to "<?php echo $spotfire_domain;?>". Please check your settings and try again. [' + err + ']');
-    		return;
-    	}
-    	});
+        if((password1.val() !== '' || password2.val() !== '')) {
+            if(password1.val() === password2.val()) {
+                jQuery.ajax({
+                    type : "post",
+                    dataType: "json",
+                    url : GLOBAL_CONTEXT_PATH+'index.php?option=com_cobalt&task=ajaxmore.validatePasswordRules',
+                    data : { password : password1.val() },
+                    success : function(res){
+                        if ( res.success == 0 ) {
+                            Joomla.showError([res.error]);
+                        } else {
+                            manageJoomlaACL();
+                        }
+                    }
+                });
+            } else {
+                Joomla.showError(['<?php echo JText::_("INVALID_CONFIRMPWD"); ?>']);
+            }
+        } else {
+            manageJoomlaACL();
         }
-        
-        if((joomla_user_id.length && joomla_user_id.val() == '0' && !parseInt(record_id))||(asgUserOrganisation && !parseInt(record_id))){
 
-             jQuery.ajax({
-                type : 'post',
-                data : data,
-                dataType:'json',
-                complete: function(jqXHR, textStatus) {
-                    var result = jQuery.parseJSON(jqXHR.responseText);
-                    if(result && result.userid && result.userid[0]) {
-                        jQuery("#fld-101,#fld-102").slideUp().attr('readonly', 'true');
-                        joomla_user_name.val(data.jform.name);
-                        joomla_user_id.val(result.userid[0]);
-                        callback();
-                    } else if(result.error) {
-                        errorback(result.error);
+        function manageJoomlaACL() {
+            var data = {
+                "option" : "com_users",
+                "task" : "autoreg.register"
+            };
+            data.jform = {
+                "email1" : email.val(),
+                "email2" : email.val(),
+                "name" : name.val(),
+                "username" : email.val(),
+                "password1" : password1.val(),
+                "password2" : password2.val(),
+                "user_group_name" : "Organization <?php echo $this->fields[47]->value[0]; ?> " + userType.val(),
+                "old_user_group_name" : "Organization <?php echo $this->fields[47]->value[0]; ?> " + old_usertype
+            };
+            data[token]=1;
+            //Set domain for handling correct redirect to dashboard page
+            //console.log(profile_id);
+            if(profile_id){
+
+            function analyticsErrorHandler(errorCode, description){
+                    console.error("Error loading analtyics: code(" + errorCode + ")\n\t" + description);
+            }
+            }
+
+            if((joomla_user_id.length && joomla_user_id.val() == '0' && !parseInt(record_id))||(asgUserOrganisation && !parseInt(record_id))){
+
+                 jQuery.ajax({
+                    type : 'post',
+                    data : data,
+                    dataType:'json',
+                    complete: function(jqXHR, textStatus) {
+                        var result = jQuery.parseJSON(jqXHR.responseText);
+                        if(result && result.userid && result.userid[0]) {
+                            jQuery("#fld-101,#fld-102").slideUp().attr('readonly', 'true');
+                            joomla_user_name.val(data.jform.name);
+                            joomla_user_id.val(result.userid[0]);
+                            callback();
+                        } else if(result.error) {
+                            errorback(result.error);
+                        }
                     }
-                }
-            });
-        } else if(joomla_user_id.length && joomla_user_id.val() && !parseInt(record_id)){
-            data.task   = "ajaxmore.attachUserToGroup";
-            data.option = "com_cobalt";
-            data.userId = joomla_user_id.val();
-            jQuery.ajax({
-                type : 'post',
-                data : data,
-                dataType:'json',
-                complete: function(jqXHR, textStatus) {
-                    var result = jQuery.parseJSON(jqXHR.responseText);
-                    if(result.success) {
-                        callback();
-                    } else if(result.error) {
-                        errorback(result.error);
+                });
+            } else if(joomla_user_id.length && joomla_user_id.val() && !parseInt(record_id)){
+                            existUserFlag = true;
+                data.task   = "ajaxmore.attachUserToGroup";
+                data.option = "com_cobalt";
+                data.userId = joomla_user_id.val();
+                jQuery.ajax({
+                    type : 'post',
+                    data : data,
+                    dataType:'json',
+                    complete: function(jqXHR, textStatus) {
+                        var result = jQuery.parseJSON(jqXHR.responseText);
+                        if(result.success) {
+                            callback();
+                        } else if(result.error) {
+                            errorback(result.error);
+                        }
                     }
-                }
-            });
-        }else if(joomla_user_id.length && joomla_user_id.val() && parseInt(record_id) && !(old_usertype == new_userType_val)){
-            data.task   = "ajaxmore.updateUsersGroup";
-            data.option = "com_cobalt";
-            data.userId = joomla_user_id.val();
-            jQuery.ajax({
-                type : 'post',
-                data : data,
-                dataType:'json',
-                complete: function(jqXHR, textStatus) {        
-                    var result = jQuery.parseJSON(jqXHR.responseText);
-                    if(result.success) {
-                        
-                        callback();     
-                    } else if(result.error) {
-                        errorback(result.error);
+                });
+            }else if(joomla_user_id.length && joomla_user_id.val() && parseInt(record_id) && !(old_usertype == new_userType_val)){
+                data.task   = "ajaxmore.updateUsersGroup";
+                data.option = "com_cobalt";
+                data.userId = joomla_user_id.val();
+                jQuery.ajax({
+                    type : 'post',
+                    data : data,
+                    dataType:'json',
+                    complete: function(jqXHR, textStatus) {
+                        var result = jQuery.parseJSON(jqXHR.responseText);
+                        if(result.success) {
+
+                            callback();
+                        } else if(result.error) {
+                            errorback(result.error);
+                        }
                     }
-                }
-            });
-            
-        }else{
-        	callback();
-        }
+                });
+
+            }else{
+                    callback();
+            }
+        };
     };
-    
+
 </script>
 <div class="form-horizontal">
 <?php if(in_array($params->get('tmpl_params.form_grouping_type', 0), array(1, 4))):?>
@@ -285,18 +332,19 @@ var old_usertype;
       <div class="span8">
         <?php if($params->get('tmpl_params.tab_main_descr')):?>
             <?php echo $params->get('tmpl_params.tab_main_descr'); ?>
-        <?php endif;?>   
+        <?php endif;?>
 
         <?php if($this->type->params->get('properties.item_title', 1) == 1):?>
           <div class="control-group odd<?php echo $k = 1 - $k ?>">
             <label id="title-lbl" for="jform_title" class="control-label" >
+             <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>">
+                <?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
               <?php if($params->get('tmpl_core.form_title_icon', 1)):?>
                 <?php echo HTMLFormatHelper::icon($params->get('tmpl_core.item_icon_title_icon', 'edit.png'));  ?>
               <?php endif;?>
 
               <?php echo JText::_($this->tmpl_params->get('tmpl_core.form_label_title', 'Title')) ?>
-              <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>">
-                <?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
+
             </label>
             <div class="controls">
               <div id="field-alert-title" class="alert alert-error" style="display:none"></div>
@@ -324,8 +372,8 @@ var old_usertype;
               <?php echo JHTML::_('users.wheretopost', @$this->item); ?>
             </div>
           </div>
-          
-            
+
+
           <div class="control-group odd<?php echo $k = 1 - $k ?>">
             <label id="anywherewho-lbl" for="whorepost" class="control-label" >
               <?php if($params->get('tmpl_core.form_anywhere_who_icon', 1)):?>
@@ -339,7 +387,7 @@ var old_usertype;
               <?php echo $this->form->getInput('whorepost'); ?>
             </div>
           </div>
-        <?php endif;?> 
+        <?php endif;?>
 
         <?php if(in_array($this->params->get('submission.allow_category'), $this->user->getAuthorisedViewLevels()) && $this->section->categories):?>
           <div class="control-group odd<?php echo $k = 1 - $k ?>">
@@ -381,7 +429,7 @@ var old_usertype;
           </div>
         <?php endif;?>
 
-        
+
         <?php if($this->ucategory) : ?>
           <div class="control-group odd<?php echo $k = 1 - $k ?>">
             <label id="ucategory-lbl" for="ucatid" class="control-label" >
@@ -411,7 +459,7 @@ var old_usertype;
               <?php echo $this->multirating;?>
             </div>
           </div>
-        <?php endif;?>   
+        <?php endif;?>
 
         <!-- system user goes here -->
 
@@ -422,8 +470,8 @@ var old_usertype;
                 <?php if($sysuser->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
                   <?php echo HTMLFormatHelper::icon($sysuser->params->get('core.icon'));  ?>
                 <?php endif;?>
-                  
-                
+
+
                 <?php if ($sysuser->required): ?>
                   <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
                 <?php endif;?>
@@ -435,7 +483,7 @@ var old_usertype;
                 <?php endif;?>
 
                 <?php echo $sysuser->label; ?>
-                
+
               </label>
               <?php if(in_array($sysuser->params->get('core.label_break'), array(1,3))):?>
                 <div style="clear: both;"></div>
@@ -446,7 +494,7 @@ var old_usertype;
               <div id="field-alert-<?php echo $sysuser->id?>" class="alert alert-error" style="display:none"></div>
               <?php echo $sysuser->result; ?>
             </div>
-          </div> 
+          </div>
 
 
         <!-- user type goes here -->
@@ -457,8 +505,8 @@ var old_usertype;
                 <?php if($usertype->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
                   <?php echo HTMLFormatHelper::icon($usertype->params->get('core.icon'));  ?>
                 <?php endif;?>
-                  
-                
+
+
                 <?php if ($usertype->required): ?>
                   <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
                 <?php endif;?>
@@ -470,7 +518,7 @@ var old_usertype;
                 <?php endif;?>
 
                 <?php echo $usertype->label; ?>
-                
+
               </label>
               <?php if(in_array($usertype->params->get('core.label_break'), array(1,3))):?>
                 <div style="clear: both;"></div>
@@ -491,8 +539,8 @@ var old_usertype;
               <?php if($username->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
                 <?php echo HTMLFormatHelper::icon($username->params->get('core.icon'));  ?>
               <?php endif;?>
-                
-              
+
+
               <?php if ($username->required): ?>
                 <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
               <?php endif;?>
@@ -504,7 +552,7 @@ var old_usertype;
               <?php endif;?>
 
               <?php echo $username->label; ?>
-              
+
             </label>
             <?php if(in_array($username->params->get('core.label_break'), array(1,3))):?>
               <div style="clear: both;"></div>
@@ -516,25 +564,23 @@ var old_usertype;
             <?php echo $username->result; ?>
           </div>
         </div>
-        
-        <?php if($userprofile):?>
+
         <div class="control-group" id="asg-userprofile-pwd1">
-              <label class="control-label">Password</label>    
+
+              <label class="control-label"> <span class="pull-left" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>Password</label>
               <div class="controls ">
                 <div style="display:none" class="alert alert-error"></div>
                   <input type="password" size="30" class="validate-password" autocomplete="off" value="" id="jform_password1" name="jform[password1]" aria-invalid="false">
               </div>
         </div>
         <div class="control-group" id="asg-userprofile-pwd2">
-              <label class="control-label">Confirm password</label>    
+              <label class="control-label"><span class="pull-left" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>Confirm password</label>
               <div class="controls">
                 <div style="display:none" class="alert alert-error"></div>
                 <input type="password" size="30" class="validate-password" autocomplete="off" value="" id="jform_password2" name="jform[password2]">
               </div>
         </div>
-        <?php endif;?>
         <!-- email goes here -->
-         
         <?php $email = $this->sorted_fields[0][102]?>
         <div id="fld-<?php echo $email->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo 'field-102'; ?><?php echo $email->fieldclass;?>">
           <?php if($email->params->get('core.show_lable') == 1 || $email->params->get('core.show_lable') == 3):?>
@@ -542,8 +588,8 @@ var old_usertype;
               <?php if($email->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
                 <?php echo HTMLFormatHelper::icon($email->params->get('core.icon'));  ?>
               <?php endif;?>
-                
-              
+
+
               <?php if ($email->required): ?>
                 <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
               <?php endif;?>
@@ -555,18 +601,20 @@ var old_usertype;
               <?php endif;?>
 
               <?php echo $email->label; ?>
-              
+
             </label>
             <?php if(in_array($email->params->get('core.label_break'), array(1,3))):?>
               <div style="clear: both;"></div>
             <?php endif;?>
           <?php endif;?>
 
-          <div class="controls<?php if(in_array($email->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($email->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $email->fieldclass  ?>">
+          <div id="email<?php echo $email->id; ?>" class="controls<?php if(in_array($email->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($email->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $email->fieldclass  ?>">
             <div id="field-alert-<?php echo $email->id?>" class="alert alert-error" style="display:none"></div>
-            <?php echo $email->result; ?>
+            <?php echo $email->result;  ?>
+            <p><?php if ($this->item->id) { echo JText::_('PROFILE_FORM_CONTACT_EMAIL'); }?></p>
           </div>
-        </div> 
+        </div>
+
 
 
         <!-- first name goes here -->
@@ -577,8 +625,8 @@ var old_usertype;
               <?php if($fname->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
                 <?php echo HTMLFormatHelper::icon($fname->params->get('core.icon'));  ?>
               <?php endif;?>
-                
-              
+
+
               <?php if ($fname->required): ?>
                 <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
               <?php endif;?>
@@ -590,7 +638,7 @@ var old_usertype;
               <?php endif;?>
 
               <?php echo $fname->label; ?>
-              
+
             </label>
             <?php if(in_array($fname->params->get('core.label_break'), array(1,3))):?>
               <div style="clear: both;"></div>
@@ -601,9 +649,9 @@ var old_usertype;
             <div id="field-alert-<?php echo $fname->id?>" class="alert alert-error" style="display:none"></div>
             <?php echo $fname->result; ?>
           </div>
-        </div> 
+        </div>
 
-        <!-- last name goes here --> 
+        <!-- last name goes here -->
         <?php $lname = $this->sorted_fields[0][46]?>
         <div id="fld-<?php echo $lname->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo 'field-46'; ?> <?php echo $lname->fieldclass;?>">
           <?php if($lname->params->get('core.show_lable') == 1 || $lname->params->get('core.show_lable') == 3):?>
@@ -611,8 +659,8 @@ var old_usertype;
               <?php if($lname->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
                 <?php echo HTMLFormatHelper::icon($lname->params->get('core.icon'));  ?>
               <?php endif;?>
-                
-              
+
+
               <?php if ($lname->required): ?>
                 <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
               <?php endif;?>
@@ -624,7 +672,7 @@ var old_usertype;
               <?php endif;?>
 
               <?php echo $lname->label; ?>
-              
+
             </label>
             <?php if(in_array($lname->params->get('core.label_break'), array(1,3))):?>
               <div style="clear: both;"></div>
@@ -638,7 +686,7 @@ var old_usertype;
         </div>
 
 
-        <!-- Contact phone number --> 
+        <!-- Contact phone number -->
         <?php $lname = $this->sorted_fields[0][121]?>
         <div id="fld-<?php echo $lname->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo 'field-46'; ?> <?php echo $lname->fieldclass;?>">
           <?php if($lname->params->get('core.show_lable') == 1 || $lname->params->get('core.show_lable') == 3):?>
@@ -646,8 +694,8 @@ var old_usertype;
               <?php if($lname->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
                 <?php echo HTMLFormatHelper::icon($lname->params->get('core.icon'));  ?>
               <?php endif;?>
-                
-              
+
+
               <?php if ($lname->required): ?>
                 <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
               <?php endif;?>
@@ -659,7 +707,7 @@ var old_usertype;
               <?php endif;?>
 
               <?php echo $lname->label; ?>
-              
+
             </label>
             <?php if(in_array($lname->params->get('core.label_break'), array(1,3))):?>
               <div style="clear: both;"></div>
@@ -681,8 +729,8 @@ var old_usertype;
                 <?php if($member->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
                   <?php echo HTMLFormatHelper::icon($member->params->get('core.icon'));  ?>
                 <?php endif;?>
-                  
-                
+
+
                 <?php if ($member->required): ?>
                   <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
                 <?php endif;?>
@@ -694,7 +742,7 @@ var old_usertype;
                 <?php endif;?>
 
                 <?php echo $member->label; ?>
-                
+
               </label>
               <?php if(in_array($member->params->get('core.label_break'), array(1,3))):?>
                 <div style="clear: both;"></div>
@@ -705,7 +753,7 @@ var old_usertype;
               <div id="field-alert-<?php echo $member->id?>" class="alert alert-error" style="display:none"></div>
               <?php echo $member->result; ?>
             </div>
-          </div> 
+          </div>
 
 
         <!-- contact of organizations goes here -->
@@ -716,8 +764,8 @@ var old_usertype;
               <?php if($organizations->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
                 <?php echo HTMLFormatHelper::icon($organizations->params->get('core.icon'));  ?>
               <?php endif;?>
-                
-              
+
+
               <?php if ($organizations->required): ?>
                 <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
               <?php endif;?>
@@ -729,7 +777,7 @@ var old_usertype;
               <?php endif;?>
 
               <?php echo $organizations->label; ?>
-              
+
             </label>
             <?php if(in_array($organizations->params->get('core.label_break'), array(1,3))):?>
               <div style="clear: both;"></div>
@@ -740,7 +788,7 @@ var old_usertype;
             <div id="field-alert-<?php echo $organizations->id?>" class="alert alert-error" style="display:none"></div>
             <?php echo $organizations->result; ?>
           </div>
-        </div> 
+        </div>
 
         <!-- contact for product goes here -->
         <?php $products = $this->sorted_fields[0][49]?>
@@ -750,8 +798,8 @@ var old_usertype;
               <?php if($products->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
                 <?php echo HTMLFormatHelper::icon($products->params->get('core.icon'));  ?>
               <?php endif;?>
-                
-              
+
+
               <?php if ($products->required): ?>
                 <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
               <?php endif;?>
@@ -763,7 +811,7 @@ var old_usertype;
               <?php endif;?>
 
               <?php echo $products->label; ?>
-              
+
             </label>
             <?php if(in_array($products->params->get('core.label_break'), array(1,3))):?>
               <div style="clear: both;"></div>
@@ -774,7 +822,7 @@ var old_usertype;
             <div id="field-alert-<?php echo $products->id?>" class="alert alert-error" style="display:none"></div>
             <?php echo $products->result; ?>
           </div>
-        </div> 
+        </div>
 
 
         <!-- contact for APIs goes here -->
@@ -785,8 +833,8 @@ var old_usertype;
               <?php if($apis->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
                 <?php echo HTMLFormatHelper::icon($apis->params->get('core.icon'));  ?>
               <?php endif;?>
-                
-              
+
+
               <?php if ($apis->required): ?>
                 <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
               <?php endif;?>
@@ -798,7 +846,7 @@ var old_usertype;
               <?php endif;?>
 
               <?php echo $apis->label; ?>
-              
+
             </label>
             <?php if(in_array($apis->params->get('core.label_break'), array(1,3))):?>
               <div style="clear: both;"></div>
@@ -809,7 +857,7 @@ var old_usertype;
             <div id="field-alert-<?php echo $apis->id?>" class="alert alert-error" style="display:none"></div>
             <?php echo $apis->result; ?>
           </div>
-        </div> 
+        </div>
 
 
         <!-- contact for plans goes here -->
@@ -820,8 +868,8 @@ var old_usertype;
               <?php if($plans->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
                 <?php echo HTMLFormatHelper::icon($plans->params->get('core.icon'));  ?>
               <?php endif;?>
-                
-              
+
+
               <?php if ($plans->required): ?>
                 <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
               <?php endif;?>
@@ -833,7 +881,7 @@ var old_usertype;
               <?php endif;?>
 
               <?php echo $plans->label; ?>
-              
+
             </label>
             <?php if(in_array($plans->params->get('core.label_break'), array(1,3))):?>
               <div style="clear: both;"></div>
@@ -844,7 +892,7 @@ var old_usertype;
             <div id="field-alert-<?php echo $plans->id?>" class="alert alert-error" style="display:none"></div>
             <?php echo $plans->result; ?>
           </div>
-        </div> 
+        </div>
 
 
         <!-- contact for applications goes here -->
@@ -855,8 +903,8 @@ var old_usertype;
               <?php if($applications->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
                 <?php echo HTMLFormatHelper::icon($applications->params->get('core.icon'));  ?>
               <?php endif;?>
-                
-              
+
+
               <?php if ($applications->required): ?>
                 <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
               <?php endif;?>
@@ -868,7 +916,7 @@ var old_usertype;
               <?php endif;?>
 
               <?php echo $applications->label; ?>
-              
+
             </label>
             <?php if(in_array($applications->params->get('core.label_break'), array(1,3))):?>
               <div style="clear: both;"></div>
@@ -879,7 +927,7 @@ var old_usertype;
             <div id="field-alert-<?php echo $applications->id?>" class="alert alert-error" style="display:none"></div>
             <?php echo $applications->result; ?>
           </div>
-        </div> 
+        </div>
 
 
         <!-- contact for subscriptions goes here -->
@@ -890,8 +938,8 @@ var old_usertype;
               <?php if($subscriptions->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
                 <?php echo HTMLFormatHelper::icon($subscriptions->params->get('core.icon'));  ?>
               <?php endif;?>
-                
-              
+
+
               <?php if ($subscriptions->required): ?>
                 <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
               <?php endif;?>
@@ -903,7 +951,7 @@ var old_usertype;
               <?php endif;?>
 
               <?php echo $subscriptions->label; ?>
-              
+
             </label>
             <?php if(in_array($subscriptions->params->get('core.label_break'), array(1,3))):?>
               <div style="clear: both;"></div>
@@ -914,7 +962,7 @@ var old_usertype;
             <div id="field-alert-<?php echo $subscriptions->id?>" class="alert alert-error" style="display:none"></div>
             <?php echo $subscriptions->result; ?>
           </div>
-        </div> 
+        </div>
       </div>
       <div class="span4">
         <!-- thumbnails goes here -->
@@ -1000,7 +1048,7 @@ var old_usertype;
 
 		<?php group_end($this);?>
 	<?php endif;?>
-	
+
 
 
 	<?php if(count($this->core_admin_fields)):?>
@@ -1017,9 +1065,9 @@ var old_usertype;
 			<?php endforeach;?>
 			</div>
 		<?php group_end($this);?>
-	<?php endif;?>	
+	<?php endif;?>
 
-  <?php 
+  <?php
     $profile_id = JFactory::getApplication()->input->getInt('id', 0);
     $user_id = DeveloperPortalApi::getUserIdByProfileId($profile_id);
   ?>
@@ -1110,21 +1158,21 @@ var old_usertype;
           $emailBox     =   form.find("#field_102"),
           $email        =   $emailBox.val();
           $token        =   form.find("input[type='hidden'][value='1']").attr("name");
-      
+
 
       if(!$name.length){
-        _getAlertBox.apply($nameBox).text("Name is unvolid!").slideDown();
+        _getAlertBox.apply($nameBox).text("Name is invalid!").slideDown();
         flag = false;
       }
 
       if(!$username.length){
-        _getAlertBox.apply($usernameBox).text("username is unvolid!").slideDown();
+        _getAlertBox.apply($usernameBox).text("username is invalid!").slideDown();
         flag = false;
       }
 
 
       if(!$email.length || !/^(.+)@(.+)$/.test($email)){
-        _getAlertBox.apply($emailBox).text("Email address is unvolid!").slideDown();
+        _getAlertBox.apply($emailBox).text("Email address is invalid!").slideDown();
         flag = false;
       }
 
@@ -1182,9 +1230,16 @@ var old_usertype;
 
         if(data === null){return false;}
 
-        $.post(GLOBAL_CONTEXT_PATH, data, function(){
-          Joomla.submitbutton('form.save');
-        });
+        $.post(GLOBAL_CONTEXT_PATH+'index.php?option=com_cobalt&task=ajaxmore.validatePasswordRules',{ password : data['jform[password1]'] },
+        	    function(res){
+      	    		if ( res.success == 0 ) {
+      	    			_getAlertBox.apply($pwd1Box).html(res.error).slideDown();
+      	  	    	} else {
+	      	  	    	$.post(GLOBAL_CONTEXT_PATH, data, function(){
+	      	  	          Joomla.submitbutton('form.save');
+	      	  	        });
+          	  	    }
+           		},'json');
         return false;
       });
 

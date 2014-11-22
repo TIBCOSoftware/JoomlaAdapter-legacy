@@ -1,5 +1,4 @@
 var require = function (file, cwd) {
-    
     var resolved = require.resolve(file, cwd || '/');
     var mod = require.modules[resolved];
     if (!mod) throw new Error(
@@ -1278,12 +1277,12 @@ var logCurl = function (req) {
 
   var query = req.query ? '?' + req.query : "";
 
-  console.log("curl " +
-    "-X " + req.method.toUpperCase() + " " +
-    req.scheme + "://" + req.host + ":" + req.port + req.path + query + " " +
-    headerString +
-    bodyString
-  );
+  // console.log("curl " +
+    // "-X " + req.method.toUpperCase() + " " +
+    // req.scheme + "://" + req.host + ":" + req.port + req.path + query + " " +
+    // headerString +
+    // bodyString
+  // );
 };
 
 
@@ -1444,11 +1443,11 @@ EventEmitter.prototype.addListener = function(type, listener) {
 
       if (m && m > 0 && this._events[type].length > m) {
         this._events[type].warned = true;
-        console.error('(node) warning: possible EventEmitter memory ' +
-                      'leak detected. %d listeners added. ' +
-                      'Use emitter.setMaxListeners() to increase limit.',
-                      this._events[type].length);
-        console.trace();
+        // console.error('(node) warning: possible EventEmitter memory ' +
+                      // 'leak detected. %d listeners added. ' +
+                      // 'Use emitter.setMaxListeners() to increase limit.',
+                      // this._events[type].length);
+        // console.trace();
       }
     }
 
@@ -1724,7 +1723,7 @@ var zlib = null;
 try {
   zlib = require('zlib');
 } catch (e) {
-  console.warn("no zlib library");
+  // console.warn("no zlib library");
 }
 
 // Iconv doesn't work in browser
@@ -1732,7 +1731,7 @@ var Iconv = null;
 try {
   Iconv = require('iconv-lite');
 } catch (e) {
-  console.warn("no iconv library");
+  // console.warn("no iconv library");
 }
 
 // Construct a `Response` object. You should never have to do this directly. The
@@ -1773,7 +1772,7 @@ var Response = function(raw, request, callback) {
           cookieObjs.push(cookie);
         }
       } catch (e) {
-        console.warn("Tried to set bad cookie: " + cookieString);
+        // console.warn("Tried to set bad cookie: " + cookieString);
       }
     }
 
@@ -2572,9 +2571,7 @@ var Request = module.exports = function (xhr, params) {
                     xhr.setRequestHeader(key, v);
                 });
             }
-            else {
-                xhr.setRequestHeader(key, value);
-            }
+            else xhr.setRequestHeader(key, value)
         });
     }
     

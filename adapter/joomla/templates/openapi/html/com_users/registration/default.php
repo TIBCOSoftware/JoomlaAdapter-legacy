@@ -16,6 +16,8 @@ JHtml::_('behavior.formvalidation');
 if($registration_form = $this->form->getFieldsets()){
 	$registration_form_api_user = $registration_form["apiuser"];
 	$fields = $this->form->getFieldset($registration_form_api_user->name);
+	$pwd_about=$registration_form['default'];
+	$pwd_about_fields=$this->form->getFieldset($pwd_about->name);
 }
 
 
@@ -23,6 +25,10 @@ $first_name = $fields["jform_apiuser_first_name"];
 $last_name = $fields["jform_apiuser_last_name"];
 $user_email = $fields["jform_apiuser_user_email"];
 $to_agree = $fields["jform_apiuser_to_agree"];
+$pwd1=$pwd_about_fields['jform_password1'];
+$pwd2=$pwd_about_fields['jform_password2'];
+
+
 
 $validate = isset($fields["jform_apiuser_validate"])?$fields["jform_apiuser_validate"]:"";
 
@@ -97,6 +103,21 @@ img
 							<?php echo $last_name->input;?>
 						</div>
 			</div>
+			
+			<div class="control-group row-fluid">
+				<div class="control span4 email">
+				<?php echo $pwd1->label;?>
+				<?php echo $pwd1->input;?>
+				</div>
+			</div>
+			
+			<div class="control-group row-fluid">
+				<div class="control span4 email">
+				<?php echo $pwd2->label;?>
+				<?php echo $pwd2->input;?>
+				</div>
+			</div>
+			
 			<div class="control-group row-fluid">
 				<div class="control span4 email">
 				<?php echo $user_email->label;?>
@@ -156,4 +177,3 @@ img
 	});
 
 </script>
-

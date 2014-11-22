@@ -135,6 +135,10 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
 .form-actions .btn:last-child {
   display: inline-block;
 }
+#fld-145 .btn:active,
+#fld-145 .btn.active {
+    background-color:  #2E9ACF;
+}
 </style>
 <div class="form-horizontal">
 <?php if(in_array($params->get('tmpl_params.form_grouping_type', 0), array(1, 4))):?>
@@ -355,6 +359,41 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
           <?php echo $api_type->result; ?>
         </div>
       </div>
+
+      <!-- API Type goes here -->
+      <?php $use_existing_facade = $this->sorted_fields[0][145]?>
+      <div id="fld-<?php echo $use_existing_facade->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo 'field-145' ?> <?php echo $use_existing_facade->fieldclass;?>">
+        <?php if($use_existing_facade->params->get('core.show_lable') == 1 || $use_existing_facade->params->get('core.show_lable') == 3):?>
+          <label id="lbl-<?php echo $use_existing_facade->id;?>" for="field_<?php echo $use_existing_facade->id;?>" class="control-label <?php echo $use_existing_facade->class;?>" >
+            <?php if($use_existing_facade->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
+              <?php echo HTMLFormatHelper::icon($use_existing_facade->params->get('core.icon'));  ?>
+            <?php endif;?>
+
+
+            <?php if ($use_existing_facade->required): ?>
+              <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
+            <?php endif;?>
+
+            <?php if ($use_existing_facade->description):?>
+              <span class="pull-right" rel="tooltip" style="cursor: help;"  data-original-title="<?php echo htmlentities(($use_existing_facade->translateDescription ? JText::_($use_existing_facade->description) : $use_existing_facade->description), ENT_COMPAT, 'UTF-8');?>">
+                <?php echo HTMLFormatHelper::icon('question-small-white.png');  ?>
+              </span>
+            <?php endif;?>
+
+            <?php echo $use_existing_facade->label; ?>
+
+          </label>
+          <?php if(in_array($use_existing_facade->params->get('core.label_break'), array(1,3))):?>
+            <div style="clear: both;"></div>
+          <?php endif;?>
+        <?php endif;?>
+
+        <div class="controls<?php if(in_array($use_existing_facade->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($use_existing_facade->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $use_existing_facade->fieldclass  ?>">
+          <div id="field-alert-<?php echo $use_existing_facade->id?>" class="alert alert-error" style="display:none"></div>
+          <?php echo $use_existing_facade->result; ?>
+        </div>
+      </div>
+
       <!-- Contact email goes here -->
       <?php $contact_email = $this->sorted_fields[0][21]?>
       <div id="fld-<?php echo $contact_email->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo 'field-21' ?> <?php echo $contact_email->fieldclass;?>">
@@ -575,39 +614,8 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
               <?php echo $upload_wsdl_spec->result; ?>
             </div>
           </div>
-      <!-- Resource Path goes here -->
-      <?php $resource_path = $this->sorted_fields[0][22]?>
-      <div id="fld-<?php echo $resource_path->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo 'field-22' ?> <?php echo $resource_path->fieldclass;?>">
-        <?php if($resource_path->params->get('core.show_lable') == 1 || $resource_path->params->get('core.show_lable') == 3):?>
-          <label id="lbl-<?php echo $resource_path->id;?>" for="field_<?php echo $resource_path->id;?>" class="control-label <?php echo $resource_path->class;?>" >
-            <?php if($resource_path->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
-              <?php echo HTMLFormatHelper::icon($resource_path->params->get('core.icon'));  ?>
-            <?php endif;?>
-
-
-            <?php if ($resource_path->required): ?>
-              <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
-            <?php endif;?>
-
-            <?php if ($resource_path->description):?>
-              <span class="pull-right" rel="tooltip" style="cursor: help;"  data-original-title="<?php echo htmlentities(($resource_path->translateDescription ? JText::_($resource_path->description) : $resource_path->description), ENT_COMPAT, 'UTF-8');?>">
-                <?php echo HTMLFormatHelper::icon('question-small-white.png');  ?>
-              </span>
-            <?php endif;?>
-
-            <?php echo $resource_path->label; ?>
-
-          </label>
-          <?php if(in_array($resource_path->params->get('core.label_break'), array(1,3))):?>
-            <div style="clear: both;"></div>
-          <?php endif;?>
-        <?php endif;?>
-
-        <div class="controls<?php if(in_array($resource_path->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($resource_path->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $resource_path->fieldclass  ?>">
-          <div id="field-alert-<?php echo $resource_path->id?>" class="alert alert-error" style="display:none"></div>
-          <?php echo $resource_path->result; ?>
-        </div>
-      </div>
+      
+      
       <!-- Environments Path goes here -->
       <?php $environments = $this->sorted_fields[0][26]?>
       <div id="fld-<?php echo $environments->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo 'field-26' ?> <?php echo $environments->fieldclass;?>">
@@ -641,6 +649,43 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
           <?php echo $environments->result; ?>
         </div>
       </div>
+
+
+      <!-- Target Environments Path goes here -->
+       <input id="sorted_value" type="hidden" value="<?php echo $this->sorted_fields[0][145]->value; ?>">
+      <?php $target_environments = $this->sorted_fields[0][147]?>
+      <div id="fld-<?php echo $target_environments->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo 'field-26' ?> <?php echo $target_environments->fieldclass;?>">
+        <?php if($target_environments->params->get('core.show_lable') == 1 || $target_environments->params->get('core.show_lable') == 3):?>
+          <label id="lbl-<?php echo $target_environments->id;?>" for="field_<?php echo $target_environments->id;?>" class="control-label <?php echo $target_environments->class;?>" >
+            <?php if($target_environments->params->get('core.icon') && $params->get('tmpl_core.item_icon_fields')):?>
+              <?php echo HTMLFormatHelper::icon($target_environments->params->get('core.icon'));  ?>
+            <?php endif;?>
+
+
+            <?php if ($target_environments->required): ?>
+              <span class="pull-right" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>
+            <?php endif;?>
+
+            <?php if ($target_environments->description):?>
+              <span class="pull-right" rel="tooltip" style="cursor: help;"  data-original-title="<?php echo htmlentities(($target_environments->translateDescription ? JText::_($target_environments->description) : $target_environments->description), ENT_COMPAT, 'UTF-8');?>">
+                <?php echo HTMLFormatHelper::icon('question-small-white.png');  ?>
+              </span>
+            <?php endif;?>
+
+            <?php echo $target_environments->label; ?>
+
+          </label>
+          <?php if(in_array($target_environments->params->get('core.label_break'), array(1,3))):?>
+            <div style="clear: both;"></div>
+          <?php endif;?>
+        <?php endif;?>
+
+        <div class="controls<?php if(in_array($target_environments->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($target_environments->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $target_environments->fieldclass  ?>">
+          <div id="field-alert-<?php echo $target_environments->id?>" class="alert alert-error" style="display:none"></div>
+          <?php echo $target_environments->result; ?>
+        </div>
+      </div>
+
       </div>
     </div>
   </div>
@@ -792,71 +837,106 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
 
 
 <script>
-  (function(jQuery) {
-    jQuery('.asg-api-step-title-container .asg-api-step-title').on('click', '.icon-chevron-down', function() {
-      jQuery(this).removeClass('icon-chevron-down').addClass('icon-chevron-right');
-      jQuery(this).parent().parent().next().hide();
+  (function($) {
+    $('.asg-api-step-title-container .asg-api-step-title').on('click', '.icon-chevron-down', function() {
+      $(this).removeClass('icon-chevron-down').addClass('icon-chevron-right');
+      $(this).parent().parent().next().hide();
     });
-    jQuery('.asg-api-step-title-container .asg-api-step-title').on('click', '.icon-chevron-right', function() {
-      jQuery(this).removeClass('icon-chevron-right').addClass('icon-chevron-down');
-      jQuery(this).parent().parent().next().show();
+    $('.asg-api-step-title-container .asg-api-step-title').on('click', '.icon-chevron-right', function() {
+      $(this).removeClass('icon-chevron-right').addClass('icon-chevron-down');
+      $(this).parent().parent().next().show();
     });
-    // jQuery('.asg-create-app-next').on('click', function() {
-      // var tab = jQuery(this).parent().parent().parent();
-      // tab.hide();
-      // tab.next().show();
-      // jQuery('.asg-create-app-guide .active').removeClass('active').next().addClass('active');
-      // if (jQuery('.asg-create-app-guide .active').is(':last-child')) {
-        // jQuery('.form-actions .btn').show();
-      // }
-    // });
-    // jQuery('.asg-create-app-back').on('click', function() {
-      // var tab = jQuery(this).parent().parent().parent();
-      // tab.hide();
-      // tab.prev().show();
-      // jQuery('.asg-create-app-guide .active').removeClass('active').prev().addClass('active');
-      // jQuery('.form-actions .btn').hide();
-      // jQuery('.form-actions .btn:last-child').show();
-    // });
   }(jQuery));
   
   (function($){
     var specData, fileName, deleted_operation_ids=[],operations_doc1,operations_doc2,is_deleted_operations=false;
     var originSpecName = "<?php echo $this->fields[23]->value[0]['filename'];?>";
+    var originalName = '';
     var originalEnvironments = [];
+    var originalTargetEnvironments = [];
+    var originalCreateProxy = '';
+    var currentName = '';
     var currentEnvironments = [];
+    var currentTargetEnvironments = [];
+    var currentCreateProxy = '';
     var sRecourcePath = '';
     var sAPIType = '';
+
     $(function(){
-      operations_doc1 = $('#fld-23 .filename').eq(1).text();
-      originalEnvironments = getEnvironments(originalEnvironments);
-      sRecourcePath = $('input[name="jform[fields][22]"]').val();
-      sAPIType = $('select[name="jform[fields][75]"]').val();
+        $('.asg-api-step-title-container .asg-api-step-title').on('click', '.icon-chevron-down', function() {
+            $(this).removeClass('icon-chevron-down').addClass('icon-chevron-right');
+            $(this).parent().parent().next().hide();
+        });
+        $('.asg-api-step-title-container .asg-api-step-title').on('click', '.icon-chevron-right', function() {
+            $(this).removeClass('icon-chevron-right').addClass('icon-chevron-down');
+            $(this).parent().parent().next().show();
+        });
+        operations_doc1 = $('#fld-23 .filename').eq(1).text();
+        originalName = $('input[name="jform[title]"]').val();
+        originalEnvironments = getEnvironments();
+        sRecourcePath = $('input[name="jform[fields][22]"]').val();
+        sAPIType = $('select[name="jform[fields][75]"]').val();
+        originalTargetEnvironments = getTargetEnvironments();
+        originalCreateProxy = $('input:checked[name="jform[fields][145]"]').val();
+        sorted_value = $('#sorted_value').val();
+
+        $('#fld-145 button').on('click', function(){
+            if(/^bool-n/.test(this.id)) {
+              $("#fld-146, #fld-147").hide();
+              $('#fld-146 #field_146').val('');
+              $('#fld-147 #parent_list147 > div').remove();
+            } else {
+              $("#fld-146, #fld-147").show();
+            }
+        });
+        
+          <?php if(!$this->item->id):?>
+            (function initForm(){
+              $("#bool-y145").addClass("active btn-success").prev("input").attr("checked", true);
+            }());
+          <?php else:?>
+            if(sorted_value == -1) {
+              $("#fld-146, #fld-147").hide();
+            } else if(sorted_value == 1){
+              $("#fld-146, #fld-147").show();
+            }
+          <?php endif;?>
     });
 
-    function getEnvironments(targetArray){
-      var envWrap = $("#parent_list26");
-      envWrap.find(".list-item").each(function(i,ele){
-        targetArray.push($(ele).attr("rel"));
-      });
-
-      targetArray = targetArray.sort();
-      envWrap.attr("original",targetArray);
-      return targetArray.sort();
+    function getEnvironments(){
+        return _getSelectedItems('parent_list26');
     }
 
+    function getTargetEnvironments(){
+        return _getSelectedItems('parent_list147');
+    }
+
+    function _getSelectedItems(id) {
+        var envWrap = $("#" + id),
+        	targetArray = [];              
+        envWrap.find(".list-item").each(function(i,ele){
+        targetArray.push($(ele).attr("rel"));
+        });
+
+        targetArray = targetArray.sort();
+        envWrap.attr("original",targetArray);
+        return targetArray.sort();
+    }
 
     Joomla.beforesubmitform = function(fCallback, fErrorback) {
       fileName = $('input[name="jform[fields][23][]"]').val();
       operations_doc2 = $('#fld-23 .filename').eq(1).text();
-      var flag      = true,
+      var flag = true,
           record_id = parseInt($("#jform_id").val());
-          currentEnvironments = getEnvironments(currentEnvironments),
+          currentName = $('input[name="jform[title]"]').val();
+          currentEnvironments = getEnvironments(),
+          currentTargetEnvironments = getTargetEnvironments(),
+          currentCreateProxy = $('input:checked[name="jform[fields][145]"]').val(),
           sNewResourcePath = $('input[name="jform[fields][22]"]').val(),
           sNewAPIType = $('select[name="jform[fields][75]"]').val();
 
       if(sRecourcePath !== sNewResourcePath || sAPIType !== sNewAPIType) {
-        window.oUpdatedFields = {};
+        window.oUpdatedFields = window.oUpdatedFields || {};
         if(sRecourcePath !== sNewResourcePath) {
           window.oUpdatedFields[22] = [sRecourcePath];
         }
@@ -864,8 +944,20 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
           window.oUpdatedFields[75] = [sAPIType];
         }
       }
+      if(currentName !== originalName) {
+          window.oUpdatedFields = window.oUpdatedFields || {};
+          window.oUpdatedFields['name'] = originalName;
+      }
+      if(!DeveloperPortal.arrayEqual(originalTargetEnvironments, currentTargetEnvironments)) {
+        window.oUpdatedFields = window.oUpdatedFields || {};
+        window.oUpdatedFields[147] = originalTargetEnvironments;
+      }
 
-      if(record_id && currentEnvironments.join() !== originalEnvironments.join()) {
+      if( originalCreateProxy !== currentCreateProxy) {
+        window.oUpdatedFields = window.oUpdatedFields || {};
+        window.oUpdatedFields[145] = [originalCreateProxy];
+      }
+      if(record_id && !DeveloperPortal.arrayEqual(originalEnvironments, currentEnvironments)) {
         var data = {
                 "option"      : "com_cobalt",
                 "task"        : "ajaxMore.checkEnvironmentsUsedByProduct",
@@ -966,20 +1058,42 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
 	try{
 	    for (var i = 0; i < apis.length; i++) {
 	      var api = apis[i];
-	      var title = api.operations[0].nickname;
+		  var subcounter = 0;
+		  for (var j = 0; j < api.operations.length; j++) {
+			  var operation = api.operations[j];
+			  var title = operation.nickname;
 	          var dForm = $('<form id="keyForm" name="keyForm" enctype="multipart/form-data" method="post" style="display:none;"></form>').appendTo('body'),
 	              sAction = GLOBAL_CONTEXT_PATH + 'index.php/apis/submit/2-apis/6?fand=' + API_ID + '&field_id=30',
 	        restPath = api.path,
-	        method = api.operations[0].httpMethod,
-	        description = api.description+" : "+api.operations[0].summary,
+	        method = operation.httpMethod,
+	        description = api.description,
 	            tokenInput = $('input[value="1"]')[0],
 	              sIFrameId = 'iframe_submission_for_'+title,
-	              dIFrame = $('<iframe id="' + sIFrameId + i + '" name="' + sIFrameId + '"  style="display:none;" />').appendTo('body'),
+	              dIFrame = $('<iframe id="' + sIFrameId + j + '" name="' + sIFrameId + '"  style="display:none;" />').appendTo('body'),
 	              dWindow, sRedirectUrl;
-
+				  
+			  if (operation.summary!=null && operation.summary.length>0) {
+			  	description += ':'+ operation.summary;
+			  }  
+			  	  
 	          dForm.attr('action', sAction);
 	          dForm.attr('target', sIFrameId);
-	          dForm.append('<input type="hidden" name="task" value="form.save" />'+'<input type="hidden" name="' + tokenInput.name + '" value="1" />'+'<input type="hidden" name="jform[title]" value="' + title +'" />'+'<input type="hidden" name="jform[fields][27]" value="' + description + '" />'+'<input type="hidden" name="jform[fields][28]" value="' + restPath + '" />'+'<input type="hidden" name="jform[fields][29]" value="' + method + '" />'+'<input type="hidden" name="jform[fields][30]" value="' + API_ID + '" />'+'<input type="hidden" name="jform[ucatid]" value="0" />'+'<input type="hidden" name="jform[id]" value="0" />'+'<input type="hidden" name="jform[section_id]" value="2" />'+'<input type="hidden" name="jform[type_id]" value="6" />'+'<input type="hidden" name="jform[published]" value="1" />');
+	          dForm.append(
+				  '<input type="hidden" name="task" value="form.save" />'+
+				  '<input type="hidden" name="' + tokenInput.name + '" value="1" />'+
+				  '<input type="hidden" name="jform[title]" value="' + title +'" />'+
+				  '<input type="hidden" name="jform[fields][27]" value="' + description + '" />'+
+				  '<input type="hidden" name="jform[fields][28]" value="' + restPath + '" />'+
+				  '<input type="hidden" name="jform[fields][29]" value="' + method + '" />'+
+				  '<input type="hidden" name="jform[fields][30]" value="' + API_ID + '" />'+
+				  '<input type="hidden" name="jform[fields][149]" value="' + restPath + '" />'+
+				  '<input type="hidden" name="jform[fields][108]" value="' + UUID.generate() + '" />'+
+				  '<input type="hidden" name="jform[ucatid]" value="0" />'+
+				  '<input type="hidden" name="jform[id]" value="0" />'+
+				  '<input type="hidden" name="jform[section_id]" value="2" />'+
+				  '<input type="hidden" name="jform[type_id]" value="6" />'+
+				  '<input type="hidden" name="jform[published]" value="1" />'
+			  );
 
 	          dIFrame.on('load', function(oEvent) {
 	              dWindow = dIFrame[0].contentWindow;
@@ -992,18 +1106,27 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
 	                      fErrorback([sErrMsg, GENERIC_ERROR_MESSAGE].join('<br />'));
 	                  }
 	              }
-	              counter++;
-	              if(counter == apis.length){
-	                DeveloperPortal.sendUpdateNotification(API_ID,DeveloperPortal.PORTAL_OBJECT_TYPE_API,{'31':[]},
-	                                                        function(){
-	                                                          window.location.href = redirectURL;
-	                                                        },function(){
-	                                                          window.location.href = redirectURL;
-	                                                        });
-	              }
+				  
+				  subcounter++;
+		          if (subcounter == api.operations.length) {
+		          	counter++;
+					subcounter = 0;
+		          }
+				  
+		          if(counter == apis.length){
+		            DeveloperPortal.sendUpdateNotification(API_ID,DeveloperPortal.PORTAL_OBJECT_TYPE_API,{'31':[]},
+		                                                    function(){
+		                                                      window.location.href = redirectURL;
+		                                                    },function(){
+		                                                      window.location.href = redirectURL;
+		                                                    });
+		          }
 	          });
           
 	          dForm.submit();
+		  }
+		  
+	        
       
 	    }
 	}catch(e){

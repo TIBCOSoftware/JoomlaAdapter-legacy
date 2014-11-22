@@ -48,7 +48,7 @@ class PlgSystemUseguide extends JPlugin
 		$app = JFactory::getApplication();
 		$user = JFactory::getUser();
 		$doc = JFactory::getDocument();
-		$maxStep = 13;
+		$maxStep = 7;
 
 		if ($app->isSite())
 		{
@@ -65,12 +65,6 @@ class PlgSystemUseguide extends JPlugin
 					JText::Script("PLG_SYSTEM_USEGUIDE_GUIDE_CONTENT_STEP5",false,false);
 					JText::Script("PLG_SYSTEM_USEGUIDE_GUIDE_CONTENT_STEP6",false,false);
 					JText::Script("PLG_SYSTEM_USEGUIDE_GUIDE_CONTENT_STEP7",false,false);
-					JText::Script("PLG_SYSTEM_USEGUIDE_GUIDE_CONTENT_STEP8",false,false);
-					JText::Script("PLG_SYSTEM_USEGUIDE_GUIDE_CONTENT_STEP9",false,false);
-					JText::Script("PLG_SYSTEM_USEGUIDE_GUIDE_CONTENT_STEP10",false,false);
-					JText::Script("PLG_SYSTEM_USEGUIDE_GUIDE_CONTENT_STEP11",false,false);
-					JText::Script("PLG_SYSTEM_USEGUIDE_GUIDE_CONTENT_STEP12",false,false);
-					JText::Script("PLG_SYSTEM_USEGUIDE_GUIDE_CONTENT_STEP13",false,false);
 
 					$storedStep = $this->getCurrentGuideStep($user->id);
 					$cookie_name = md5(strtotime($user->registerDate).$user->id."_guide_step");

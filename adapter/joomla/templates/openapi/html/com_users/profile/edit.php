@@ -102,8 +102,12 @@ _renderMessages({
         Joomla.showError(messages);
       } else {
         $.ajax({
-          type: 'GET',
-          url: 'index.php?option=com_cobalt&task=ajaxmore.changePassword&old_password=' + curpwd + '&new_password=' + newpwd
+          type: 'POST',
+          data: {
+            new_password: newpwd,
+            old_password: curpwd
+          },
+          url: 'index.php?option=com_cobalt&task=ajaxmore.changePassword'
         }).done(function(responseText) {
           var res = JSON.parse(responseText);
           if (res.success) {
@@ -114,7 +118,7 @@ _renderMessages({
 				      // Do something after 2 seconds
 					window.location='<?php echo JURI::base();?>';
 				}, 2000);
-        	 
+
             //$('.logout-button [type="submit"]').click();
           } else {
             messages.push(res.error);

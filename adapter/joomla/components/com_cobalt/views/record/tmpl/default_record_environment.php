@@ -21,6 +21,7 @@ $category = array();
 $author = array();
 $details = array();
 $started = FALSE;
+$is_env_managed = TibcoTibco::isEnvManaged($this->item->id);
 $i = $o = 0;
 if(JComponentHelper::getParams('com_emails')->get('enable_archiving_objects') == 1) {
   $tasks_to_hide = DeveloperPortalApi::isReferencedByDownstreamSubs($this->item->id, "environment") ? array(DeveloperPortalApi::TASK_ARCHIVE) : array();
@@ -186,11 +187,15 @@ if($params->get('tmpl_core.item_follow_num'))
 				<a href="#" class="btn btn-mini" rel="tooltip" data-original-title="<?php echo JText::_('CPRINT');?>" onclick="window.print();return false;"><?php echo HTMLFormatHelper::icon('printer.png');  ?></a>
 			</div>
 		<?php endif;?>
-		<button type="button" class="iframe_active btn" id="configUIbutton" >Configure</button>		
+		<?php if($is_env_managed == 1): ?>
+            <button type="button" class="iframe_active btn" id="configUIbutton" >Configure</button>		
+		<?php endif; ?>
 	</div>
-	<div id="configuidiv">
-		<iframe id="configuiframe" src="about:blank" frameborder=0 style="display:none;width:100%;height:800px;"> </iframe>
-	</div>
+    <?php if($is_env_managed == 1): ?>
+        <div id="configuidiv">
+            <iframe id="configuiframe" src="about:blank" frameborder=0 style="display:none;width:100%;height:800px;"> </iframe>
+        </div>
+    <?php endif; ?>
 	
 	<div class="clearfix"></div>
 	<?php if($params->get('tmpl_core.item_title')):?>
@@ -208,7 +213,9 @@ if($params->get('tmpl_core.item_follow_num'))
 	<?php if(isset($this->item->fields_by_groups[null])):?>
 
 		<dl class="dl-horizontal fields-list">
+			<?php $is_show_gateway = $this->item->fields_by_groups[null]['k2bbba040aea1ea47710820a38f288744']->value; ?>
 			<?php foreach ($this->item->fields_by_groups[null] as $field_id => $field):?>
+				<?php if( $field->id != 15 || $is_show_gateway == 1 ): ?>
 				<dt id="<?php echo 'dt-'.$field_id; ?>" class="<?php echo $field->fieldclass;?>">
 					<?php if($field->params->get('core.show_lable') > 1):?>
 						<label id="<?php echo $field->id;?>-lbl">
@@ -224,7 +231,7 @@ if($params->get('tmpl_core.item_follow_num'))
 				<dd id="<?php echo 'dd-'.$field_id; ?>" class="<?php echo $field->fieldclass;?><?php echo ($field->params->get('core.label_break') > 1 ? ' line-brk' : NULL) ?>">
 					<?php echo $field->result; ?>
 				</dd>
-			<?php endforeach;?>
+			<?php endif; endforeach;?>
 		</dl>
 		<?php unset($this->item->fields_by_groups[null]);?>
 	<?php endif;?>

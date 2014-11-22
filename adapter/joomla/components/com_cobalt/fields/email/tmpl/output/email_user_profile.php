@@ -101,6 +101,14 @@ if (in_array($params->get('params.send_mail', 3), $this->user->getAuthorisedView
             $db = JFactory::getDbo();
             $db->setQuery('select `field_value` from #__js_res_record_values where `field_id`=77 and `record_id`='.$record->id);
             $result1 = $db->loadColumn();
+            $returnUrl = urlencode($_SERVER['PHP_SELF']);
+            $queryUri = $_SERVER['QUERY_STRING'];
+
+            if($queryUri != ""){
+            	$queryUri = "index.php?".$queryUri;
+            	$returnUrl = JRoute::_($queryUri);
+            }
+
             if(!empty($result1))
             {
                 $db->setQuery('select `id` from #__users where `id`="'.$result1[0].'"');
@@ -111,7 +119,7 @@ if (in_array($params->get('params.send_mail', 3), $this->user->getAuthorisedView
                     $token = $re_user->get('activation');
                     if($token)
                     {
-                        echo '<p><br/><a href="'.JRoute::_('index.php?options=com_cobalt&task=ajaxmore.resendActiveEmail&id='.$record->id.'&'.JSession::getFormToken() .'=1').'">'. JText::_('BTN_RESEND_ACTIVATION_EMAIL').'</a></p>';
+                        echo '<p><br/><a href="'.JRoute::_('index.php?options=com_cobalt&task=ajaxmore.resendActiveEmail&id='.$record->id.'&'.JSession::getFormToken() .'=1&return='.$returnUrl).'">'. JText::_('BTN_RESEND_ACTIVATION_EMAIL').'</a></p>';
                     }
                 }
             }

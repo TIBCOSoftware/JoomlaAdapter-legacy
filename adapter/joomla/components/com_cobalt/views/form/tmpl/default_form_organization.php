@@ -441,14 +441,14 @@ function analyticsErrorHandler(errorCode, description){
 	console.error("Error loading analtyics: code(" + errorCode + ")\n\t" + description);
 }
 jQuery(document).ready(function(){
-try{
+	jQuery("#fld-20 .controls").find(".row-fluid").each(function(){
+		jQuery(this).find("div input[type='text']").each(function(){
+			var defaultText = jQuery(this).attr("value");
+			jQuery(this).attr("value","");
+			jQuery(this).val(defaultText);
+		});
+	});
 	
-	document.domain = '<?php echo $spotfire_domain;?>';
-}
-catch(err){
-	analyticsErrorHandler(0, 'Failed setting of analytics domain to "<?php echo $spotfire_domain;?>". Please check your settings and try again. [' + err + ']');
-	return;
-}
 });
 
 </script>

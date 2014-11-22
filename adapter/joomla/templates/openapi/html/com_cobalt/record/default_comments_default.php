@@ -108,6 +108,7 @@ if($this->comment->rate > 10) $bc = ' badge-success';
 			</div>
 
 			<?php if($menu || $replay):?>
+				<?php if(in_array($this->item->params->get('comments.comments_access_post', $this->type->params->get('comments.comments_access_post')), $this->user->getAuthorisedViewLevels())):?>
 				<div class="btn-group pull-left" style="display: none; margin-left: 20px;">
 					<?php if(isset($replay)):?>
 						<?php echo $replay; ?>
@@ -121,6 +122,7 @@ if($this->comment->rate > 10) $bc = ' badge-success';
 						</ul>
 					<?php endif;?>
 				</div>
+				<?php endif;?>
 			<?php endif;?>
 			<div class="clearfix"></div>
 			<div>

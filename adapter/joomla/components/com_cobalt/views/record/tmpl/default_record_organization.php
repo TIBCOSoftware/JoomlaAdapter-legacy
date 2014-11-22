@@ -570,7 +570,7 @@ button.resync-org{
 					</thead>
 					<tbody>
 						<tr>
-							<td><?php echo $contactInfo->content['list'][0]->fields[45].' '.$contactInfo->content['list'][0]->fields[46].'<br/>'.$contactInfo->content['list'][0]->fields[102]; ?><br/><?php echo $contactValue['address']['address1'].' '.$contactValue['address']['zip'].'<br/>'.$contactValue['address']['city'].' '.$contactValue['address']['state'].'<br/>'.($contactValue['contacts']['tel']?"Phone:":"").$contactValue['contacts']['tel']; ?></td>
+							<td><?php echo $contactInfo->content['list'][0]->fields[45].' '.$contactInfo->content['list'][0]->fields[46].'<br/>'.$contactInfo->content['list'][0]->fields[102]; ?><br/><?php echo $contactValue['address']['address1'].' '.$contactValue['address']['address2'].' '.$contactValue['address']['zip'].'<br/>'.$contactValue['address']['city'].' '.$contactValue['address']['state'].'<br/>'.($contactValue['contacts']['tel']?"Phone:":"").$contactValue['contacts']['tel']; ?></td>
 						</tr>
 					</tbody>
 				</table>
@@ -784,8 +784,13 @@ GLOBAL_CONTEXT_PATH+"index.php?option=com_cobalt&task=ajaxMore.alertMessages",
 			  function(data){
 				  elements = '';
 				  $(data.result).each(function(){
-					//  elements += '<dt class="'+renderAlertType(this.log_type)+'">'+this.entity_type+'</dt><dd>'+ (this.event||"")+': '+ (this.event_status||'')+'</dd><dd class="time">'+this.create_time+'</dd>';
-					  elements += '<dt class="'+renderAlertType(this.log_type, this.event_status)+'">'+this.entity_type+' : '+ (this.event||"")+'</dt><dd>'+ (this.summary||"")+'</dd><dd class="time">'+this.create_time+'</dd>';
+					  var element = '', aTagStart = '', aTagEnd = '';
+					  if (this.log_type == 'Request') {
+						  aTagStart = '<a href="index.php/subscriptions">';
+						  aTagEnd = '</a>';
+					  }
+					  element = '<dt class="'+renderAlertType(this.event_status)+'">'+aTagStart+this.entity_type+' : '+ (this.event||"")+aTagEnd+'</dt><dd>'+aTagStart+ (this.summary||"")+aTagEnd+'</dd><dd class="time">'+this.create_time+'</dd>';
+					  elements += element;
 					  });
 				  if (elements.length>0) {
 				  	alertNode.html(elements);
@@ -812,15 +817,14 @@ GLOBAL_CONTEXT_PATH+"index.php?option=com_cobalt&task=ajaxMore.alertMessages",
 			node.after('<div style="float:left;height:14px;margin-top:2px;margin-left:2px;">'+percentage+'%'+'</div><div class="clearfix"></div>');
 		}
 
-		function renderAlertType(typeString, statusString){
-			var status=statusString.toLowerCase();
-			var matchString = typeString.toLowerCase();
+		function renderAlertType(typeString){
+			var status=typeString.toLowerCase();
 			var returnType = "";
 			if (status==='error') {
 				returnType = 'error';
 			}else if (status==='success' || status==='complete') {
 				returnType = 'normal';
-			}else if (matchString==='portalalert') {
+			}else if (status==='portalalert') {
 				returnType = 'alert1';
 			}else if(status==='partially completed'){
 				returnType = 'alert2';

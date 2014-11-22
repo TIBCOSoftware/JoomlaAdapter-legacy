@@ -90,7 +90,8 @@ Joomla.submitbutton = function(task) {
 	<?php if(in_array($this->type->params->get('comments.comments_private'), $this->user->getAuthorisedViewLevels())):?>
 		<div class="control-group">
 			<div class="control-label">
-				<?php echo $this->comment_form->getInput('private');?>
+				<input name="jform_private" id="prv-chk" value="" class="inputbox" type="checkbox">
+				<input type="hidden" id="jform_private" name="jform[private]" value=""/>
 			</div>
 			<div class="controls">
 				<label for="private">
@@ -101,6 +102,22 @@ Joomla.submitbutton = function(task) {
 				</label>
 			</div>
 		</div>
+		<script type="text/javascript">
+			(function($){
+				$('#prv-chk').change(function(){
+					setval(this);
+				});
+
+				setval(document.getElementById('prv-chk'));
+
+				function setval(el) {
+					$('#jform_private').val('-1');
+					if(el.checked) {
+						$('#jform_private').val('1');
+					}
+				}
+			}(jQuery))
+		</script>
 	<?php endif;?>
 
 	<?php if(in_array($this->type->params->get('comments.comments_access_access'), $this->user->getAuthorisedViewLevels())):?>

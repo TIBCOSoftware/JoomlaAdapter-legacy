@@ -437,8 +437,10 @@ $k = 0;
 			    <?php if ($this->item->id): ?>
 			  	var originRate = <?php echo DeveloperPortalApi::valueForKeyFromJson($this->item->fields,79,$this->item->id);?>;
 			  	var originQuota = <?php echo DeveloperPortalApi::valueForKeyFromJson($this->item->fields,80,$this->item->id);?>;
+				var originPlanType = '<?php echo DeveloperPortalApi::valueForKeyFromJson($this->item->fields,131);?>';
 				var nowRate = jQuery("#field_79").val();
 				var nowQuota = jQuery("#field_80").val();
+				var nowPlanType = jQuery("#field_131").val();
 				var paraObj = {};
 				if (originRate !== parseInt(nowRate,10)) {
 				  paraObj[79] = parseInt(originRate,10);
@@ -446,6 +448,10 @@ $k = 0;
 
 				if (originQuota !== parseInt(nowQuota,10)) {
 				  paraObj[80] = parseInt(originQuota,10);
+			    }
+				
+				if (originPlanType !== nowPlanType) {
+				  paraObj[131] = '"'+originPlanType+'"';
 			    }
 
 				if (!jQuery.isEmptyObject(paraObj)) {

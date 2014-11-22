@@ -24,6 +24,7 @@ $author = array();
 $details = array();
 $started = FALSE;
 $i = $o = 0;
+$parent_api_create_proxy = "-1";
 if(JComponentHelper::getParams('com_emails')->get('enable_archiving_objects') == 1) {
   $tasks_to_hide = array();
 } else {
@@ -31,10 +32,10 @@ if(JComponentHelper::getParams('com_emails')->get('enable_archiving_objects') ==
 }
 
 
-if($from_which_api = json_decode(ItemsStore::getRecord($this->item->id)->{'fields'})->{'30'})
-{
+if($from_which_api = json_decode(ItemsStore::getRecord($this->item->id)->{'fields'})->{'30'}) {
 
 	$old_operations_of_api = DeveloperPortalApi::getOperationsOfApiByApiId($from_which_api);
+    $parent_api_create_proxy = TibcoTibco::getAPICreateProxyById($from_which_api);
 	if($old_operations_of_api  && !empty($old_operations_of_api)){
 		$doc = JFactory::getDocument();
 		$old_operations_of_api_js = "var parent_api_id=".$from_which_api.";";
@@ -196,6 +197,7 @@ if($params->get('tmpl_core.item_follow_num'))
 	<?php if(isset($this->item->fields_by_groups[null])):?>
 		<dl class="dl-horizontal fields-list">
 			<?php foreach ($this->item->fields_by_groups[null] as $field_id => $field):?>
+			    <?php if($field->id != 149 || $parent_api_create_proxy == "1"): ?>
 				<dt id="<?php echo 'dt-'.$field_id; ?>" class="<?php echo $field->fieldclass;?>">
 					<?php if($field->params->get('core.show_lable') > 1):?>
 						<label id="<?php echo $field->id;?>-lbl">
@@ -211,6 +213,7 @@ if($params->get('tmpl_core.item_follow_num'))
 				<dd id="<?php echo 'dd-'.$field_id; ?>" class="<?php echo $field->fieldclass;?><?php echo ($field->params->get('core.label_break') > 1 ? ' line-brk' : NULL) ?>">
 					<?php echo $field->result; ?>
 				</dd>
+				<?php endif; ?>
 			<?php endforeach;?>
 		</dl>
 		<?php unset($this->item->fields_by_groups[null]);?>

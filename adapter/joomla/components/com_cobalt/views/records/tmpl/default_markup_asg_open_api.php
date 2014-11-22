@@ -62,7 +62,7 @@ $current_user = JFactory::getUser($this->input->getInt('user_id', $this->user->g
             <!--            --><?php //echo $dtitle; ?>
             <!--            --><?php //echo CEventsHelper::showNum('section', $this->section->id, true); ?>
                     </h1>
-                    
+
                     <script type="text/javascript">
                         (function($){
                             $(function(){
@@ -94,9 +94,17 @@ $current_user = JFactory::getUser($this->input->getInt('user_id', $this->user->g
 </div>
 
 <!--  Show description of the current category or section -->
-<?php if(!$this->user->id && $this->description):?>
-  <?php echo preg_replace("/<\/p>/","</div>",preg_replace("/<p>/","<div class=\"section-description\">",$this->description,1),1); ?>
-<?php endif;?>
+<?php
+    if($this->description) {
+        $tmp = $this->description;
+        if($this->user->id) {
+            $tmp = preg_replace("/guests-only/","guests-only hidden",$tmp);
+        } else {
+            $tmp = preg_replace("/registered-only/","registered-only hidden",$tmp);
+        }
+        echo $tmp;
+    }
+?>
 
 
 <!--  Show menu and filters -->
@@ -111,7 +119,7 @@ $current_user = JFactory::getUser($this->input->getInt('user_id', $this->user->g
                       //check for application and switch create button copy to register
                       if($type->id ==9){
                       	$createButtonText=  JText::_('REGISTER_APP').JText::_($type->name);
-                      }else{ 
+                      }else{
                         $createButtonText=  JText::_('CREATE_NEW').JText::_($type->name);
                       }
                       echo '<a class="btn new-recorder pull-left"  href="'.Url::add($this->section, $type, $this->category).'">'.$createButtonText. '</a>';
@@ -184,7 +192,7 @@ $current_user = JFactory::getUser($this->input->getInt('user_id', $this->user->g
         <div class="search-form pull-left"<?php if(!$has_allowed_types){echo " style='margin-left:330px;'"; } ?>>
           <span style="display: none;">Search box</span>
           <?php if(in_array($markup->get('filters.show_search'), $this->user->getAuthorisedViewLevels())):?>
-          	
+
             <input type="text" style="max-width: 300px; min-width: 50px;" placeholder="<?php echo JText::sprintf('ASG_CSEARCHPLACEHOLDER', $this->escape($this->title));  ?>" name="filter_search" value="<?php echo  htmlspecialchars($this->state->get('records.search'));?>" />
             <button  class="icon icon-search"></button>
             <a id="reset-search-keyword" style="position:relative;display:none; left:-25px;cursor:pointer;"><img src="<?php echo JURI::root(TRUE)?>/media/mint/icons/16/cross-circle.png" alt="<?php echo JText::_('P_STOP')?>" align="absmiddle"></a>
@@ -206,7 +214,7 @@ $current_user = JFactory::getUser($this->input->getInt('user_id', $this->user->g
                               });
 
                 _showCross.apply(search_keyword);
-                
+
                 cross_button.live("click",function(){
                   search_keyword.val("").parents('form').submit();
                 });
