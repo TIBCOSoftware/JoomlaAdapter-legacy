@@ -1,10 +1,45 @@
 <?php
-$spotfire_domain = $_POST['domain'];
-$user_group = explode('-', $_POST['group']);
-$user_session_id = $_POST['sid'];
-$root_url = $_POST['rooturl'];
+
+///////// SECTION START /////////
+///////// This section of code was copied from the index.php file in the joomla folder. /////////
+///////// It's used to initialize the session so that the current user can be captured. /////////
+if (version_compare(PHP_VERSION, '5.3.10', '<'))
+{
+    die('Your host needs to use PHP 5.3.10 or higher to run this version of Joomla!');
+}
+
+/**
+ * Constant that is checked in included files to prevent direct access.
+ * define() is used in the installation folder rather than "const" to not error for PHP 5.2 and lower
+ */
+define('_JEXEC', 1);
+
+if (file_exists(__DIR__ . '/defines.php'))
+{
+    include_once __DIR__ . '/defines.php';
+}
+
+if (!defined('_JDEFINES'))
+{
+    define('JPATH_BASE', __DIR__);
+    require_once JPATH_BASE . '/includes/defines.php';
+}
+
+require_once JPATH_BASE . '/includes/framework.php';
+
+// Mark afterLoad in the profiler.
+JDEBUG ? $_PROFILER->mark('afterLoad') : null;
+
+// Instantiate the application.
+$app = JFactory::getApplication('site');
+///////// SECTION END /////////
+
+$spotfire_domain = JComponentHelper::getComponent('com_emails')->params->get('spotfire_domain');
+$user_session_id = JSession::getInstance(null, null)->getId();
+$root_url = rtrim(JURI::root(), "/");
 
 $spotfire_app_url = $root_url."/Analytics/";
+$current_user_groups = JFactory::getUser()->getAuthorisedGroups();
 ?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-gb" lang="en-gb" dir="ltr">
@@ -22,7 +57,7 @@ $spotfire_app_url = $root_url."/Analytics/";
 	</style>
 </head>
 <body>
-	<?php if(empty($spotfire_domain) || empty($user_session_id) || empty($user_group)):?>
+	<?php if(empty($spotfire_domain) || empty($user_session_id) || empty($current_user_groups)):?>
 		<h3>Request unavailable.</h3>
 	<?php else:?>
 		<script type="text/javascript" src="<?php echo $spotfire_app_url; ?>GetJavaScriptApi.ashx?Version=3.1"></script>
@@ -130,11 +165,11 @@ $spotfire_app_url = $root_url."/Analytics/";
 			showHideBtn.click();
 		});
 		</script>
-		
+
 		<div>
 			<div id="analytics">
 			<div id="analytics-control" style="display:inline-block; width:100%;">
-				<?php if(in_array(7, $user_group) || in_array(8, $user_group)): //If user is an Administrator or a SuperUser... ?>
+				<?php if(in_array(7, $current_user_groups) || in_array(8, $current_user_groups)): //If user is an Administrator or a SuperUser... ?>
 				<select id="selectDashboardMode" title="Select Dashboard Type to Display" class="pull-right" style="margin-bottom:0px;">
 				<option value="/ASG/Host">Host</option>
 				<option value="/ASG/Partner">Partner</option>

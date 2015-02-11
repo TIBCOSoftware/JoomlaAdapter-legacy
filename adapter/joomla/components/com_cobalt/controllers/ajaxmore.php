@@ -515,6 +515,9 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
     }
     
     public function getUserByUid(){
+      if ( !$this->userState() ) {
+          AjaxHelper::error( JText::_('USER_NO_LOGIN') );
+      }
       $uid  = intval($_GET["uid"]);
       if ($uid) {
         $user = &JFactory::getUser($uid);
@@ -598,20 +601,20 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
       $user = JFactory::getUser();
       $log_item = new stdClass();
 
-      $log_item->log_type             = $_POST['log_type'];
+      $log_item->log_type             = filter_var($_POST['log_type'], FILTER_SANITIZE_STRIPPED);
       $log_item->is_show              = 0;
       $log_item->org_id               = 0;
-      $log_item->http_status          = $_POST['status'];
-      $log_item->http_status_text     = addslashes($_POST['statusText']);
+      $log_item->http_status          = filter_var($_POST['status'], FILTER_SANITIZE_STRIPPED);
+      $log_item->http_status_text     = addslashes(filter_var($_POST['statusText'], FILTER_SANITIZE_STRIPPED));
       $log_item->http_response_text   = addslashes('');
-      $log_item->summary              = addslashes($_POST['summary']);
-      $log_item->content              = addslashes($_POST['content']);
-      $log_item->entity_type          = $_POST['entity_type'];
-      $log_item->entity_id            = $_POST['entity_id'];
-      $log_item->event                = $_POST['event'];
-      $log_item->event_status         = $_POST['event_status'];
+      $log_item->summary              = addslashes(filter_var($_POST['summary'], FILTER_SANITIZE_STRIPPED));
+      $log_item->content              = addslashes(filter_var($_POST['content'], FILTER_SANITIZE_STRIPPED));
+      $log_item->entity_type          = filter_var($_POST['entity_type'], FILTER_SANITIZE_STRIPPED);
+      $log_item->entity_id            = filter_var($_POST['entity_id'], FILTER_SANITIZE_NUMBER_INT);
+      $log_item->event                = filter_var($_POST['event'], FILTER_SANITIZE_STRIPPED);
+      $log_item->event_status         = filter_var($_POST['event_status'], FILTER_SANITIZE_STRIPPED);
       $log_item->uid                  = $user->id ? $user->id : 0;
-      $log_item->uuid                 = $_POST['uuid'];
+      $log_item->uuid                 = filter_var($_POST['uuid'], FILTER_SANITIZE_STRIPPED);
 
 
       $db->insertObject("asg_logs",$log_item,'id') ? AjaxHelper::send("") : AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_4'));
@@ -1350,6 +1353,25 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
     	else 
     		AjaxHelper::send('');
     }
+    
+    public function validateOldPassword(){
+        $email = $_POST['email'];
+        $old_password = $_POST['oldPassword'];
+        if ( !empty( $email ) && !empty( $old_password ) ) {
+            $db = JFactory::getDbo();
+            $sql = "SELECT `password` FROM `#__users` WHERE `email` = '".$email."' ";
+            $db->setQuery( $sql );
+            $obj = $db->loadObject();
+            if ( JUserHelper::verifyPassword( $old_password, $obj->password ) ) {
+                AjaxHelper::send('');
+            }
+            AjaxHelper::error( JText::_("OLD_PASSWORD_ERROR") );
+        } elseif ( empty( $old_password ) ) {
+            AjaxHelper::error( JText::_("OLD_PASSWORD_NULL") );
+        }
+        AjaxHelper::error( JText::_("OLD_PASSWORD_UNKNOW_ERROR") );
+    }
+    
     /*return error messages.*/
     private function getErrorMsg($errno) {
     	$msg = '';
@@ -1370,6 +1392,48 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
 
     public function getFormToken() {
     	AjaxHelper::send(JFactory::getSession()->getFormToken());
+    }
+    /**
+     * Check user login or no-login.
+    */
+    private function userState() {
+        $user = JFactory::getUser();
+        if ( isset( $user->id ) && !empty( $user->id ) ) {
+            return true;
+}
+        return false;
+    }
+
+    /**
+     * Save a policy to database
+     */
+    public function savePolicy(){
+        $res = 0;
+        $user = JFactory::getUser();
+        if ( in_array( 8, $user->groups ) ) {
+            $db = JFactory::getDbo();
+            $policy = new stdClass();
+            $policy->field_value = addslashes( strip_tags( preg_replace("'([\r\n])[\s]+'", "", $_POST['policy']) ) );
+            $policy->record_id = filter_var($_POST['id'], FILTER_SANITIZE_NUMBER_INT);
+            $policy->user = JFactory::getUser();
+            $policy->field_id = 151;
+            $policy->field_key = 'k' . md5($field->label . '-' . $field->type);
+            $policy->field_type = 'textarea';
+            $policy->field_label = 'Policy';
+            $policy->user_id = $user->id;
+            $policy->type_id = 6;
+            $policy->section_id = 2;
+            $policy->category_id = 0;
+            $policy->ctime = date( 'Y-m-d H:i:s', time() );
+            $policy->value_index = 0;
+            $policy->ip = $_SERVER['REMOTE_ADDR'];
+            if ( !empty( $policy->field_value ) && !empty( $_POST['id'] ) ) {
+                if ( $db->insertObject("#__js_res_record_values",$policy,'id') ) {
+                    $res = $db->insertid();
+                }
+            }
+        }
+        return AjaxHelper::send( $res );
     }
 }
 ?>

@@ -1191,8 +1191,31 @@ $k = 0;
                   $('#fld-144').find('input:checked').removeAttr('checked');
               }
           });
-
-            environmentForm.oldBasepath = jQuery('#url-list14 .url-item.row-fluid input[name^="jform[fields][14][0][url]"]').val();
+          var option = {
+              whiteList: [],
+              stripIgnoreTag:true,
+              onIgnoreTag: function (tag, html, options) {
+                    if (isRemoveTag(tag)) {
+                      if (options.isClosing) {
+                        var ret = '';
+                        var end = options.position + ret.length;
+                        removeList.push([posStart !== false ? posStart : options.position, end]);
+                        posStart = false;
+                        return ret;
+                      } else {
+                        if (!posStart) {
+                          posStart = options.position;
+                        }
+                        return '';
+                      }
+                    } else {
+                      return next(tag, html, options);
+                    }
+                  }
+            };
+            var oldBasepath = jQuery('#url-list14 .url-item.row-fluid input[name^="jform[fields][14][0][url]"]').val();
+            var filterXssString = filterXSS(oldBasepath,option);
+            environmentForm.oldBasepath = filterXssString;
             environmentForm.oldGateways = [];
             jQuery('#adminForm input[name="jform[fields][15][]"]').each(function(index, item) {
                 environmentForm.oldGateways.push(jQuery(item).val());
@@ -1202,6 +1225,8 @@ $k = 0;
             environmentForm.oldTimeouts = jQuery('input[name="jform[fields][136]"]').val();
 
             Joomla.beforesubmitform = function(fCallback, fErrorback) {
+                var urlXss = filterXSS(jQuery('#url-list14 .url-item.row-fluid input[name^="jform[fields][14][0][url]"]').val(),option);
+                jQuery('#url-list14 .url-item.row-fluid input[name^="jform[fields][14][0][url]"]').val(urlXss);
                 window.oUpdatedFields = {};
                 environmentForm.newBasepath = jQuery('#url-list14 .url-item.row-fluid input[name^="jform[fields][14][0][url]"]').val();
                 environmentForm.newGateways = [];

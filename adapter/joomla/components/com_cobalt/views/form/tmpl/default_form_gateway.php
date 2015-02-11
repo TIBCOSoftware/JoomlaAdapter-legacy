@@ -425,10 +425,36 @@ if($_GET["fand"]){
 
 <script type="text/javascript">
   jQuery('document').ready(function() {
+	var option = {
+		whiteList: [],
+		stripIgnoreTag:true,
+		onIgnoreTag: function (tag, html, options) {
+		      if (isRemoveTag(tag)) {
+		        if (options.isClosing) {
+		          var ret = '';
+		          var end = options.position + ret.length;
+		          removeList.push([posStart !== false ? posStart : options.position, end]);
+		          posStart = false;
+		          return ret;
+		        } else {
+		          if (!posStart) {
+		            posStart = options.position;
+		          }
+		          return '';
+		        }
+		      } else {
+		        return next(tag, html, options);
+		      }
+		    }
+	};
     var gatewayForm = {};
     gatewayForm.oldManagementURLs = getManagementURLs();
     Joomla.beforesubmitform = function(fCallback, fErrorback) {
       validateGatewaysManagementURLs(gatewayForm.oldManagementURLs, fCallback, fErrorback).done(validateGatewaysTitle);
+	  jQuery('#url-list89 .url-item.row-fluid input[type="text"][name^="jform[fields][89]"]').each(function(index, item) {
+			itemUrlXss = filterXSS(jQuery(item).val(),option);
+		    jQuery(item).val(itemUrlXss);
+	  });
     }
     if (jQuery('#jform_id').val() == 0) {
       var environmentForm = {};

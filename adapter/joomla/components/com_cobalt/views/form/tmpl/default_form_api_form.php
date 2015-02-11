@@ -582,7 +582,7 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
         </div>
       </div>
           <!-- Upload REST API Spec goes here -->
-          <?php $upload_wsdl_spec = $this->sorted_fields[0][127]?>
+          <?php $upload_wsdl_spec = $this->sorted_fields[0][127] ?>
           <div id="fld-<?php echo $upload_wsdl_spec->id;?>" class="control-group odd<?php echo $k = 1 - $k ?> <?php echo 'field-127' ?> <?php echo $upload_wsdl_spec->fieldclass;?>">
             <?php if($upload_wsdl_spec->params->get('core.show_lable') == 1 || $upload_wsdl_spec->params->get('core.show_lable') == 3):?>
               <label id="lbl-<?php echo $upload_wsdl_spec->id;?>" for="field_<?php echo $upload_wsdl_spec->id;?>" class="control-label <?php echo $upload_wsdl_spec->class;?>" >
@@ -1065,7 +1065,7 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
 	          var dForm = $('<form id="keyForm" name="keyForm" enctype="multipart/form-data" method="post" style="display:none;"></form>').appendTo('body'),
 	              sAction = GLOBAL_CONTEXT_PATH + 'index.php/apis/submit/2-apis/6?fand=' + API_ID + '&field_id=30',
 	        restPath = api.path,
-	        method = operation.httpMethod,
+	        method = operation.method,
 	        description = api.description,
 	            tokenInput = $('input[value="1"]')[0],
 	              sIFrameId = 'iframe_submission_for_'+title,
@@ -1075,7 +1075,9 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
 			  if (operation.summary!=null && operation.summary.length>0) {
 			  	description += ':'+ operation.summary;
 			  }  
-			  	  
+                  if ( operation.httpMethod && !method ) {
+                      method = operation.httpMethod;
+                  }
 	          dForm.attr('action', sAction);
 	          dForm.attr('target', sIFrameId);
 	          dForm.append(

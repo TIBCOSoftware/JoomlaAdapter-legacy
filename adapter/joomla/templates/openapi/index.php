@@ -121,6 +121,7 @@ else
 }
 $doc->addScript($this->baseurl . '/templates/' . $this->template . '/js/public.js', 'text/javascript');
 $doc->addScript($this->baseurl . '/templates/' . $this->template . '/js/vendor/jquery.als-1.1.min.js', 'text/javascript');
+$doc->addScript($this->baseurl . '/templates/' . $this->template . '/js/vendor/js-xss/xss-0.1.20.js', 'text/javascript');
 $doc->addScript($this->baseurl . '/templates/' . $this->template . '/js/vendor/uuid.core.js', 'text/javascript');
 
 $doc->addScript($this->baseurl . '/templates/' . $this->template . '/js/developer_portal.js', 'text/javascript');

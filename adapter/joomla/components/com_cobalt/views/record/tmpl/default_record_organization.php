@@ -66,15 +66,6 @@ if(isset($this->item->fields_by_groups[null])){
 }
 ?>
 
-<?php
-	$comEmail = JComponentHelper::getComponent('com_emails');
-	$spotfire_domain = $comEmail->params->get('spotfire_domain');
-	if(!$spotfire_domain){
-		$spotfire_domain = '';
-	}
-	$spotfire_url = rtrim(JURI::root(), "/");
-?>
-
 <script type="text/javascript">
 var hasJoomlaRoot=false;
 </script>
@@ -416,13 +407,7 @@ button.resync-org{
 			<a href="#" class="btn btn-mini" rel="tooltip" data-original-title="<?php echo JText::_('CPRINT');?>" onclick="window.print();return false;"><?php echo HTMLFormatHelper::icon('printer.png');  ?></a>
 		</div>
 	<?php endif;?>
-	<form action="<?php echo $spotfire_url;?>/spotfire.php" method="POST" target="_blank">
-		<input type="hidden" name="domain" value="<?php echo $spotfire_domain;?>" />
-		<input type="hidden" name="rooturl" value="<?php echo rtrim(JURI::root(), "/");?>" />
-		<input type="hidden" name="group" value="<?php echo implode('-',JFactory::getUser()->groups);?>" />
-		<input type="hidden" name="sid" value="<?php echo JSession::getInstance(null,null)->getId();?>" />
-		<input type='submit' value="<?php echo JText::_('Show Statistics');?>" class="btn btn-statistics pull-left" style="margin:10px;" />
-	</form>
+    <a href="<?php echo rtrim(JURI::root(), "/");?>/spotfire.php" class="btn btn-statistics pull-left" style="margin: 10px;" target="_blank"><?php echo JText::_('Show Statistics');?></a>
 <div class="pull-right controls ctrl-org">
 	<div class="btn-group">
 		<?php if($params->get('tmpl_core.item_print')):?>

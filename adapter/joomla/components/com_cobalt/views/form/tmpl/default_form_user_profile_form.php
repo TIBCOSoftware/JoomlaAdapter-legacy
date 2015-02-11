@@ -564,7 +564,15 @@ Joomla.submitform = function(task) {
             <?php echo $username->result; ?>
           </div>
         </div>
-
+        <?php if($userprofile): ?>
+        <div class="control-group" id="asg-userprofile-oldPwd">
+              <label class="control-label"> <span class="pull-left" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>Old Password</label>
+              <div class="controls ">
+                <div style="display:none" class="alert alert-error"></div>
+                  <input type="password" size="30" class="validate-password" autocomplete="off" value="" id="jform_oldPassword" name="jform[oldPassword]" aria-invalid="false">
+              </div>
+        </div>
+        <?php endif; ?>
         <div class="control-group" id="asg-userprofile-pwd1">
 
               <label class="control-label"> <span class="pull-left" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>Password</label>
@@ -1147,6 +1155,8 @@ Joomla.submitform = function(task) {
     function _getDataForJoomla(){
       var flag          =   true;
           form          =   $("#asg-userprofile-form").parents("form"),
+          $oldPwdBox    =   form.find("#asg-userprofile-oldPwd input"),
+          $oldPwd       =   $oldPwdBox.val(),
           $pwd1Box      =   form.find("#asg-userprofile-pwd1 input"),
           $pwd1         =   $pwd1Box.val(),
           $pwd2Box      =   form.find("#asg-userprofile-pwd2 input"),
@@ -1158,7 +1168,6 @@ Joomla.submitform = function(task) {
           $emailBox     =   form.find("#field_102"),
           $email        =   $emailBox.val();
           $token        =   form.find("input[type='hidden'][value='1']").attr("name");
-
 
       if(!$name.length){
         _getAlertBox.apply($nameBox).text("Name is invalid!").slideDown();
@@ -1179,6 +1188,11 @@ Joomla.submitform = function(task) {
 
       if($pwd1 !== $pwd2){
         _getAlertBox.apply($pwd2Box).text("Please check your password!").slideDown();
+        flag = false;
+      }
+
+      if(!$oldPwd.length){
+        _getAlertBox.apply($oldPwdBox).text("old password can not is null.").slideDown();
         flag = false;
       }
 
@@ -1230,6 +1244,16 @@ Joomla.submitform = function(task) {
 
         if(data === null){return false;}
 
+        $.post(GLOBAL_CONTEXT_PATH+'index.php?option=com_cobalt&task=ajaxmore.validateOldPassword',{ email : data['jform[email1]'], oldPassword : $oldPwd },
+        	    function(res){
+      	    		if ( res.success == 0 ) {
+                                _getAlertBox.apply($oldPwdBox).text(res.error).slideDown();
+      	  	    	} else {
+	      	  	    	validatePassword();
+          	  	}
+                    },'json');
+        
+        function validatePassword() {
         $.post(GLOBAL_CONTEXT_PATH+'index.php?option=com_cobalt&task=ajaxmore.validatePasswordRules',{ password : data['jform[password1]'] },
         	    function(res){
       	    		if ( res.success == 0 ) {
@@ -1240,6 +1264,8 @@ Joomla.submitform = function(task) {
 	      	  	        });
           	  	    }
            		},'json');
+        }
+        
         return false;
       });
 

@@ -272,7 +272,7 @@ if($api_id)
 
 	<?php if(isset($this->sorted_fields[0])):?>
 		<?php foreach ($this->sorted_fields[0] as $field_id => $field):?>
-            <?php if($field->id != 149 || $parent_api_create_proxy == "1"): ?>
+            <?php if($field->id != 151 && ($field->id != 149 || $parent_api_create_proxy == "1")): ?>
                 <?php if (($api_type=='REST' && in_array($field->id, array(128))) || ($parent_api_create_proxy == "1" && $api_type != "REST" && $field->id == 29)): ?>
                     <?php continue; ?>
                 <?php endif ?>
