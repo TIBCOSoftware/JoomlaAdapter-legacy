@@ -1403,37 +1403,5 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
 }
         return false;
     }
-
-    /**
-     * Save a policy to database
-     */
-    public function savePolicy(){
-        $res = 0;
-        $user = JFactory::getUser();
-        if ( in_array( 8, $user->groups ) ) {
-            $db = JFactory::getDbo();
-            $policy = new stdClass();
-            $policy->field_value = addslashes( strip_tags( preg_replace("'([\r\n])[\s]+'", "", $_POST['policy']) ) );
-            $policy->record_id = filter_var($_POST['id'], FILTER_SANITIZE_NUMBER_INT);
-            $policy->user = JFactory::getUser();
-            $policy->field_id = 151;
-            $policy->field_key = 'k' . md5($field->label . '-' . $field->type);
-            $policy->field_type = 'textarea';
-            $policy->field_label = 'Policy';
-            $policy->user_id = $user->id;
-            $policy->type_id = 6;
-            $policy->section_id = 2;
-            $policy->category_id = 0;
-            $policy->ctime = date( 'Y-m-d H:i:s', time() );
-            $policy->value_index = 0;
-            $policy->ip = $_SERVER['REMOTE_ADDR'];
-            if ( !empty( $policy->field_value ) && !empty( $_POST['id'] ) ) {
-                if ( $db->insertObject("#__js_res_record_values",$policy,'id') ) {
-                    $res = $db->insertid();
-                }
-            }
-        }
-        return AjaxHelper::send( $res );
-    }
 }
 ?>

@@ -28,12 +28,10 @@ $org_admin_group_id = TibcoTibco::getGroupByOrgAndType($this->item->id, Develope
 $auth_group_ids = $this->user->getAuthorisedGroups();
 $path = JRequest::getURI();
 $current_user_org_id = TibcoTibco::getCurrentUserOrgId();
-if(strpos($path,'userprofile') || strpos($path, 'dashboard')){
   if(!($current_user_org_id == $this->item->id || in_array(7, $auth_group_ids) || in_array(8, $auth_group_ids))){
   	JFactory::getApplication()->enqueueMessage(JText::_('USERPROFILE_CUSTOM_ACCESS_DENIED_ERROR'), 'error');
    return;
   }
-}
 if(!in_array(8, $auth_group_ids) || JComponentHelper::getParams("com_emails")->get("enable_archiving_objects") != 1) {
   $tasks_to_hide = array(DeveloperPortalApi::TASK_ARCHIVE);
 }

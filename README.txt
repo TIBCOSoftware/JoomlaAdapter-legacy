@@ -1,7 +1,7 @@
 ==================================================================================
 Project Name    : Adapter Code for TIBCO(R) API Exchange and Joomla!
-Release Version : 2.1.1_HF-001
-Release Date    : February 2015
+Release Version : 2.1.1_HF-002
+Release Date    : April 2015
 ==================================================================================
 DISCLAIMER
 
@@ -53,7 +53,13 @@ Contents of the /adapter Directory:
 
              - com_migrate(upgrade_2.1.1_to_2.1.1-hf1).zip - Scripts to migrate 
                                                              from 2.1.1 to 2.1.1 HF1
-
+             - com_migrate(upgrade_2.1.1_or_2.1.1-hf1_to_2.1.1-hf2).zip - Scripts
+                                                             to migrate from 2.1.1 
+                                                             or 2.1.1 HF1 to
+                                                             2.1.1 HF2
+             - access_field_type_int(10).zip               - Scripts to update access
+               column in openapi_js_res_record table from tinyint(1) to int(10)
+                                                             
 ==================================================================================
 DOCUMENTATION
 
@@ -82,25 +88,26 @@ includes the following:
      https://github.com/API-Exchange/JoomlaAdapter/wiki
     
 ==================================================================================
-Migration for Adapter Code for TIBCO API Exchange and Joomla! from Release 2.1.1 
-to Release 2.1.1_HF-001
+Migration for Adapter Code for TIBCO API Exchange and Joomla! from "Release 2.1.1 
+or Release 2.1.1_HF-001" to "Release 2.1.1_HF-002"
 
-Follow these steps to migrate Release 2.1.1 of 
-Adapter Code for TIBCO API Exchange and Joomla! to Release 2.1.1_HF-001:
+Follow these steps to migrate "Release 2.1.1 
+or Release 2.1.1_HF-001" of 
+Adapter Code for TIBCO API Exchange and Joomla! to "Release 2.1.1_HF-002":
 
 Task A) Back up Existing Database
-Before upgrading to API Exchange 2.1.1_HF-001, it is highly recommended to 
+Before upgrading to API Exchange 2.1.1_HF-002, it is highly recommended to 
 create a backup of both the Joomla files and the database. 
 Refer to the "Adapter Code for TIBCO(R) API Exchange and Joomla!" Release Notes 
 Version 2.1.1 for the instructions to backup the database and Joomla files.
 
-Task B) Migrate to Release 2.1.1_HF-001
-Follow these steps to update to Release 2.1.1_HF-001:
+Task B) Migrate to Release 2.1.1_HF-002
+Follow these steps to update to Release 2.1.1_HF-002:
  1. Log in to the Joomla administration utility.
  2. Choose Extensions > Extension Manager.
- 3. Choose the extension package "com_migrate(upgrade_2.1.1_to_2.1.1-hf1).zip".
+ 3. Choose the extension package "com_migrate(upgrade_2.1.1_or_2.1.1-hf1_to_2.1.1-hf2).zip".
  4. Click Upload & install. The migration installation might take a while.
- 5. Copy the contents of the TIB_api-exchange-joomla-adapter_2.1.1_HF-001/adapter/joomla 
+ 5. Copy the contents of the TIB_api-exchange-joomla-adapter_2.1.1_HF-002/adapter/joomla 
     folder into your installed Joomla folder. On UNIX, for example, from the directory 
     where you unzipped this distribution, you can copy the files as follows:
 
@@ -115,7 +122,7 @@ Follow these steps to update to Release 2.1.1_HF-001:
  7. Clear your browser cache to ensure the latest content is being used in the 
     portal.
 
-Note: Your project installation is now upgraded to version 2.1.1_HF-001.
+Note: Your project installation is now upgraded to version 2.1.1_HF-002.
 
 Task C) Restore Installation with Backup Data (Optional)
 If anything goes wrong during the migration process, you can easily restore your data 
@@ -125,7 +132,18 @@ original data. Refer to the
 Version 2.1.1 for the instructions to restore the installation with backup data.
 
 ==================================================================================
-Closed Issues in 2.1.1_HF-001 (This Release)
+Closed Issues in 2.1.1_HF-002 (This Release)
+
+ASG-6287
+TIBCO API Exchange Manager threw an exception when the user created or edited 
+more than one target environment containing more than one API.
+
+ASG-6281
+TIBCO API Exchange Manager did not allow the user to edit the application after 
+a product had been enabled in the application.
+
+==================================================================================
+Closed Issues in 2.1.1_HF-001
 
 ASG-6186
 API import of specification was looking for operations through httpMethod

@@ -32,7 +32,6 @@ $user_profile_org_id = TibcoTibco::getOrgIdByUserProfileId($this->item->id);
 $current_user_org_id = TibcoTibco::getCurrentUserOrgId();
 $auth_group_ids = $this->user->getAuthorisedGroups();
 $path = JRequest::getURI();
-if(strpos($path,'userprofile') || strpos($path,'dashboard')){
    $userProfile = DeveloperPortalApi::getUserProfileId();
    $userprofile_id = $item->id;
 
@@ -46,7 +45,6 @@ if(strpos($path,'userprofile') || strpos($path,'dashboard')){
    }else if(!(in_array(7, $auth_group_ids) || in_array(8, $auth_group_ids))){
    		unset($item);
    }
-}
 ?>
 <script type="text/javascript">
 var hasJoomlaRoot=false;

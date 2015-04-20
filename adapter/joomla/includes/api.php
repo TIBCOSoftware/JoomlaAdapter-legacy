@@ -1411,7 +1411,26 @@ where type_id=10)');
        return $org_id;
     }
 
+    public static function getOranizationIdOfSubscription($subscription_id = 0)
+    {
+       $org_id = 0;
+       if($subscription_id)
+       {
+            $subscription =  ItemsStore::getRecord($subscription_id);
+            // pr($application);
+            if($subscription->fields)
+            {
+                 $fields = json_decode($subscription->fields);
 
+                 if($organizations = $fields->{'73'})
+                 {
+                     $org_id = $organizations;
+                 }
+            }
+       }
+
+       return $org_id;
+    }
     /**
      * Get user's organization access level name by user group's id
      * @param  integer $org_group_id  Id of the user group

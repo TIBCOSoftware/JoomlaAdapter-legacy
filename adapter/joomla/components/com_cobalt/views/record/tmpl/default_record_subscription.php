@@ -199,7 +199,18 @@ if($params->get('tmpl_core.item_follow_num'))
 }
 
 ?>
+<?php 
+$user = JFactory::getUser();
+$belong_to_organization = DeveloperPortalApi::getUserOrganization();
+$sub_organization = DeveloperPortalApi::getOranizationIdOfSubscription($this->item->id);
+if(!(in_array(7, $user->getAuthorisedGroups()) || in_array(8, $user->getAuthorisedGroups())) && !in_array($sub_organization, $belong_to_organization)):
+?>
+<script type="text/javascript">
+jQuery(function () {
+ 	Joomla.showError(['<?php echo JText::_("CWARNING_NO_ACCESS_ARTICLE"); ?>']);
+})
 
+</script><?php else: ?>  
 <article class="<?php echo $this->appParams->get('pageclass_sfx')?><?php if($item->featured) echo ' article-featured' ?>">
 	<div class="toolbar">
 	<?php if(!$this->print):?>
@@ -355,6 +366,7 @@ if($params->get('tmpl_core.item_follow_num'))
 		</div>
 	<?php endif;?>
 </article>
+<?php endif; ?>
 
 <?php if($started):?>
 	<script type="text/javascript">
