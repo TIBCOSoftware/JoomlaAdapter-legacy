@@ -186,6 +186,7 @@ Joomla.submitform = function(task) {
         var record_id = jQuery("input[name='id'][type='hidden']").val();
         var username = jQuery("#field_101");
         var name = jQuery("#jform_title");
+        var firstName = jQuery('#field_45');
         var password1 = jQuery("#jform_password1");
         var password2 = jQuery("#jform_password2");
         var email = jQuery("#field_102");
@@ -218,12 +219,13 @@ Joomla.submitform = function(task) {
         function manageJoomlaACL() {
             var data = {
                 "option" : "com_users",
-                "task" : "autoreg.register"
+                "task" : "autoreg.createMember"
             };
             data.jform = {
                 "email1" : email.val(),
                 "email2" : email.val(),
                 "name" : name.val(),
+                "first-name": firstName.val(),
                 "username" : email.val(),
                 "password1" : password1.val(),
                 "password2" : password2.val(),
@@ -245,7 +247,7 @@ Joomla.submitform = function(task) {
                  jQuery.ajax({
                     type : 'post',
                     data : data,
-                    dataType:'json',
+                    dataType: 'json',
                     complete: function(jqXHR, textStatus) {
                         var result = jQuery.parseJSON(jqXHR.responseText);
                         if(result && result.userid && result.userid[0]) {
@@ -566,7 +568,7 @@ Joomla.submitform = function(task) {
         </div>
         <?php if($userprofile): ?>
         <div class="control-group" id="asg-userprofile-oldPwd">
-              <label class="control-label"> <span class="pull-left" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>Old Password</label>
+              <label class="control-label"> <span class="pull-left" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>Current Password</label>
               <div class="controls ">
                 <div style="display:none" class="alert alert-error"></div>
                   <input type="password" size="30" class="validate-password" autocomplete="off" value="" id="jform_oldPassword" name="jform[oldPassword]" aria-invalid="false">
@@ -1169,8 +1171,13 @@ Joomla.submitform = function(task) {
           $email        =   $emailBox.val();
           $token        =   form.find("input[type='hidden'][value='1']").attr("name");
 
+
       if(!$name.length){
         _getAlertBox.apply($nameBox).text("Name is invalid!").slideDown();
+        flag = false;
+      }
+      if(!$oldPwd.length){
+        _getAlertBox.apply($oldPwdBox).text("Current Password can not is null.").slideDown();
         flag = false;
       }
 
@@ -1188,11 +1195,6 @@ Joomla.submitform = function(task) {
 
       if($pwd1 !== $pwd2){
         _getAlertBox.apply($pwd2Box).text("Please check your password!").slideDown();
-        flag = false;
-      }
-
-      if(!$oldPwd.length){
-        _getAlertBox.apply($oldPwdBox).text("old password can not is null.").slideDown();
         flag = false;
       }
 
@@ -1243,29 +1245,26 @@ Joomla.submitform = function(task) {
         var data = _getDataForJoomla();
 
         if(data === null){return false;}
-
-        $.post(GLOBAL_CONTEXT_PATH+'index.php?option=com_cobalt&task=ajaxmore.validateOldPassword',{ email : data['jform[email1]'], oldPassword : $oldPwd },
-        	    function(res){
-      	    		if ( res.success == 0 ) {
-                                _getAlertBox.apply($oldPwdBox).text(res.error).slideDown();
-      	  	    	} else {
-	      	  	    	validatePassword();
-          	  	}
-                    },'json');
-        
+          $.post(GLOBAL_CONTEXT_PATH + 'index.php?option=com_cobalt&task=ajaxmore.validateOldPassword',{ email : data['jform[email1]'], oldPassword : $oldPwd },
+                function(res){
+                  if ( res.success == 0 ) {
+                                  _getAlertBox.apply($oldPwdBox).text(res.error).slideDown();
+                    } else {
+                      validatePassword();
+                  }
+                      },'json');
         function validatePassword() {
-        $.post(GLOBAL_CONTEXT_PATH+'index.php?option=com_cobalt&task=ajaxmore.validatePasswordRules',{ password : data['jform[password1]'] },
-        	    function(res){
-      	    		if ( res.success == 0 ) {
-      	    			_getAlertBox.apply($pwd1Box).html(res.error).slideDown();
-      	  	    	} else {
-	      	  	    	$.post(GLOBAL_CONTEXT_PATH, data, function(){
-	      	  	          Joomla.submitbutton('form.save');
-	      	  	        });
-          	  	    }
-           		},'json');
+          $.post(GLOBAL_CONTEXT_PATH+'index.php?option=com_cobalt&task=ajaxmore.validatePasswordRules',{ password : data['jform[password1]'] },
+          	    function(res){
+        	    		if ( res.success == 0 ) {
+        	    			_getAlertBox.apply($pwd1Box).html(res.error).slideDown();
+        	  	    	} else {
+  	      	  	    	$.post(GLOBAL_CONTEXT_PATH, data, function(){
+  	      	  	          Joomla.submitbutton('form.save');
+  	      	  	        });
+            	  	    }
+             		},'json');
         }
-        
         return false;
       });
 

@@ -80,44 +80,29 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
     }
 	
 	public function archiveOperationsInSpec() {
-        if (isset($_REQUEST['specPath'])) {
-            $specPath = $_REQUEST['specPath'];
+        if (isset($_REQUEST['apiID'])) {
 			$apiID = $_REQUEST['apiID'];
-			if (!empty($specPath) && !empty($apiID)) {
-				$file = file_get_contents($specPath);
-				$spec = json_decode($file);
-				$titlesArray = array();
-				foreach ($spec->apis as $key => $api) {
-					foreach ($api->operations as $operation) {
-						$titlesArray[] = '"'.$operation->nickname.'"';
-					}
-				}
-				
-				if (count($titlesArray)>0) {
-					$titles = implode(",",$titlesArray);
-					$db = JFactory::getDbo();
-					$sql = 'Select id from `#__js_res_record` where id in (select record_id from `#__js_res_record_values` where field_id=30 and field_value='.$apiID.') and title in ('.$titles.') and published <> 2';
-					$db->setQuery($sql);
-					$result = array();
-					foreach ($db->loadObjectList() as $key => $value) {
-						$result[] = $value->id;
-					}
-					if (count($result)>0) {
-						$ids = implode(",",$result);
-				        $sql = 'Update `#__js_res_record` set published=2 where id in ('.$ids.')';
-				        $db->setQuery($sql);
-						if ($db -> query()) {
-							AjaxHelper::send($result);
-						}else{
-							AjaxHelper::error("");
-						}
-					}else{
-						AjaxHelper::send("");
-					}
-				}
-			}else{
-				AjaxHelper::error("");
-			}
+            $db = JFactory::getDbo();
+            $sql = 'Select id from `#__js_res_record` where id in (select record_id from `#__js_res_record_values` where field_id=30 and field_value='.$apiID.') and published = 1';
+            $db->setQuery($sql);
+            $result = array();
+            foreach ($db->loadObjectList() as $key => $value) {
+                $result[] = $value->id;
+            }
+
+            if (count($result)>0) {
+                $ids = implode(",",$result);
+                $sql = 'Update `#__js_res_record` set published=2 where id in ('.$ids.')';
+                $db->setQuery($sql);
+                if ($db -> query()) {
+                    AjaxHelper::send($result);
+                }else{
+                    AjaxHelper::error("");
+                }
+            }else{
+                AjaxHelper::send("");
+            }
+
         }
 	}
     
@@ -587,7 +572,17 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
     $url .= $user->get('activation');
 
     if(DeveloperPortalApi::resendActiveEmail($user_id[0], $url)){
-      $app->redirect( $retunrUrl, $msg=JText::_("RESEND_ACTIVATION_EMAIL_SUCCESS"), $msgType='message');
+        $query = $db->getQuery(true);
+        $query->select($db->quoteName('params'))
+            ->from($db->quoteName('#__users'))
+            ->where($db->quoteName('id') . ' = ' . $result[0]);
+        $db->setQuery($query);
+        $userParams = json_decode($db->loadResult());
+        $userParams->activation_time = date('Y-m-d H:i:s');
+        $params = json_encode($userParams);
+        $db->setQuery('UPDATE `#__users` SET `params` = \'' . $params . '\' WHERE `id` = ' . $result[0]);
+        $result = $db->execute();
+        $app->redirect( $retunrUrl, $msg=JText::_("RESEND_ACTIVATION_EMAIL_SUCCESS"), $msgType='message');
     }
     else
     {

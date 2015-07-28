@@ -1,5 +1,5 @@
-<?php
-/* Portions copyright © 2013, TIBCO Software Inc.
+﻿<?php
+/* Portions copyright © 2015, TIBCO Software Inc.
  * All rights reserved.
  */
 ?>
@@ -1191,30 +1191,8 @@ $k = 0;
                   $('#fld-144').find('input:checked').removeAttr('checked');
               }
           });
-          var option = {
-              whiteList: [],
-              stripIgnoreTag:true,
-              onIgnoreTag: function (tag, html, options) {
-                    if (isRemoveTag(tag)) {
-                      if (options.isClosing) {
-                        var ret = '';
-                        var end = options.position + ret.length;
-                        removeList.push([posStart !== false ? posStart : options.position, end]);
-                        posStart = false;
-                        return ret;
-                      } else {
-                        if (!posStart) {
-                          posStart = options.position;
-                        }
-                        return '';
-                      }
-                    } else {
-                      return next(tag, html, options);
-                    }
-                  }
-            };
-            var oldBasepath = jQuery('#url-list14 .url-item.row-fluid input[name^="jform[fields][14][0][url]"]').val();
-            var filterXssString = filterXSS(oldBasepath,option);
+            var oldBasepath = jQuery('#url-list14 .url-item.row-fluid input[name$="[url]"]').val();
+            var filterXssString = filterXSS(oldBasepath);
             environmentForm.oldBasepath = filterXssString;
             environmentForm.oldGateways = [];
             jQuery('#adminForm input[name="jform[fields][15][]"]').each(function(index, item) {
@@ -1225,10 +1203,10 @@ $k = 0;
             environmentForm.oldTimeouts = jQuery('input[name="jform[fields][136]"]').val();
 
             Joomla.beforesubmitform = function(fCallback, fErrorback) {
-                var urlXss = filterXSS(jQuery('#url-list14 .url-item.row-fluid input[name^="jform[fields][14][0][url]"]').val(),option);
-                jQuery('#url-list14 .url-item.row-fluid input[name^="jform[fields][14][0][url]"]').val(urlXss);
+                var urlXss = filterXSS(jQuery('#url-list14 .url-item.row-fluid input[name$="[url]"]').val());
+                jQuery('#url-list14 .url-item.row-fluid input[name$="[url]"]').val(urlXss);
                 window.oUpdatedFields = {};
-                environmentForm.newBasepath = jQuery('#url-list14 .url-item.row-fluid input[name^="jform[fields][14][0][url]"]').val();
+                environmentForm.newBasepath = jQuery('#url-list14 .url-item.row-fluid input[name$="[url]"]').val();
                 environmentForm.newGateways = [];
                 environmentForm.newManagedByGateway = jQuery('input:checked[name="jform[fields][132]"]').val();
                 environmentForm.newHeadersToForward = jQuery('input[name="jform[fields][140]"]').val();

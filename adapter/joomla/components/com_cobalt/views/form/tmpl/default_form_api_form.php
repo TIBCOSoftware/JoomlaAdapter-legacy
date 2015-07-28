@@ -849,8 +849,8 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
   }(jQuery));
   
   (function($){
-    var specData, fileName, deleted_operation_ids=[],operations_doc1,operations_doc2,is_deleted_operations=false;
-    var originSpecName = "<?php echo $this->fields[23]->value[0]['filename'];?>";
+    var specData, fileName,realName, deleted_operation_ids=[],operations_doc1,operations_doc2,is_deleted_operations=false;
+    var originSpecName = "<?php echo $this->fields[23]->value[0]['realname'];?>";
     var originalName = '';
     var originalEnvironments = [];
     var originalTargetEnvironments = [];
@@ -861,6 +861,7 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
     var currentCreateProxy = '';
     var sRecourcePath = '';
     var sAPIType = '';
+    var operationsCount   = <?php echo count($old_operations_of_api); ?>;
 
     $(function(){
         $('.asg-api-step-title-container .asg-api-step-title').on('click', '.icon-chevron-down', function() {
@@ -926,6 +927,7 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
     Joomla.beforesubmitform = function(fCallback, fErrorback) {
       fileName = $('input[name="jform[fields][23][]"]').val();
       operations_doc2 = $('#fld-23 .filename').eq(1).text();
+      realName =  jQuery('#fld-23').find('li.mooupload_readonly div.filename').text();
       var flag = true,
           record_id = parseInt($("#jform_id").val());
           currentName = $('input[name="jform[title]"]').val();
@@ -985,27 +987,34 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
       }
 
       if(flag){
-          if (originSpecName !== "" && fileName !== originSpecName) {
-            var oldSpecPath = GLOBAL_CONTEXT_PATH+"<?php echo $this->appParams->get('general_upload',1).'/'.$this->fields[23]->params->get('params',1)->subfolder.'/'.$this->fields[23]->value[0]['fullpath'];?>"; 
-            $.post(
-              GLOBAL_CONTEXT_PATH+"index.php?option=com_cobalt&task=ajaxMore.archiveOperationsInSpec",
-              {'specPath':''+oldSpecPath, 'apiID':'<?php echo $this->item->id;?>'},
-              function(data){
-                if (data.success) {
-                   deleted_operation_ids = data.result;
-                   is_deleted_operations = true;
-                }else{
-                  fileName = "";
-                  Joomla.showError(["Can't auto created operations now."]);
-                }
+          if (originSpecName !== "" && realName !== originSpecName) {
+            var oldSpecPath = GLOBAL_CONTEXT_PATH+"<?php echo $this->appParams->get('general_upload',1).'/'.$this->fields[23]->params->get('params',1)->subfolder.'/'.$this->fields[23]->value[0]['fullpath'];?>";
+            if(operationsCount > 0 && confirm("<?php echo JText::_('REMOVE_ALL_OPERATION')?>")) {
+                $.post(
+                    GLOBAL_CONTEXT_PATH + "index.php?option=com_cobalt&task=ajaxMore.archiveOperationsInSpec",
+                    {'apiID': '<?php echo $this->item->id;?>'},
+                    function (data) {
+                        if (data.success) {
+                            deleted_operation_ids = data.result;
+                            is_deleted_operations = true;
+                            fCallback();
+                        } else {
+                            realName = "";
+                            Joomla.showError(["Can't auto created operations now."]);
+                        }
+                        fCallback();
+                    },
+                    'json'
+                ).fail(function () {
+                        fCallback();
+                    });
+            }else{
                 fCallback();
-              },
-                'json'
-            ).fail(function(){
-              fCallback();
-            });
+            }
           }else{
-            fCallback();
+
+              fCallback();
+
           }
       }
 
@@ -1015,7 +1024,7 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
     Joomla.submitform = function(task) {
       DeveloperPortal.submitForm(task, 
         function(nObjectId, sRedirectUrl) {
-          if (fileName!==undefined && fileName.length>0 && fileName !== originSpecName) {
+          if (fileName!==undefined && fileName.length>0 && realName !== originSpecName) {
             var rootPath = GLOBAL_CONTEXT_PATH+"<?php echo $this->appParams->get('general_upload',1).'/'.$this->fields[23]->params->get('params',1)->subfolder.'/'.$folder_format.'/';?>";
             $.post(
               rootPath+fileName,

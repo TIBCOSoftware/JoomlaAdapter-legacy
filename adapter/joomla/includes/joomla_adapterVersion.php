@@ -36,8 +36,8 @@ class joomla_adapterVersion
 	static $copyright       = "Copyright(c) 2004-2015 TIBCO Software Inc. All rights reserved.";
 	static $line_separator  = "\n"; //In Java we use: System.getProperty("line.separator");
 	static $version = "2.1.1";
-	static $build = "098";
-	static $buildDate = "2015-04-14";
+	static $build = "110";
+	static $buildDate = "2015-07-22";
 	static $company = "TIBCO Software Inc.";
 	static $component = "Adapter Code for TIBCO API Exchange and Joomla!";
 	static $license = "";

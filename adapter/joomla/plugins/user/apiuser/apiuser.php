@@ -96,27 +96,6 @@ class PlgUserApiuser extends JPlugin
       {
         $form->setFieldAttribute('validate', 'required','required','apiuser');
         $form->setFieldAttribute('validate', 'class','required validate-is_validated','apiuser');
-        $doc->addScriptDeclaration('
-               if(document.formvalidator !== undefined){
-                window.addEvent("domready", function(){
-                   document.formvalidator.setHandler("is_validated", function(value) {
-                       var result = false;
-
-                      jQuery.ajax({
-                       url:GLOBAL_CONTEXT_PATH+"index.php?option=com_cobalt&task=ajaxMore.checkvalidate",
-                       data:{"code":value},
-                       type:"post",
-                       async: false,
-                       dataType:"json"}).success(function(res){
-                         result = res.success;
-                      });
-                      
-                      return !!result;
-                   });
-                });
-               }
-
-        ');
       }
     }
 
@@ -144,7 +123,7 @@ class PlgUserApiuser extends JPlugin
 
       include_once JPATH_BASE . "/includes/api.php"; 
 
-      $orgName    =   $data['apiuser']['first-name']." ".$data['apiuser']["last-name"];
+      $orgName    =   $data['apiuser']['first-name'] . " " . $data['apiuser']["last-name"];
       $user_id    =   JArrayHelper::getValue($data, 'id', 0, 'int');
       $user       =   JFactory::getUser($user_id);
       
@@ -152,7 +131,7 @@ class PlgUserApiuser extends JPlugin
         $options = array(
             "title" => $orgName,
             "type" => "Individual",
-            "user" =>$user
+            "user" => $user
         );
 
         $org_id = TibcoTibco::forceGetOrganizationId($options);

@@ -1062,7 +1062,7 @@ var DeveloperPortal = {};
      */
     DeveloperPortal.archiveRecord = function(nRecId, nTypeId) {
     	// confirm dialog box
-    	if (confirm('This will permanently delete the record, are you sure?') == true) {
+    	if (confirm('This will archive the record, are you sure?') == true) {
 	       $.ajax({
 	            url: GLOBAL_CONTEXT_PATH + 'index.php',
 	            data: {
