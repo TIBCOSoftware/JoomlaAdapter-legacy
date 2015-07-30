@@ -95,11 +95,37 @@ and Joomla!:
      https://github.com/API-Exchange/JoomlaAdapter/wiki
     
 ==================================================================================
+New Installation
+
+ 1. Unzip the package which includes Joomla 3.3.6. 
+    Note: Do not install any sample data during the installation. You also do not
+    need to install any other languages. If you encounter any issues please go to
+    Joomla! website for help.
+ 2. Upgrade to Joomla 3.4.1
+  2.1. Log in to the Joomla administration utility.
+  2.2. Choose Extensions > Extension Manager.
+  2.3. Choose the extension package "Joomla_3.4.1-Stable-Update_Package.zip".
+  2.4. Click the "Upload and Install" button. The migration installation might take a while.
+ 3. Navigate to the Joomla Administration page for 3.4.1 and install the patched
+    Cobalt packages in the same way: "pkg_cobalt.j3.everything.v.8.652_patch02.zip"
+    and "pkg.mint.j3.media.v.8.82_patch01.zip".
+ 4. Copy over all of the files inside the following folder:
+    "TIB_api-exchange-joomla-adapter_2.1.1_HF-003/adapter/joomla" into your
+    Joomla's root folder. 
+ 5. Overwrite any existing files.
+ 6. Install the "com_baseline.zip" file located in the "TIB_api-exchange-joomla
+    -adapter_2.1.1_HF-003/adapter/sql-scripts/baseline&seed_data" folder in the 
+    Extension Manager of Joomla.
+ 7. If you see any "Notice" shown on top of the page, go to the "Global Configuration"  
+    by clicking the menu in the "System" menu.
+ 8. On the "Global Configuration" page, click the "Server" tab. Then change the
+    "Error Reporting" to "None." Click the "Save and Close" button.
+
+==================================================================================
 Migration for Adapter Code for TIBCO API Exchange and Joomla! from "Release 2.1.1 
 or Release 2.1.1_HF-002" to "Release 2.1.1_HF-003"
 
-Follow these steps to migrate "Release 2.1.1 
-or Release 2.1.1_HF-002" of 
+Follow these steps to migrate release 2.1.1, 2.1.1 HF001 or 2.1.1 HF003 of
 Adapter Code for TIBCO API Exchange and Joomla! to "Release 2.1.1_HF-003":
 
 Task A) Back up Existing Database
