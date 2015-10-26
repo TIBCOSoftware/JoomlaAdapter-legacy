@@ -37,7 +37,8 @@ $app = JFactory::getApplication('site');
 $spotfire_domain = JComponentHelper::getComponent('com_emails')->params->get('spotfire_domain');
 $user_session_id = JSession::getInstance(null, null)->getId();
 $root_url = rtrim(JURI::root(), "/");
-
+$apps            = JFactory::getApplication();
+$templateName  = $apps->getTemplate('template')->template;
 $spotfire_app_url = $root_url."/Analytics/";
 $current_user_groups = JFactory::getUser()->getAuthorisedGroups();
 ?>
@@ -45,7 +46,7 @@ $current_user_groups = JFactory::getUser()->getAuthorisedGroups();
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-gb" lang="en-gb" dir="ltr">
 <head>
 	<script src="media/jui/js/jquery.min.js" type="text/javascript"></script>
-	<link rel="stylesheet" href="templates/nielsen/css/template.css" type="text/css">
+	<link rel="stylesheet" href="templates/<?php echo $templateName; ?>/css/template.css" type="text/css">
 	<style>
 	body{
 		padding:10px;

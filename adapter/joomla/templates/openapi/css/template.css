@@ -2230,6 +2230,10 @@ button.close {
     /*content: "\0000a0\25ba";*/
 /*}*/
 
+.btn[id^="bool-"] {
+    background-color: #AAAAAA;
+}
+
 a.btn.plus {
     font: normal 20px Veranda, Arial, sans-serif;
     padding-top: 4px;
@@ -2330,6 +2334,14 @@ a.btn.minus {
 .btn-inverse.active {
   color: rgba(255,255,255,0.75);
 }
+
+.btn-n.active{
+background-color:red !important;
+}
+
+
+
+
 .btn {
   border-color: #c5c5c5;
   border-color: rgba(0,0,0,0.15) rgba(0,0,0,0.15) rgba(0,0,0,0.25);
@@ -2414,6 +2426,16 @@ a.btn.minus {
 .btn-danger.active {
   background-color: #942a25 \9;
 }
+.btn-n
+{
+  color: #fff;
+  text-shadow: 0 -1px 0 rgba(0,0,0,0.25);
+  background-color: red;
+  border-color: #51a351 #51a351 #387038;
+  border-color: rgba(0,0,0,0.1) rgba(0,0,0,0.1) rgba(0,0,0,0.25);
+  *background-color: #51a351;
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+}
 .btn-success {
   color: #fff;
   text-shadow: 0 -1px 0 rgba(0,0,0,0.25);
@@ -2443,6 +2465,12 @@ a.btn.minus {
 .btn-success.active {
   background-color: #408140 \9;
 }
+
+.btn-n:active,
+.btn-n.active {
+  background-color: red;
+}
+
 .btn-info {
   color: #fff;
   text-shadow: 0 -1px 0 rgba(0,0,0,0.25);
@@ -2553,6 +2581,18 @@ input[type="submit"].btn.btn-mini {
   white-space: nowrap;
   *margin-left: .3em;
 }
+
+
+.btn-n{
+background: grey;
+color: white;
+}
+
+
+
+
+
+
 .btn-group:first-child {
   *margin-left: 0;
 }
@@ -7457,7 +7497,7 @@ article h4 {
 
 .plan p {
     padding: 0px;
-    height: 120px;
+    height: 90px;
     overflow-y: auto;
     overflow-x: hidden;
     color: #777777;
@@ -8720,4 +8760,85 @@ p.req-status-3:before{
 
 p.req-status-4:before{
    background: #FF7F04 ;
+}
+
+.btn-n.btn.active:hover{
+background-color:red !important;
+}
+
+.btn-y.btn{
+background-color:grey !important;
+}
+.btn.btn-y.btn-success{
+background-color:grey !important;
+background-image:-webkit-gradient(linear,0 0,0 100%,from(#949494),to(#656565));
+}
+
+.btn.btn-y.active.btn-success,
+.btn.btn-y.btn-success.btn-primary.active{
+background-color:green !important;
+ color: #fff;
+  text-shadow: 0 -1px 0 rgba(0,0,0,0.25);
+  background-color: #5bb75b;
+  background-image: -moz-linear-gradient(top,#62c462,#51a351);
+  background-image: -webkit-gradient(linear,0 0,0 100%,from(#62c462),to(#51a351));
+  background-image: -webkit-linear-gradient(top,#62c462,#51a351);
+  background-image: -o-linear-gradient(top,#62c462,#51a351);
+  background-image: linear-gradient(to bottom,#62c462,#51a351);
+  background-repeat: repeat-x;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff62c462', endColorstr='#ff51a351', GradientType=0);
+  border-color: #51a351 #51a351 #387038;
+  border-color: rgba(0,0,0,0.1) rgba(0,0,0,0.1) rgba(0,0,0,0.25);
+  *background-color: #51a351;
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+}
+
+.btn-n:hover{
+background-color:grey !important;
+
+}
+
+.mapping-display{
+  width: 600px;
+  max-height: 300px;
+  padding: 10px;
+  overflow: auto;
+  border: 1px solid #ccc;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+  -moz-box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+  box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+  background-color: #f0fafc;
+  overflow-x:hidden;
+
+}
+
+.mapping-textarea{
+    margin-bottom: 10px !important;
+    box-sizing: border-box;
+    max-height: 350px;
+    height: 90px;
+    width: 100%;
+    resize: none;
+    overflow: auto;
+}
+.schema-map{
+    margin-bottom: 10px;
+}
+
+.mapperBtn{
+    margin-bottom: 10px;
+}
+
+
+#fld-152 .input-append input#field_152{
+    width: 100px !important;
+}
+
+#fld-152 .input-append span.add-on{
+    height: 22px;
+}
+
+.visualMapperOutputDisplay{
+    width: 680px !important;
+    height: 150px !important;
 }

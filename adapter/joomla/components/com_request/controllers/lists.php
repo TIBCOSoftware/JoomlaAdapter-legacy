@@ -58,9 +58,10 @@ class RequestControllerLists extends RequestController {
             $is_email = $customArr->is_email;
             $qlimit = $customArr->qlimit;
             $rlimit = $customArr->rlimit;
+            $climit = $customArr->climit;
             $applications = $customArr->application;
             if( isset($customArr->is_plan) && $customArr->is_plan == 0 ) {
-            	$customArr->is_plan = $this->createCustom( $planObj->created_by, $planObj->product_id, $rlimit, $qlimit , $plan_type );
+            	$customArr->is_plan = $this->createCustom( $planObj->created_by, $planObj->product_id, $rlimit, $qlimit, $climit, $plan_type );
             	$plan_id = $customArr->is_plan;
             }
             if( isset($customArr->is_sub) && $customArr->is_sub == 0 ) {
@@ -139,7 +140,7 @@ class RequestControllerLists extends RequestController {
         return TRUE;
     }
 
-    private function createCustom($user_id, $product_id, $rlimit, $qlimit,$plan_type){
+    private function createCustom($user_id, $product_id, $rlimit, $qlimit,$climit,$plan_type){
         $db = JFactory::getDbo();
         $plan = new stdClass();
         $fields = new stdClass();
@@ -154,6 +155,7 @@ class RequestControllerLists extends RequestController {
         $fields->{110} = CreateSubscriptionApi::getUuid('');;
         $fields->{120} = '$99.9';
         $fields->{123} = '';
+        $fields->{152} = $climit;
         if (!empty($plan_type))
         	$fields->{131} = addslashes($plan_type);
         $plan->id = null;
@@ -195,6 +197,7 @@ class RequestControllerLists extends RequestController {
             $field_key[55] = 'k'.md5($fields->{55}.'-html');
             $field_key[79] = 'k'.md5($fields->{79}.'-digits');
             $field_key[80] = 'k'.md5($fields->{80}.'-digits');
+            $field_key[152] = 'k'.md5($fields->{152}.'-digits');
             $field_key[110] = 'k'.md5($fields->{110}.'-uuid');
             $field_key[120] = 'k'.md5($fields->{120}.'-text');
             if (!empty($plan_type))
@@ -205,6 +208,7 @@ class RequestControllerLists extends RequestController {
             $content .= '(55,"'.$field_key[55].'","html", "Plan details", "'.$fields->{55}.'",'.$record_id.','.$user_id.', 7, 1, 0,"::1",  "'.$time.'"),';
             $content .= '(79,"'.$field_key[79].'","digits", "Rate limit", "'.$fields->{79}.'",'.$record_id.','.$user_id.', 7, 1, 0, "::1", "'.$time.'"),';
             $content .= '(80,"'.$field_key[80].'","digits", "Quota limit", "'.$fields->{80}.'",'.$record_id.','.$user_id.', 7, 1, 0,"::1",  "'.$time.'"),';
+            $content .= '(152,"'.$field_key[152].'","digits", "Concurrent Limit", "'.$fields->{152}.'",'.$record_id.','.$user_id.', 7, 1, 0,"::1",  "'.$time.'"),';
             $content .= '(110,"'.$field_key[110].'","uuid", "uuid", "'.$fields->{110}.'",'.$record_id.','.$user_id.', 7, 1, 0, "::1", "'.$time.'"),';
             if (!empty($plan_type)) {
             	$content .= '(120,"'.$field_key[120].'","text", "Price or keyword", "'.$fields->{120}.'",'.$record_id.','.$user_id.', 7, 1, 0, "::1", "'.$time.'"),';
@@ -242,8 +246,8 @@ class RequestControllerLists extends RequestController {
       $user = JFactory::getUser();
       $lang   = JFactory::getLanguage();
 
-      $stime = strtotime($start_date);
-      $stime = date('Y-m-d', $stime);
+      $stimeStr = strtotime($start_date);
+      $stime = date('Y-m-d', $stimeStr);
 
       $etime = strtotime($end_date);
       $etime = date('Y-m-d', $etime);
@@ -254,7 +258,18 @@ class RequestControllerLists extends RequestController {
       $fields->{'71'}   =   array($stime);
       $fields->{'72'}   =   array($etime);
       $fields->{'73'}   =   $org_id;
-      $fields->{'78'}   =   array("Active");
+	  
+	  if ($stimeStr > time())
+	  {
+		  $fields->{'78'}   =   array("Inactive");
+	  }
+	  
+	  else
+	  {
+		  $fields->{'78'}   =   array("Active");
+	  }
+	  
+
       $fields->{'112'}  =   CreateSubscriptionApi::getUuid('');
 
       $org_title        =  $this->getOrgName($org_id);
@@ -400,7 +415,7 @@ class RequestControllerLists extends RequestController {
             $is_email = 0;
             $appliction = 0;
             if ( isset($_POST['appliction']) && !empty($_POST['appliction']) )
-            	$appliction = $_POST['appliction'];
+              $appliction = $_POST['appliction'];
             if ( isset($_POST['is_email']) && $_POST['is_email'] == 1 )
                     $is_email = 1;
             if (isset($_POST['plan'])) {
@@ -415,6 +430,9 @@ class RequestControllerLists extends RequestController {
                     elseif ($v->field_id == 80) {
                         $qlimit = $v->field_value;
                     }
+                    elseif($v->field_id == 152){
+                        $climit = $v->field_value;
+                    }
                 }
                 $plan = $_POST['plan'];
                 $db = JFactory::getDbo();
@@ -422,14 +440,15 @@ class RequestControllerLists extends RequestController {
                 $db->setQuery($queryString);
                 $result = $db->loadObjectList();
                 $plan_name = $result[0]->title;
-                $custom = addslashes(json_encode(array('qlimit' => $qlimit, 'rlimit' => $rlimit, 'comment' => $_POST['comment'], 'subscription_start' => '', 'subscription_end' => '','application'=>$appliction,'is_sub'=>0,'is_email'=>$is_email)));
+                $custom = addslashes(json_encode(array('qlimit' => $qlimit, 'rlimit' => $rlimit, 'climit' => $climit, 'comment' => $_POST['comment'], 'subscription_start' => '', 'subscription_end' => '','application'=>$appliction,'is_sub'=>0,'is_email'=>$is_email)));
             } else {
                 $plan = 'Custom';
                 $plan_name = "Custom";
                 $plan_id = 0;
-                $custom = addslashes(json_encode(array('qlimit' => $_POST['quota_limit'], 'rlimit' => $_POST['rate_limit'], 'comment' => $_POST['comment'], 'subscription_start' => '', 'subscription_end' => '','application'=>$appliction,'is_plan'=>0,'is_sub'=>0,'is_email'=>$is_email)));
+                $custom = addslashes(json_encode(array('qlimit' => $_POST['quota_limit'], 'rlimit' => $_POST['rate_limit'], 'climit' => $_POST['concurrent_calls'], 'comment' => $_POST['comment'], 'subscription_start' => '', 'subscription_end' => '','application'=>$appliction,'is_plan'=>0,'is_sub'=>0,'is_email'=>$is_email)));
                 $rlimit = $_POST['rate_limit'];
                 $qlimit = $_POST['quota_limit'];
+                $climit = $_POST['concurrent_calls'];
             }
             if ( isset($_POST['comment']) && !empty($_POST['comment']) )
                 $user_note = addslashes($_POST['comment']);
@@ -450,7 +469,7 @@ class RequestControllerLists extends RequestController {
             $db->setQuery($sql);
             $result = $db->execute();
             //$this->($user->id, $plan_id, $product_id);
-            $this->sendAdminEmails($user->id,$plan_id,$product_id,$org_id,$rlimit,$qlimit,$plan_name,$user_note,"/subscriptions/requests");
+            $this->sendAdminEmails($user->id,$plan_id,$product_id,$org_id,$rlimit,$qlimit,$climit,$plan_name,$user_note,"/subscriptions/requests");
             $this->ajaxSend($result);
         }
     }

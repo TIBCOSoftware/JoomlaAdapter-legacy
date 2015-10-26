@@ -710,14 +710,14 @@ class CobaltModelRecords extends JModelList
 		}
 		else
 		{
-            ////////////////////////////////////////////////////////////////////////////////////////////////////
-            // Commenting out this if condition to re-enable the archive functionality in the Joomla front-end.
-            ////////////////////////////////////////////////////////////////////////////////////////////////////
+			////////////////////////////////////////////////////////////////////////////////////////////////////
+			// Commenting out this if condition to re-enable the archive functionality in the Joomla front-end.
+			////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            // if(CStatistics::hasUnPublished($this->section->id))
-            // {
-            $query->where('r.published = 1');
-            // }
+			// if(CStatistics::hasUnPublished($this->section->id))
+			// {
+			$query->where('r.published = 1');
+			// }
 		}
 
 		if($this->section->params->get('general.lang_mode') && $include_lang)

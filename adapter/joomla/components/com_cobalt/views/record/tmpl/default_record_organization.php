@@ -32,8 +32,8 @@ $current_user_org_id = TibcoTibco::getCurrentUserOrgId();
   	JFactory::getApplication()->enqueueMessage(JText::_('USERPROFILE_CUSTOM_ACCESS_DENIED_ERROR'), 'error');
    return;
   }
-if(!in_array(8, $auth_group_ids) || JComponentHelper::getParams("com_emails")->get("enable_archiving_objects") != 1) {
-  $tasks_to_hide = array(DeveloperPortalApi::TASK_ARCHIVE);
+if(!in_array(8, $auth_group_ids) || JComponentHelper::getParams("com_emails")->get("enable_deleting_objects") != 1) {
+  $tasks_to_hide = array(DeveloperPortalApi::TASK_DELETE);
 }
 $membersValue = (object)null;
 $contactInfo = (object)null;
@@ -405,7 +405,7 @@ button.resync-org{
 			<a href="#" class="btn btn-mini" rel="tooltip" data-original-title="<?php echo JText::_('CPRINT');?>" onclick="window.print();return false;"><?php echo HTMLFormatHelper::icon('printer.png');  ?></a>
 		</div>
 	<?php endif;?>
-    <a href="<?php echo rtrim(JURI::root(), "/");?>/spotfire.php" class="btn btn-statistics pull-left" style="margin: 10px;" target="_blank"><?php echo JText::_('Show Statistics');?></a>
+	<a href="<?php echo rtrim(JURI::root(), "/");?>/spotfire.php" class="btn btn-statistics pull-left" style="margin: 10px;" target="_blank"><?php echo JText::_('Show Statistics');?></a>
 <div class="pull-right controls ctrl-org">
 	<div class="btn-group">
 		<?php if($params->get('tmpl_core.item_print')):?>
@@ -681,7 +681,14 @@ button.resync-org{
 
 						$(this.plans).each(function(i){
 							jsonObj = JSON.parse($(this).attr('planDetail'));
-							plans += jsonObj[80]+'<?php echo JText::_('DASHBOARD_PLAN_UNIT_DAY'); ?><br/>';
+                            var quotaVal = jsonObj[80] || "";
+                            var rateVal = jsonObj[79] || "";
+							if(jsonObj[152]){
+							var concurrent_calls = jsonObj[152] +" "+ "<?php echo JText::_('CONCURRENT_CALLS'); ?>"
+							}else{
+							var concurrent_calls="";
+							}
+							plans += quotaVal.replace('/',' calls per ') +'<br/>' + concurrent_calls + '<br/>';
 						});
 
 						$(this.usage).each(function(i){
@@ -733,7 +740,14 @@ button.resync-org{
 							if(plan_ids && plan_ids.length>1){
 								for(i=0;i<plan_ids.length;i++){
 									jsonObj = JSON.parse(this.planDetail);
-									plan = jsonObj[80]+'<?php echo JText::_('DASHBOARD_PLAN_UNIT_DAY'); ?><br/>'+jsonObj[79]+'<?php echo JText::_('DASHBOARD_PLAN_UNIT_SECOND'); ?>';
+                                    var quotaVal = jsonObj[80] || "";
+                                    var rateVal = jsonObj[79] || "";
+									if(jsonObj[152]){
+									var concurrent_calls = jsonObj[152] +" "+ "<?php echo JText::_('CONCURRENT_CALLS'); ?>"
+									}else{
+									var concurrent_calls="";
+									}
+                                    plan = quotaVal.replace('/',' calls per ')+'<br/>' + rateVal.replace('/',' calls per ') + '<br/>' + concurrent_calls;
 									if(plan_ids[i]==this.id){
 										node = $(subs[i]);
 									node.html('<span class="line'+(i%4)+'">'+this.title+'</span>'+plan);
@@ -741,7 +755,14 @@ button.resync-org{
 									}
 						}else {
 							jsonObj = JSON.parse(this.planDetail);
-							plan = jsonObj[80]+'<?php echo JText::_('DASHBOARD_PLAN_UNIT_DAY'); ?><br/>'+jsonObj[79]+'<?php echo JText::_('DASHBOARD_PLAN_UNIT_SECOND'); ?>';
+                            var quotaVal = jsonObj[80] || "";
+                            var rateVal = jsonObj[79] || "";
+							if(jsonObj[152]){
+							var concurrent_calls = jsonObj[152] +" "+ "<?php echo JText::_('CONCURRENT_CALLS'); ?>"
+							}else{
+							var concurrent_calls="";
+							}
+                            plan = quotaVal.replace('/',' calls per ')+'<br/>'+rateVal.replace('/',' calls per ')+'<br/>'+concurrent_calls;
 							node = $(subs[row]);
 							node.html('<span class="line'+(row%4)+'">'+this.title+'</span>'+plan);
 							}

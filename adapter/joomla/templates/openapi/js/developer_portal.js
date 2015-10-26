@@ -49,6 +49,8 @@ var DeveloperPortal = {};
     DeveloperPortal.PORTAL_OBJECT_TYPE_PRODUCT = 'Product';
     DeveloperPortal.PORTAL_OBJECT_TYPE_SUBSCRIPTION = 'Subscription';
     DeveloperPortal.PORTAL_OBJECT_TYPE_USER_PROFILE = 'UserProfile';
+    DeveloperPortal.PORTAL_OBJECT_TYPE_MAPPING = 'Mapping';
+    DeveloperPortal.PORTAL_OBJECT_TYPE_SCHEMA = 'Schema';
     DeveloperPortal.SERVER_STATUS_SUCCESS = 'Success';
     DeveloperPortal.SERVER_STATUS_ERROR = 'Error';
     DeveloperPortal.SERVER_STATUS_COMPLETED = 'Completed';
@@ -65,7 +67,7 @@ var DeveloperPortal = {};
     DeveloperPortal.REGEXP_JFORM_FIELDS_ID_ARRAY = /jform\[fields\]\[([0-9]+)\]\[\]/;
     DeveloperPortal.REGEXP_JFORM_FIELDS_ID_OTHERS = /jform\[fields\]\[([0-9]+)\]\[[^\]].+/;
     DeveloperPortal.PARENT_CONTENT_TYPES = [1, 2, 4, 5, 9, 10];
-    DeveloperPortal.NOTIFYING_CONTENT_TYPES = [1, 2, 3, 4, 5, 6, 7, 9, 10];
+    DeveloperPortal.NOTIFYING_CONTENT_TYPES = [1, 2, 3, 4, 5, 6, 7, 9, 10, 20, 21];
     DeveloperPortal.ERROR_TYPE_PORTAL_EVENT = 'portal_event';
     DeveloperPortal.ERROR_TYPE_API_KEY = 'api_key';
     DeveloperPortal.KEY_HAS_ERRORS = 'has_errors';
@@ -91,6 +93,8 @@ var DeveloperPortal = {};
         DeveloperPortal.PORTAL_OBJECT_TYPE_SUBSCRIPTION,
         DeveloperPortal.PORTAL_OBJECT_TYPE_KEY
     ];
+    DeveloperPortal.CONTENT_TYPE_MAP[20] = DeveloperPortal.PORTAL_OBJECT_TYPE_MAPPING;
+    DeveloperPortal.CONTENT_TYPE_MAP[21] = DeveloperPortal.PORTAL_OBJECT_TYPE_SCHEMA;
     DeveloperPortal.DELETION_REDIRECT_URI = [
         '',
         '/products',
@@ -105,7 +109,10 @@ var DeveloperPortal = {};
         '/subscriptions',
         '/applications'
     ];
-
+    DeveloperPortal.DELETION_REDIRECT_URI[20] = '/mappings';
+    DeveloperPortal.DELETION_REDIRECT_URI[21] = '/mappings/schemas';
+    DeveloperPortal.REGEXP_EXTRA_ENCODED = /[~!()']/g;
+    DeveloperPortal.REGEXP_EXTRA_DECODED = /%7E|%21|%28|%29|%27/g;
     /**
      * Count how many properties one plain object owns.
      *
@@ -1061,48 +1068,55 @@ var DeveloperPortal = {};
      * @param {Number} nTypeId The id of the type of the object to be deleted.
      */
     DeveloperPortal.archiveRecord = function(nRecId, nTypeId) {
-    	// confirm dialog box
-    	if (confirm('This will archive the record, are you sure?') == true) {
-	       $.ajax({
-	            url: GLOBAL_CONTEXT_PATH + 'index.php',
-	            data: {
-	                option: 'com_cobalt',
-	                task: 'ajaxmore.archiveRecord',
-	                rec_id: nRecId,
-	                type_id:nTypeId
-	            },
-	            dataType: 'json',
-	            success: function(data, textStatus, jqXHR) {
-	                if(nTypeId === 8) {
-	                    $.post('index.php?options=com_cobalt&task=ajaxmore.disabledUser', {
-	                        userfile_id: nRecId
-	                    }, function(res){
-	                        if(!res.success){
-	                            DeveloperPortal.storeErrMsgInCookie([FAILED_TO_DEACTIVATE_USER_AFTER_ARCHIVE_USERPROFILE]);
-	                        }
-                          window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
-	                    }, 'json');
-	                } else if (nTypeId === 6){
-	                        DeveloperPortal.sendUpdateNotification(parent_api_id,DeveloperPortal.PORTAL_OBJECT_TYPE_API,{'31':[]}, function(data) {
-	                            window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
-	                        }, function(errorThrown) {
-	                            window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
-	                        } );
-	                }else{
-	                  DeveloperPortal.sendDeleteNotification(nRecId, DeveloperPortal.CONTENT_TYPE_MAP[nTypeId], function(data) {
-	                    window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
-	                  }, function(errorThrown) {
-	                    window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
-	                  });
-	                }
-	            },
-	            error: function(jqXHR, textStatus, errorThrow) {
-	                Joomla.showError([ARCHIVE_FAILED]);
-	            }
-	        });
+        // confirm dialog box
+        if (confirm('This will permanently delete the record, are you sure?') == true) {
+            $.ajax({
+                url: GLOBAL_CONTEXT_PATH + 'index.php',
+                data: {
+                    option: 'com_cobalt',
+                    task: 'ajaxmore.archiveRecord',
+                    rec_id: nRecId,
+                    type_id: nTypeId
+                },
+                dataType: 'json',
+                success: function(data, textStatus, jqXHR) {
+                    if(nTypeId === 8) {
+                        $.post('index.php?options=com_cobalt&task=ajaxmore.disabledUser', {
+                            userfile_id: nRecId
+                        }, function(res){
+                            if(!res.success){
+                                DeveloperPortal.storeErrMsgInCookie([FAILED_TO_DEACTIVATE_USER_AFTER_ARCHIVE_USERPROFILE]);
+                            }
+                            window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
+                        }, 'json');
+                    } else if (nTypeId === 6){
+                        DeveloperPortal.sendUpdateNotification(parent_api_id,DeveloperPortal.PORTAL_OBJECT_TYPE_API,{'31':[]}, function(data) {
+                            window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
+                        }, function(errorThrown) {
+                            window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
+                        } );
+                    } else if(nTypeId === 3) {
+                        DeveloperPortal.sendUpdateNotification(parent_env_id, DeveloperPortal.PORTAL_OBJECT_TYPE_ENVIRONMENT, {'15': [nRecId]}, function(data) {
+                            window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
+                        }, function(errorThrown) {
+                            window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
+                        });
+                    } else {
+                        DeveloperPortal.sendDeleteNotification(nRecId, DeveloperPortal.CONTENT_TYPE_MAP[nTypeId], function(data) {
+                            window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
+                        }, function(errorThrown) {
+                            window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
+                        });
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrow) {
+                    Joomla.showError([ARCHIVE_FAILED]);
+                }
+            });
         };
     };
-    
+
+
     /**
      * Get the value of a group of radio buttons of which share the value of the "name" attribute.
      * 
@@ -1256,7 +1270,7 @@ var DeveloperPortal = {};
     DeveloperPortal.getIFrameErrMsgArray = function(dIFrame) {
         var rv = [], dParagraphs;
         if(dIFrame.contentWindow) {
-            dParagraphs = dIFrame.contentWindow.jQuery('div#system-message-container div.alert-error > div > p');
+            dParagraphs = dIFrame.contentWindow.jQuery('div#system-message-container div.alert > div > p');
             dParagraphs.each(function() {
                 rv.push($(this).text());
             });
@@ -1320,4 +1334,106 @@ var DeveloperPortal = {};
             n.addClass('btn-danger');
         }
     };
+
+
+    /**
+     * Encode the input string in the same way as the java.net.URLEncoder.encode() of Java SE 7 does.
+     *
+     * @author Kevin Li<huali@tibco-support.com>
+     * @param {String} sInput The input string which is to be encoded. If this is not a string an empty string
+     * will be returned.
+     * @returns {String} The encoded string.
+     */
+    DeveloperPortal.java7EncodeURIComponent = function(sInput) {
+        var ret = '';
+
+        if(typeof sInput === 'string') {
+
+            ret = encodeURIComponent(sInput)
+                .replace(DeveloperPortal.REGEXP_EXTRA_ENCODED, function(char) {
+
+                    return '%' + char.charCodeAt(0).toString(16).toUpperCase();
+                })
+                .replace(/%20/g, '+');
+        }
+
+        return ret;
+    };
+
+    /**
+     * Decode the input string in the same way as the java.net.URLDecoder.decode() of Java SE 7 does.
+     *
+     * @author Kevin Li<huali@tibco-support.com>
+     * @param {String} sInput The input string which is to be decoded. If this is not a string an empty string
+     * will be returned.
+     * @returns {String} The decoded string.
+     */
+    DeveloperPortal.java7DecodeURIComponent = function(sInput) {
+        var ret = '';
+
+        if(typeof sInput === 'string') {
+            ret = decodeURIComponent(sInput
+                .replace(DeveloperPortal.REGEXP_EXTRA_DECODED, function(char) {
+                    return String.fromCharCode(parseInt(char.substr(1), 16));
+                })
+                .replace(/\+/g, ' '));
+        }
+
+        return ret;
+    }
+
+
+
+
+    /**
+     * Delete a record and send delete notification to the portal engine after successful deletion.
+     *
+     * @author Vivian Ma<xima@tibco-support.com>
+     * @param {Number} nObjId The id of the object to be deleted.
+     * @param {Number} nTypeId The id of the type of the object to be deleted.
+     */
+    DeveloperPortal.deleteRecord = function(nRecId, nTypeId) {
+        // confirm dialog box
+        if (confirm('This will permanently delete the record, are you sure?') == true) {
+           $.ajax({
+                url: GLOBAL_CONTEXT_PATH + 'index.php',
+                data: {
+                    option: 'com_cobalt',
+                    task: 'ajaxmore.deleteRecord',
+                    id: nRecId,
+                    nTypeId:nTypeId
+                },
+                dataType: 'json',
+                success: function(data, textStatus, jqXHR) {
+                    if(data.success===1){
+                        DeveloperPortal.storeSuccessMsgInCookie([DELETE_SUCCESS]);
+                        if (nTypeId === 6){
+                            DeveloperPortal.sendUpdateNotification(parent_api_id,DeveloperPortal.PORTAL_OBJECT_TYPE_API,{'31':[]}, function(data) {
+                                window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
+                            }, function(errorThrown) {
+                                window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
+                            } );
+                        } else if(nTypeId === 3) {
+                            DeveloperPortal.sendUpdateNotification(parent_env_id, DeveloperPortal.PORTAL_OBJECT_TYPE_ENVIRONMENT, {'15': [nRecId]}, function(data) {
+                                window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
+                            }, function(errorThrown) {
+                                window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
+                            });
+                        } else {
+                            DeveloperPortal.sendDeleteNotification(nRecId, DeveloperPortal.CONTENT_TYPE_MAP[nTypeId], function(data) {
+                                window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
+                            }, function(errorThrown) {
+                                window.location.href = GLOBAL_CONTEXT_PATH + 'index.php' + DeveloperPortal.DELETION_REDIRECT_URI[nTypeId];
+                            });
+                        }
+                    }else{
+                        Joomla.showError([DELETE_FAILED]);
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrow) {
+                    Joomla.showError([DELETE_FAILED]);
+                }
+            });
+        };
+    };    
 }(jQuery));

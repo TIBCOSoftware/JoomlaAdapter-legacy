@@ -9,7 +9,9 @@ defined('_JEXEC') or die();
 jimport('joomla.application.component.controlleradmin');
 jimport('joomla.application.component.controllerusers');
 require_once JPATH_BASE . "/includes/api.php";
+require_once JPATH_ROOT . '/components/com_cobalt/api.php';
 require_once JPATH_BASE . "/includes/subcreate.php";
+require_once JPATH_BASE . "/administrator/components/com_cobalt/models/record.php";
 
 class CobaltControllerAjaxMore extends JControllerAdmin {
     
@@ -78,34 +80,121 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
             AjaxHelper::error("Don't have any public environment!");
         }
     }
-	
-	public function archiveOperationsInSpec() {
-        if (isset($_REQUEST['apiID'])) {
-			$apiID = $_REQUEST['apiID'];
-            $db = JFactory::getDbo();
-            $sql = 'Select id from `#__js_res_record` where id in (select record_id from `#__js_res_record_values` where field_id=30 and field_value='.$apiID.') and published = 1';
-            $db->setQuery($sql);
-            $result = array();
-            foreach ($db->loadObjectList() as $key => $value) {
-                $result[] = $value->id;
-            }
 
-            if (count($result)>0) {
-                $ids = implode(",",$result);
-                $sql = 'Update `#__js_res_record` set published=2 where id in ('.$ids.')';
-                $db->setQuery($sql);
-                if ($db -> query()) {
-                    AjaxHelper::send($result);
-                }else{
-                    AjaxHelper::error("");
+    public function archiveOperationsInSpec() {
+        if (isset($_REQUEST['specPath'])) {
+            $specPath = $_REQUEST['specPath'];
+            $apiID = $_REQUEST['apiID'];
+            if (!empty($specPath) && !empty($apiID)) {
+                $file = file_get_contents($specPath);
+                $spec = json_decode($file);
+                $titlesArray = array();
+                foreach ($spec->apis as $key => $api) {
+                    foreach ($api->operations as $operation) {
+                        $titlesArray[] = '"'.$operation->nickname.'"';
+                    }
+                }
+
+                if (count($titlesArray)>0) {
+                    $titles = implode(",",$titlesArray);
+                    $db = JFactory::getDbo();
+                    $sql = 'Select id from `#__js_res_record` where id in (select record_id from `#__js_res_record_values` where field_id=30 and field_value='.$apiID.') and title in ('.$titles.') and published <> 2';
+                    $db->setQuery($sql);
+                    $result = array();
+                    foreach ($db->loadObjectList() as $key => $value) {
+                        $result[] = $value->id;
+                    }
+                    if (count($result)>0) {
+                        $ids = implode(",",$result);
+                        $sql = 'Update `#__js_res_record` set published=2 where id in ('.$ids.')';
+                        $db->setQuery($sql);
+                        if ($db -> query()) {
+                            AjaxHelper::send($result);
+                        }else{
+                            AjaxHelper::error("");
+                        }
+                    }else{
+                        AjaxHelper::send("");
+                    }
                 }
             }else{
-                AjaxHelper::send("");
+                AjaxHelper::error("");
             }
+        }
+    }
+
+// Uses the Cobalt API to find the Parent / Child Relationships and Set the Operations published to 2.
+	public function deleteOperationsAPI() {
+		
+	
+		//Insantiate the Cobalt API
+		$api = new CobaltApi();
+		
+		//Get the API ID
+        if (isset($_REQUEST['apiID'])) {
+            $apiID = $_REQUEST['apiID'];
+            $result = true;
+			
+		//Test out ID, make sure it is only numbers // Validation
+      
+        $contentdata = $api->records(
+		$section_id = 2, 
+		$view_what, 
+		$orderby, 
+		$type_ids = 6,
+		$user_id,
+		$category_id, 
+		$limit = $usersetlimit, 
+		$template,
+		$client,
+		$client_id,
+		$lang,
+		$ids
+            );
+			
+		$response = $this->getJsonFromObject($contentdata['list']);
+		$db = JFactory::getDbo();
+		
+        foreach ($response as $key => $value) {
+
+        	if ($response[$key]['fields'][30] == $apiID)
+			{
+				$sql = "Update #__js_res_record SET published=2 WHERE id = " . $response[$key]['id'];
+				$results = $db->setQuery($sql);
+				$db->query();
+			}
+        }     
 
         }
 	}
     
+	// Use this Function to turn some of the PHP Objects into JSON DATA - For REST APIS -
+    private function getJsonFromObject($data){
+        $resultArr = array();
+        foreach ( $data as $obj ) {
+            $array = get_object_vars($obj);
+            $newArr = array();
+            foreach ( $array as $key => $val ){
+                if ( $key === 'params' ) {
+                    $tmp = get_object_vars($val);
+                    foreach( $tmp as $pk => $pv ){
+                        $newArr[$key][$pk] = (array)$pv;
+                    }
+
+                }elseif( $key === 'ctime' || $key === 'mtime' ){
+                    $tmp = get_object_vars($val);
+                    foreach( $tmp as $tk => $tv ){
+                        $newArr[$key][$tk] = (array)$tv;
+                    }
+                }elseif( $key !== 'fields_by_id' && $key !== 'fields_by_groups' && $key !== 'fields_by_key' ){
+                    $newArr[$key] = $val;
+                }
+            }
+            $resultArr[]=$newArr;
+        }
+        return $resultArr;
+    }
+	
     public function _getEmailTemplateByAlias($alias){
       $db = JFactory::getDbo();
       $db -> setQuery('SELECT * FROM #__email_templates WHERE alias="'.$alias.'" AND published = 1 LIMIT 1');
@@ -254,25 +343,25 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
      * verify if there is same plan title existed in same product. 
      */
     public function validatePlanTitle() {
-	    $plan_title = $_POST["plan_title"];
-	    $product_id = $_POST["product_id"];
-	    $plan_id = $_POST["plan_id"];
-	    if ($plan_title && $product_id) {
-	      $db = JFactory::getDbo();
-	      $sql = "SELECT COUNT(r.id) AS sum  FROM openapi_js_res_record AS r, openapi_js_res_record_values AS rv ";
-	      $sql.= " WHERE rv.field_id=53 AND rv.type_id=7 AND rv.record_id=r.id";
-	      $sql.= " AND rv.field_value=".$product_id." AND LOWER(r.title)='".strtolower($plan_title)."'";
-	      $sql.= $plan_id ? " AND r.id!=".$plan_id : "";
-	      $db->setQuery($sql);
-	      $result = $db->loadObject();
-	      if ($result->sum==0) {
-	        AjaxHelper::send("");
-	      }else{
-  	      AjaxHelper::error(JText::_('DUPLICATE_PLAN_TITLE_IN_PRODUCT'));
-	      }
-	    }else{
-	      AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_4'));
-	    }
+      $plan_title = $_POST["plan_title"];
+      $product_id = $_POST["product_id"];
+      $plan_id = $_POST["plan_id"];
+      if ($plan_title && $product_id) {
+        $db = JFactory::getDbo();
+        $sql = "SELECT COUNT(r.id) AS sum  FROM openapi_js_res_record AS r, openapi_js_res_record_values AS rv ";
+        $sql.= " WHERE rv.field_id=53 AND rv.type_id=7 AND rv.record_id=r.id";
+        $sql.= " AND rv.field_value=".$product_id." AND LOWER(r.title)='".strtolower($plan_title)."'";
+        $sql.= $plan_id ? " AND r.id!=".$plan_id : "";
+        $db->setQuery($sql);
+        $result = $db->loadObject();
+        if ($result->sum==0) {
+          AjaxHelper::send("");
+        }else{
+          AjaxHelper::error(JText::_('DUPLICATE_PLAN_TITLE_IN_PRODUCT'));
+        }
+      }else{
+        AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_4'));
+      }
     }
     /**
      * verify if there is same gateway title existed in same environments.
@@ -328,169 +417,170 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
     public function validateGatewaysManagementURLs() {
       $urls = explode(",", $_POST["urls"]);
       $duplicates = array();
-	    if (count($urls)>0) {
-	      $db = JFactory::getDbo();
+      if (count($urls)>0) {
+        $db = JFactory::getDbo();
         for($i=0;$i<count($urls);$i++) {
           $sql = "select count(id) as sum from #__js_res_record where published!=2 and id in (select record_id from #__js_res_record_values where field_id=89 and type_id=3 and field_value='" . $urls[$i] . "')";
           $db->setQuery($sql);
           $result = $db->loadObject();
           if ($result->sum!=0) {
             $duplicates[] = $urls[$i];
-	        }
+          }
         }
         if (count($duplicates) == 0) {
           AjaxHelper::send("");
         } else {
           AjaxHelper::error(JText::_('DUPLICATE_MANAGEMENT_URL_IN_GATEWAYS') . ": " . join(",", $duplicates) . ".");
         }
-	    }else{
-	      AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_4'));
-	    }
-    }	
-	
+      }else{
+        AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_4'));
+      }
+    } 
+  
     /**
      * invoke when user click send in support page. 
      */
-	public function requestSupport() {
-	  $user_id = JFactory::getUser()->id;
-	  $name = $_POST["fname"];
-	  if ( $user_id == 0 )
-		$name = $_POST["fname"].' '.$_POST["lname"];
-	  $email = $_POST["email"];
-	  $user_content = $_POST["content"];
-	  
-	  $db = JFactory::getDbo();
-	  $db -> setQuery('SELECT * FROM #__email_templates WHERE alias="request_email" AND published = 1 LIMIT 1');
-	  $results = $db -> loadObject();
-	  if ($results -> subject && $results -> content) {
-	    $config = &JFactory::getConfig();
-	    $title = str_replace("{USER}", $name, $results -> subject);
-	    
-	    $content = str_replace("{USER}", $name, $results -> content);
-	    $content = str_replace("{EMAIL}", $email, $content);
-	    $content = str_replace("{USER_CONTENT}", $user_content, $content);
-	  
-	    $config = JFactory::getConfig();
-	    $admin_email = $config -> get('mailfrom');
-	  
-	    if (DeveloperPortalApi::send_email($admin_email, $title, $content, $results -> isHTML)) {
-	      AjaxHelper::send("");
-	    }else{
-	      AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_2'));
-	    }
-	  }else{
-	    AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_6'));
-	  }
-	}
-	
+  public function requestSupport() {
+    $user_id = JFactory::getUser()->id;
+    $name = $_POST["fname"];
+    if ( $user_id == 0 )
+    $name = $_POST["fname"].' '.$_POST["lname"];
+    $email = $_POST["email"];
+    $user_content = $_POST["content"];
+    
+    $db = JFactory::getDbo();
+    $db -> setQuery('SELECT * FROM #__email_templates WHERE alias="request_email" AND published = 1 LIMIT 1');
+    $results = $db -> loadObject();
+    if ($results -> subject && $results -> content) {
+      $config = &JFactory::getConfig();
+      $title = str_replace("{USER}", $name, $results -> subject);
+      
+      $content = str_replace("{USER}", $name, $results -> content);
+      $content = str_replace("{EMAIL}", $email, $content);
+      $content = str_replace("{USER_CONTENT}", $user_content, $content);
+    
+      $config = JFactory::getConfig();
+      $admin_email = $config -> get('mailfrom');
+    
+      if (DeveloperPortalApi::send_email($admin_email, $title, $content, $results -> isHTML)) {
+        AjaxHelper::send("");
+      }else{
+        AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_2'));
+      }
+    }else{
+      AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_6'));
+    }
+  }
+  
     /**
      * get enabled subscriptions' product&plan in specific application. 
      */
-	public function subscriptionsInApp() {
-		$app_ids = $_POST["app_ids"];
-		$sub_ids = $_POST["sub_ids"];
-		$plan_ids = $_POST["plan_ids"];
-		$counter = array();
-		if (!empty($app_ids)) {
-			$counter = $app_ids;
-		}else if(!empty($sub_ids)){
-			$counter = array(1);
-		}else{
-			AjaxHelper::error("");
-		}
-		$returnValue = array();
-		foreach ($counter as $app_id) {
-			if (!empty($app_ids)) {
-				$records = DeveloperPortalApi::subscriptionsInApplication($app_id);
-			}else{
-				$records = $sub_ids;
-			}
-			
-	        if (count($records)>0) {
-				$results = array();
-				$db = JFactory::getDbo();
-				$sql = 'select title as productName from `#__js_res_record` where id in (SELECT field_value FROM `#__js_res_record_values` WHERE field_id=114 and record_id in ('.implode(',',$records).'))';
-				$db -> setQuery($sql);
-				$results['products'] = $db->loadObjectList();
-				$sql = 'select fields as planDetail from `#__js_res_record` where id in (SELECT field_value FROM `#__js_res_record_values` WHERE field_id=69 and record_id in ('.implode(',',$records).'))';
-				if (!empty($plan_ids)) {
-					$sql = 'select id,title,fields as planDetail from `#__js_res_record` where id in ('.implode(',',$plan_ids).')';
-				}
-				$db -> setQuery($sql);
-				$results['plans'] = $db->loadObjectList();
-				$sql = 'select id,pct from (select id from #__js_res_record where id in ('.implode(',',$records).')) a left join (SELECT subscription_id, pct FROM  `asg_subscription_usage` WHERE subscription_id in ('.implode(',',$records).')) b on a.id=b.subscription_id';
-				$db -> setQuery($sql);
-				$results['usage'] = $db->loadObjectList();
-				$returnValue[] = $results;
-	        }else {
-	        	$returnValue[] = array();
-	        }
-		}
-		
-		AjaxHelper::send($returnValue);
-	}
-	
+  public function subscriptionsInApp() {
+    $app_ids = $_POST["app_ids"];
+    $sub_ids = $_POST["sub_ids"];
+    $plan_ids = $_POST["plan_ids"];
+    $counter = array();
+    if (!empty($app_ids)) {
+      $counter = $app_ids;
+    }else if(!empty($sub_ids)){
+      $counter = array(1);
+    }else{
+      AjaxHelper::error("");
+    }
+    $returnValue = array();
+    foreach ($counter as $app_id) {
+      if (!empty($app_ids)) {
+        $records = DeveloperPortalApi::subscriptionsInApplication($app_id);
+      }else{
+        $records = $sub_ids;
+      }
+      
+          if (count($records)>0) {
+        $results = array();
+        $db = JFactory::getDbo();
+        $sql = 'select title as productName from `#__js_res_record` where id in (SELECT field_value FROM `#__js_res_record_values` WHERE field_id=114 and record_id in ('.implode(',',$records).'))';
+        $db -> setQuery($sql);
+        $results['products'] = $db->loadObjectList();
+        $sql = 'select fields as planDetail from `#__js_res_record` where id in (SELECT field_value FROM `#__js_res_record_values` WHERE field_id=69 and record_id in ('.implode(',',$records).'))';
+        if (!empty($plan_ids)) {
+          $sql = 'select id,title,fields as planDetail from `#__js_res_record` where id in ('.implode(',',$plan_ids).')';
+        }
+        $db -> setQuery($sql);
+        $results['plans'] = $db->loadObjectList();
+        $sql = 'select id,pct from (select id from #__js_res_record where id in ('.implode(',',$records).')) a left join (SELECT subscription_id, pct FROM  `asg_subscription_usage` WHERE subscription_id in ('.implode(',',$records).')) b on a.id=b.subscription_id';
+        $db -> setQuery($sql);
+        $results['usage'] = $db->loadObjectList();
+        $returnValue[] = $results;
+          }else {
+            $returnValue[] = array();
+          }
+    }
+    
+    AjaxHelper::send($returnValue);
+  }
+  
     /**
      * get alert data from table asg_log 
      */
-	public function alertMessages(){
-		$orgID  = $_POST["org_id"];
-		$comEmail = JComponentHelper::getComponent('com_emails');
-		$limitCount = $comEmail->params->get('show_alerts_count');
-		$limitCount = (empty($limitCount)||$limitCount<1)?0:$limitCount;
-		$curUser = JFactory::getUser();
-		
-		if (!empty($orgID)) {
-			$db = JFactory::getDbo();
-			$db -> setQuery('SELECT event, http_status_text, log_type, summary,event_status,entity_type, create_time FROM  `asg_logs` WHERE org_id ='.$orgID.' or (uid = '.$curUser->id.' and event_status in ("Error","Partially Completed","Request")) ORDER BY id desc LIMIT 0,'.$limitCount);
-			$result = $db->loadObjectList();
-			AjaxHelper::send($result);
-		} else {
-		    AjaxHelper::error("");
-		}
-	}
-	
+  public function alertMessages(){
+    $orgID  = $_POST["org_id"];
+    $comEmail = JComponentHelper::getComponent('com_emails');
+    $limitCount = $comEmail->params->get('show_alerts_count');
+    $limitCount = (empty($limitCount)||$limitCount<1)?0:$limitCount;
+    $curUser = JFactory::getUser();
+    
+    if (!empty($orgID)) {
+      $db = JFactory::getDbo();
+      $db -> setQuery('SELECT event, http_status_text, log_type, summary,event_status,entity_type, create_time FROM  `asg_logs` WHERE org_id ='.$orgID.' or (uid = '.$curUser->id.' and event_status in ("Error","Partially Completed","Request")) ORDER BY id desc LIMIT 0,'.$limitCount);
+      $result = $db->loadObjectList();
+      AjaxHelper::send($result);
+    } else {
+        AjaxHelper::error("");
+    }
+  }
+  
     /**
      * send email to related people when a subscription created. 
      */
-	public function subscriptionDidCreate() {
-	  $requester_uid   = $_POST["requester_uid"];
-	  $product_id      = $_POST["product_id"];
-	  $subscription_id = $_POST["subscription_id"];
-	  $_domain = DeveloperPortalApi::getHostUrl();
-	  $product_url      = $_domain.JRoute::_(Url::record($product_id));
-	  $subscription_url = $_domain.JRoute::_('index.php?option=com_cobalt&view=record&Itemid=140&id='.$subscription_id);
+  public function subscriptionDidCreate() {
+    $requester_uid   = $_POST["requester_uid"];
+    $product_id      = $_POST["product_id"];
+    $subscription_id = $_POST["subscription_id"];
+    $_domain = DeveloperPortalApi::getHostUrl();
+    $product_url      = $_domain.JRoute::_(Url::record($product_id));
+    $subscription_url = $_domain.JRoute::_('index.php?option=com_cobalt&view=record&Itemid=140&id='.$subscription_id);
 
 
-	  
+    
     //send email to joomla admin/organization admin,contacter/requester
-	  if ($requester_uid && $product_id && $subscription_id) {
-  	  $config = JFactory::getConfig();
-  	  $admin_email = $config -> get('mailfrom');
-  	  
-  	  $user = JFactory::getUser($requester_uid);
-  	  $user_email = $user->email;
-  	  $email_group = array_merge(
+    if ($requester_uid && $product_id && $subscription_id) {
+      $config = JFactory::getConfig();
+      $admin_email = $config -> get('mailfrom');
+      
+      $user = JFactory::getUser($requester_uid);
+      $user_email = $user->email;
+      $email_group = array_merge(
          DeveloperPortalApi::getEmailsOfJoomlaAdmins(),
          DeveloperPortalApi::getEmailsOfOrganizationAdmin(), 
          DeveloperPortalApi::getEmailsOfOrganizationContact(),
          array($user_email)
-  	  );
-  	  $email_group = array_unique($email_group);
-	    $results = $this->_getEmailTemplateByAlias("notification_of_create_subscription");
-	    if ($results -> subject && $results -> content) {
-	      $title = $results -> subject;
-	      $content = $results -> content;
-	      $content = str_replace("{PRODUCT_URL}", $product_url, $content);
-	      $content = str_replace("{SUBSCRIPTION_URL}", $subscription_url, $content);
-	  
-	      DeveloperPortalApi::send_email($email_group, $title, $content, $results -> isHTML);
-	    }
-	    AjaxHelper::send(JText::_('SUBSCRIPTION_CREATE_SUCCESS'),"msg");
-	  }else{
-	    AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_4'));
-	  }
-	}
+      );
+      $email_group = array_unique($email_group);
+      $results = $this->_getEmailTemplateByAlias("notification_of_create_subscription");
+      if ($results -> subject && $results -> content) {
+        $title = $results -> subject;
+        $content = $results -> content;
+        $content = str_replace("{PRODUCT_URL}", $product_url, $content);
+        $content = str_replace("{SUBSCRIPTION_URL}", $subscription_url, $content);
+    
+        DeveloperPortalApi::send_email($email_group, $title, $content, $results -> isHTML);
+      }
+      AjaxHelper::send(JText::_('SUBSCRIPTION_CREATE_SUCCESS'),"msg");
+    }else{
+      AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_4'));
+    }
+  }
+    
     
     public function createUserGroups() {
         if(isset($_REQUEST['org_id'])) {
@@ -498,12 +588,16 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
         }
         DeveloperPortalApi::createUserGroups($org_id);
     }
-    
-    public function getUserByUid(){
-      if ( !$this->userState() ) {
+
+    public function getUserByUid(){      
+      $uid  = intval($_GET["uid"]);
+      $current_user = JFactory::getUser();
+      if ( !$this->userState()) {
           AjaxHelper::error( JText::_('USER_NO_LOGIN') );
       }
-      $uid  = intval($_GET["uid"]);
+      elseif(!in_array(8, $current_user->getAuthorisedGroups())&&!DeveloperPortalApi::fromSameOrg($current_user->id,$uid)){
+          AjaxHelper::error(JText::_('NOPERMISSION'));
+      }
       if ($uid) {
         $user = &JFactory::getUser($uid);
         if ($user) {
@@ -550,8 +644,8 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
     $app = JFactory::getApplication();
     $url = '';
     $url .= JURI::root().'index.php/component/users/?task=registration.activate&token=';
-	$retunrUrl = $_GET['return'];
-	
+  $retunrUrl = $_GET['return'];
+  
     $res_id = $_REQUEST['id'];
     $db = JFactory::getDbo();
     $db->setQuery('select `field_value` from #__js_res_record_values where `field_id`=77 and `record_id`='.$res_id);
@@ -589,7 +683,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
       $app->redirect( $retunrUrl, $msg=JText::_("RESEND_ACTIVATION_EMAIL_FAIL_TECHNICAL"), $msgType='message');
     }
   }
-	
+  
     public function asgLogs(){
 
       $db = JFactory::getDbo();
@@ -618,40 +712,40 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
 
     /**
      * Archive an object by setting the "published" column to 2.
-     * 
-     * @author Kevin Li<huali@tibco-support.com> 
+     *
+     * @author Kevin Li<huali@tibco-support.com>
      * @return string A JSON string
      * update 13/11/2013 by Jacky
      */
     public function archiveRecord() {
       $flag       = true;
       $type_id    =  JRequest::getInt("type_id",0);
-      $record_id  =  JRequest::getInt("rec_id",0);
+      $object_id  =  JRequest::getInt("rec_id",0);
 
-      $archive_ids = $record_id?array($record_id):array();
+      $archive_ids = $object_id?array($object_id):array();
 
-      if($type_id == 4 && $record_id)
+      if($type_id == 4 && $object_id)
       {
         $db = JFactory::getDbo();
         $query = $db->getQuery(true);
 
-        $query->select("record_id")->from("#__js_res_record_values")->where('field_id=16 and field_value='.$record_id);
+        $query->select("record_id")->from("#__js_res_record_values")->where('field_id=16 and field_value='.$object_id);
         $db->setQuery($query);
         $result = $db->loadColumn();
 
         $archive_ids = array_merge($archive_ids, $result);
       }
 
-      foreach ($archive_ids as $archive_id) 
+      foreach ($archive_ids as $archive_id)
       {
-        if(!DeveloperPortalApi::archiveRecord($archive_id))
+        if(!DeveloperPortalApi::archiveRecord($archive_id, $type_id))
         {
           $flag = false;
           break;
         }
       }
 
-      if (!$record_id)
+      if (!$object_id)
       {
         AjaxHelper::error("The parameter rec_id is missing.");
       }else if ($flag){
@@ -659,7 +753,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
       }else{
         AjaxHelper::error("Record update failed.");
       }
-      
+
     }
 
     /**
@@ -706,10 +800,10 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
       }
 
       //Update the record fields
-	  $fieldsValue = str_replace('\\','\\\\',$fields);
-	  $fieldsValue = str_replace("'","\'",$fieldsValue);
+    $fieldsValue = str_replace('\\','\\\\',$fields);
+    $fieldsValue = str_replace("'","\'",$fieldsValue);
       $query = $db->getQuery(true);
-	  $query->update($db->quoteName('#__js_res_record'))->set($db->quoteName('fields') . "='" .  $fieldsValue ."'")->where($db->quoteName('id') . '=' . $record_id);
+    $query->update($db->quoteName('#__js_res_record'))->set($db->quoteName('fields') . "='" .  $fieldsValue ."'")->where($db->quoteName('id') . '=' . $record_id);
       $db->setQuery($query);
 
       if($db->query()){
@@ -755,7 +849,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
       $start_date = new JDate("now", $offset);
       $start_date = $start_date->format("Y-m-d",true);
 
-      $end_date = new JDate("+5 year", $offset);
+      $end_date = new JDate("2038-01-01", $offset);
       $end_date = $end_date->format("Y-m-d",true);
 
       $fields->{'66'}   =   "";
@@ -812,8 +906,8 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
             
             if($applications){
               if($old_subscriptions = TibcoTibco::updateApplicationForPlan($applications, $fields->{'114'}, $record_id)){
-              	$result = array("record_id"=>$record_id,"appIds"=>$applications,"app_old_subscriptions"=>$old_subscriptions,"msg"=>JText::_('AUTO_CREATE_SUBSCRIPTION_SUCCESS'));
-            	
+                $result = array("record_id"=>$record_id,"appIds"=>$applications,"app_old_subscriptions"=>$old_subscriptions,"msg"=>JText::_('AUTO_CREATE_SUBSCRIPTION_SUCCESS'));
+              
                 AjaxHelper::send($result,"result");
 
               }else{
@@ -974,89 +1068,89 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
 
     
 
-    	$user_id = JRequest::getVar("userId",0);
+      $user_id = JRequest::getVar("userId",0);
 
-    	$org_name = JRequest::getVar("jform",array());
+      $org_name = JRequest::getVar("jform",array());
 
-    	$org_name = $org_name['user_group_name'];
+      $org_name = $org_name['user_group_name'];
 
-    	$usergrouptoupdate = JRequest::getVar("jform",array());
+      $usergrouptoupdate = JRequest::getVar("jform",array());
 
-    	$usergrouptoupdate = $usergrouptoupdate['old_user_group_name'];
+      $usergrouptoupdate = $usergrouptoupdate['old_user_group_name'];
 
-    	 
+       
 
-    	 
+       
 
-    	if(!$user_id || !$org_name)
+      if(!$user_id || !$org_name)
 
-    	{
+      {
 
-    		AjaxHelper::error(JText::_('ATTACH_USER_TO_ORGANIZATION_NO_USER_ORGANIZATION'));
+        AjaxHelper::error(JText::_('ATTACH_USER_TO_ORGANIZATION_NO_USER_ORGANIZATION'));
 
-    	}
-
-    
-
-    	$user = JFactory::getUser($user_id);
+      }
 
     
 
-    	$old_group_id = DeveloperPortalApi::getOrganizationIdByName($usergrouptoupdate);
-
-    	$group_id = DeveloperPortalApi::getOrganizationIdByName($org_name);
-
-    	 
-
-    	if (!$group_id)
-
-    	{
-
-    		AjaxHelper::error(JText::_("ATTACH_USER_NO_ORGANIZATION_FOUND"));
+      $user = JFactory::getUser($user_id);
 
     
 
-    	}
+      $old_group_id = DeveloperPortalApi::getOrganizationIdByName($usergrouptoupdate);
 
-    	 
+      $group_id = DeveloperPortalApi::getOrganizationIdByName($org_name);
 
-    	if(in_array(12, $user->getAuthorisedGroups())) { // if User belongs to partner
+       
 
-    		$db = JFactory::getDbo();
+      if (!$group_id)
 
-    		$db->setQuery('select * from #__user_usergroup_map where user_id='.$user_id.' and group_id='.$old_group_id);
+      {
 
-    		if ($result = $db -> loadObjectList()) {
+        AjaxHelper::error(JText::_("ATTACH_USER_NO_ORGANIZATION_FOUND"));
 
     
 
-    			foreach($result as $record) {
+      }
 
-    				if ($record->group_id > 12) {
+       
 
-    					$db->setQuery('update #__user_usergroup_map set group_id='.$group_id.' where user_id='.$user_id.' and group_id='.$record->group_id);
+      if(in_array(12, $user->getAuthorisedGroups())) { // if User belongs to partner
 
-    					if($db -> execute()) {
+        $db = JFactory::getDbo();
 
-    						AjaxHelper::send("success",'result');
+        $db->setQuery('select * from #__user_usergroup_map where user_id='.$user_id.' and group_id='.$old_group_id);
 
-    					} else {
+        if ($result = $db -> loadObjectList()) {
 
-    						AjaxHelper::error(JText::_('ATTACH_USER_TO_ORGANIZATION_FAILED1'));
+    
 
-    					}
+          foreach($result as $record) {
 
-    				}
+            if ($record->group_id > 12) {
 
-    			}
+              $db->setQuery('update #__user_usergroup_map set group_id='.$group_id.' where user_id='.$user_id.' and group_id='.$record->group_id);
 
-    		}else {
+              if($db -> execute()) {
 
-    			AjaxHelper::error(JText::_('USERGROUP_OUTOFSYNC'));
+                AjaxHelper::send("success",'result');
 
-    		}
+              } else {
 
-    	}
+                AjaxHelper::error(JText::_('ATTACH_USER_TO_ORGANIZATION_FAILED1'));
+
+              }
+
+            }
+
+          }
+
+        }else {
+
+          AjaxHelper::error(JText::_('USERGROUP_OUTOFSYNC'));
+
+        }
+
+      }
 
     }
     
@@ -1070,7 +1164,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
       $sub_id  = $_REQUEST["subId"];
       $usedPercentage  = $_REQUEST["usedPercentage"];
       $_domain = DeveloperPortalApi::getHostUrl();
-      
+
       $config = JFactory::getConfig();
       if ($org_id && $sub_id) {
         $sub_url          = $_domain.JRoute::_('index.php?option=com_cobalt&view=record&Itemid=140&id='.$sub_id);
@@ -1155,8 +1249,8 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
 
       if ($old_password && $new_password) {
         // below confirm password logic is as same as "plugins/authentication/joomla/joomla.php, onUserAuthenticate()" 
-        $db		= JFactory::getDbo();
-        $query	= $db->getQuery(true)
+        $db   = JFactory::getDbo();
+        $query  = $db->getQuery(true)
         ->select('id, password')
         ->from('#__users')
         ->where('id=' . $user->id);
@@ -1167,7 +1261,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
         if ($result) {
           //if the old password is correct.
          if (JUserHelper::verifyPassword($old_password,$result->password)){
-           	$new_password_status = $this->checkPasswordRules($new_password);
+            $new_password_status = $this->checkPasswordRules($new_password);
             if ( $new_password_status == 1 ) {
                 // Generate the new password hash.
                 $crypted = JUserHelper::hashPassword($new_password);
@@ -1290,63 +1384,63 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
         $app->redirect($return, JText::_('RESET_WORK_THROUGH_FAILED'));
       }else{
        $cookieName =  md5(strtotime($user->registerDate).$user->id."_guide_step");
-      	if (isset($_COOKIE[$cookieName]))
-      	{
-      		unset($_COOKIE[$cookieName]);
-      		setcookie($cookieName, "", time()-3600, '/');
-      	}
-      	 
+        if (isset($_COOKIE[$cookieName]))
+        {
+          unset($_COOKIE[$cookieName]);
+          setcookie($cookieName, "", time()-3600, '/');
+        }
+         
         $app->redirect($return, JText::_('RESET_WORK_THROUGH_SUCCESSFULLY'));
       }
     }
-	
-	public function addUserToGroup(){
-	        $org_id = $_POST['org_id']*1;
-	        $user_email = $_POST['user_email'];
-			$user_type = empty($_POST['user_type']) ? 'Member' : ucwords(strtolower($_POST['user_type']));
-			$group_name = 'Organization '.$org_id.' '.$user_type;
-	        $db = JFactory::getDbo();
-	        //get user id
-	        $userIdSql = "SELECT * FROM `#__users` WHERE `email` LIKE '".$user_email."' ORDER BY id DESC";
-	        $db->setQuery($userIdSql);
-	        $userObj = $db->loadObject();
-	        $user_id = $userObj->id;
+  
+  public function addUserToGroup(){
+          $org_id = $_POST['org_id']*1;
+          $user_email = $_POST['user_email'];
+      $user_type = empty($_POST['user_type']) ? 'Member' : ucwords(strtolower($_POST['user_type']));
+      $group_name = 'Organization '.$org_id.' '.$user_type;
+          $db = JFactory::getDbo();
+          //get user id
+          $userIdSql = "SELECT * FROM `#__users` WHERE `email` LIKE '".$user_email."' ORDER BY id DESC";
+          $db->setQuery($userIdSql);
+          $userObj = $db->loadObject();
+          $user_id = $userObj->id;
         
-	        //get group id
-	        $getGroupIdSql = 'SELECT `id` FROM `#__usergroups` WHERE title = "'.$group_name.'" LIMIT 1';
-	        $db->setQuery($getGroupIdSql);
-	        $groupObj = $db->loadObject();
-	        $group_id = $groupObj->id;
-        	
-	        //insert group map
-	        $insertSql = 'INSERT INTO `#__user_usergroup_map` (`user_id`, `group_id`) VALUES ("'.$user_id.'","'.$group_id.'")';
-	        $db->setQuery($insertSql);
-	        $result = $db->execute();
-	        return $result;
-	}
+          //get group id
+          $getGroupIdSql = 'SELECT `id` FROM `#__usergroups` WHERE title = "'.$group_name.'" LIMIT 1';
+          $db->setQuery($getGroupIdSql);
+          $groupObj = $db->loadObject();
+          $group_id = $groupObj->id;
+          
+          //insert group map
+          $insertSql = 'INSERT INTO `#__user_usergroup_map` (`user_id`, `group_id`) VALUES ("'.$user_id.'","'.$group_id.'")';
+          $db->setQuery($insertSql);
+          $result = $db->execute();
+          return $result;
+  }
     /*background function use validate password rules*/
     private function checkPasswordRules( $passwd ) {
-    	$resArr = TibcoTibco::validatePassword( $passwd );
+      $resArr = TibcoTibco::validatePassword( $passwd );
         if ( $resArr['success'] == 0 ) {
-        	$msg = $this->getErrorMsg($resArr['errno']);
-        	return $msg;
+          $msg = $this->getErrorMsg($resArr['errno']);
+          return $msg;
         } else {
-        	return 1;
+          return 1;
         }
     }
     /*javascript use validate password rules*/
     public function validatePasswordRules(){
-    	$passwd = $_POST['password'];
-    	$check = 0;
-    	$resArr = TibcoTibco::validatePassword( $passwd );
-		if ( $resArr['success'] == 0 ) {
-			$msg = $this->getErrorMsg($resArr['errno']);
-			$check = 1;
-		}
-		if ($check == 1)
-			AjaxHelper::error($msg);
-    	else 
-    		AjaxHelper::send('');
+      $passwd = $_POST['password'];
+      $check = 0;
+      $resArr = TibcoTibco::validatePassword( $passwd );
+    if ( $resArr['success'] == 0 ) {
+      $msg = $this->getErrorMsg($resArr['errno']);
+      $check = 1;
+    }
+    if ($check == 1)
+      AjaxHelper::error($msg);
+      else 
+        AjaxHelper::send('');
     }
     
     public function validateOldPassword(){
@@ -1369,24 +1463,24 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
     
     /*return error messages.*/
     private function getErrorMsg($errno) {
-    	$msg = '';
-    	if( isset($errno['len']) && !empty($errno['len']) ) {
-			$msg .= sprintf(JText::_("COM_AJAXMORE_LEN"),$errno['len']).'</br>';
-		}
-		if( isset($errno['int']) && !empty($errno['int']) ) {
-			$msg .= sprintf(JText::_("COM_AJAXMORE_INT"),$errno['int']).'</br>';
-		}
-		if( isset($errno['upp']) && !empty($errno['upp']) ) {
-			$msg .= sprintf(JText::_("COM_AJAXMORE_UPP"),$errno['upp']).'</br>';
-		}
-		if( isset($errno['sym']) && !empty($errno['sym']) ) {
-			$msg .= sprintf(JText::_("COM_AJAXMORE_SYM"),$errno['sym']).'</br>';
-		}
-		return $msg;
+      $msg = '';
+      if( isset($errno['len']) && !empty($errno['len']) ) {
+      $msg .= sprintf(JText::_("COM_AJAXMORE_LEN"),$errno['len']).'</br>';
+    }
+    if( isset($errno['int']) && !empty($errno['int']) ) {
+      $msg .= sprintf(JText::_("COM_AJAXMORE_INT"),$errno['int']).'</br>';
+    }
+    if( isset($errno['upp']) && !empty($errno['upp']) ) {
+      $msg .= sprintf(JText::_("COM_AJAXMORE_UPP"),$errno['upp']).'</br>';
+    }
+    if( isset($errno['sym']) && !empty($errno['sym']) ) {
+      $msg .= sprintf(JText::_("COM_AJAXMORE_SYM"),$errno['sym']).'</br>';
+    }
+    return $msg;
     }
 
     public function getFormToken() {
-    	AjaxHelper::send(JFactory::getSession()->getFormToken());
+      AjaxHelper::send(JFactory::getSession()->getFormToken());
     }
     /**
      * Check user login or no-login.
@@ -1395,8 +1489,320 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
         $user = JFactory::getUser();
         if ( isset( $user->id ) && !empty( $user->id ) ) {
             return true;
-}
+        }   
         return false;
+    }
+
+    /**
+     * Save a policy to database
+     */
+    public function savePolicy(){
+        $res = 0;
+        $user = JFactory::getUser();
+        if ( in_array( 8, $user->groups ) ) {
+            $db = JFactory::getDbo();
+            $policy = new stdClass();
+            $policy->field_value = addslashes( strip_tags( preg_replace("'([\r\n])[\s]+'", "", $_POST['policy']) ) );
+            $policy->record_id = filter_var($_POST['id'], FILTER_SANITIZE_NUMBER_INT);
+            $policy->user = JFactory::getUser();
+            $policy->field_id = 151;
+            $policy->field_key = 'k' . md5($field->label . '-' . $field->type);
+            $policy->field_type = 'textarea';
+            $policy->field_label = 'Policy';
+            $policy->user_id = $user->id;
+            $policy->type_id = 6;
+            $policy->section_id = 2;
+            $policy->category_id = 0;
+            $policy->ctime = date( 'Y-m-d H:i:s', time() );
+            $policy->value_index = 0;
+            $policy->ip = $_SERVER['REMOTE_ADDR'];
+            if ( !empty( $policy->field_value ) && !empty( $_POST['id'] ) ) {
+                if ( $db->insertObject("#__js_res_record_values",$policy,'id') ) {
+                    $res = $db->insertid();
+                }
+            }
+        }
+        return AjaxHelper::send( $res );
+    }
+    /**
+    * Parsing a wsdl file.
+    * @return Json string.
+    */
+    public function soapClient() {
+        $resArr = array();
+        if (!empty($_REQUEST['filename'])) {
+            $apiID = $_REQUEST['apiID'];
+            $wsdl_subfolder = TibcoTibco::getWSDLSubfolder();
+            $time = substr($_REQUEST['filename'], 0, stripos($_REQUEST['filename'], '_'));
+            $dirname = date('Y-m/', $time) . $_REQUEST['filename'];
+            $handle = fopen(JPATH_BASE . "/uploads/$wsdl_subfolder/wsdlName.json", 'w');
+            fwrite($handle, $dirname);
+            fclose($handle);
+            $uri = JUri::base().'soapServer.php?WSDL';
+            $client = new SoapClient($uri, array('cache_wsdl' => 0));
+            $funcsArr = $client->__getFunctions();
+            $soapActionArr = $this->getSoapAction(JPATH_BASE . "/uploads/$wsdl_subfolder/".$dirname);
+            $db = JFactory::getDbo();
+            foreach ($funcsArr as $idx => $func) {
+                $name = rtrim( substr( $func, stripos( $func, ' ' ) + 1), ')');
+                $arr = explode('(', $name);
+                $arr[1] = explode(',', $arr[1]);
+                $document = $this->getSoapDocument( JPATH_BASE . "/uploads/$wsdl_subfolder/".$dirname, $arr[0] );
+                if ( empty($document) ) { $document = 'No description for '.$arr[0]; }
+                $resArr['apis'][] = $this->getDetails($arr, $soapActionArr[$idx], $document);
+                if ( !empty( $apiID ) )
+                    $this->checkOldOperation($arr[0], $apiID);
+            }
+        }
+        AjaxHelper::send($resArr);
+    }
+    /**
+    * The fields of the function.
+    * @return array of the function.
+    */
+    private function getDetails($arr, $soapAction, $document) {
+        $resArr = array(
+            'path' => $soapAction,
+            "description" => $document,
+            'operations' => array(
+                array(
+                    'method' => 'POST',
+                    'timeout' => 10000,
+                    'summary' => "",
+                    "produces" => array("application/xml"),
+                    'nickname' => $arr[0],
+                    'parameters' => array(
+                        "name" => "Title",
+                        "description" => "Request Payload",
+                        "paramType" => "body",
+                        "required" => true,
+                        "allowMultiple" => false,
+                        "dataType" => "String"
+                    )
+                )
+            )
+        );
+        return $resArr;
+    }
+    private function getSoapDocument( $filename, $fname ){
+        $content = '';
+        $doc = new DOMDocument();
+        $doc->load($filename);
+        $xml = $doc->saveXMl();
+        $start = strpos($xml,'operation name="'.$fname.'"');
+        $end = strrpos($xml,'operation name="'.$fname.'"');
+        $matches = substr($xml,$start,$end-$start);
+        $startT = strpos($matches,'<wsdl11:documentation>');
+        $endT = strpos($matches,'</wsdl11:documentation>');
+        if ($startT)
+            $content = str_replace('<wsdl11:documentation>','',substr($matches,$startT,$endT-$startT));
+        return $content;
+    }
+    private function getSoapAction( $filename ) {
+        $doc = new DOMDocument();
+        $doc->load($filename);
+        $xml = $doc->saveXMl();
+        preg_match_all('/soapAction=.*/',$xml, $matches );
+        $saArr = array();
+        foreach( $matches[0] as $key => $val ) {
+           $start=strpos($val,'soapAction=')+12;
+           $saArr[$key] = rtrim(rtrim( trim(substr( $val, $start, strpos($val,'style="document')-$start)), '"' ), "'");
+        }
+        return $saArr;
+    }
+    /**
+     * check and delete old operation.
+     */
+    private function checkOldOperation( $title, $apiID ){
+        $db = JFactory::getDbo();
+        $sql = 'SELECT `record_id` FROM `#__js_res_record_values` WHERE `field_id` = 30 and `field_value` = '.$apiID;
+        $db->setQuery($sql);
+        $operation = $db->loadObjectList();
+        foreach ( $operation as $opt ) {
+            if ( !empty( $opt->record_id ) ) {
+                $sql2 = 'SELECT `title` FROM `#__js_res_record` WHERE `id` = '.$opt->record_id;
+                $db->setQuery($sql2);
+                $record = $db->loadObject();
+                if ( !empty ( $record->title ) && $record->title == $title ) {
+                    $sql3 = 'DELETE FROM `#__js_res_record` WHERE `id` = '.$opt->record_id;
+                    $db->setQuery($sql3);
+                    $db->execute();
+                    $sql4 = 'DELETE FROM `#__js_res_record_values` WHERE `record_id` = '.$opt->record_id;
+                    $db->setQuery($sql4);
+                    $db->execute();
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Delete a record.
+     * 
+     * @author Vivian Ma<xima@tibco-support.com> 
+     * @return string A JSON string
+     * update 3/7/2015 by Vivian
+     */
+    public function deleteRecord(){
+        $app  = JFactory::getApplication();
+        $id = $app->input->get('id');
+        $type_id = $app->input->get('nTypeId');
+        $result = TibcoTibco::deleteRecord($id,$type_id);
+        if($result){
+          AjaxHelper::send("success");
+        }else{
+          AjaxHelper::error("error");
+        }
+    }
+
+    /**
+     * Find the WSDL file of an API according to the parameters and replace the value of all "location" properties of
+     * the "address" elements with the base path of the facade environment of that API.
+     *
+     * If everything goes fine the user will be prompted with a file download dialog. Otherwise, the user will be
+     * redirected to the API's detail page with an error shown at the top of the page.
+     *
+     * @author Kevin Li<huali@tibco-support.com>
+     */
+    public function getFacadeWSDL() {
+
+        $file_id = $_REQUEST['file_id'];
+
+        $app = JFactory::getApplication();
+
+        if($file_id > 0) {
+
+            $file_record = TibcoTibco::getFileById($file_id);
+
+            if(file_record != null) {
+
+                $file_contents = TibcoTibco::replaceLocationsInWSDL($file_record);
+
+                if (strlen($file_contents) > 0) {
+
+                    header('Cache-Control: no-cache, must-revalidate');
+                    header('Content-Disposition: attachment; filename="' . TibcoTibco::insertFacadeInFileName($file_record->realname) . '"');
+                    header('Content-Encoding: none');
+                    header('Content-Length: ' . strlen($file_contents));
+                    header('Content-Transfer-Encoding: binary');
+                    header('Content-Type: application/octet-stream', true);
+                    header('Pragma: no-cache');
+
+                    echo $file_contents;
+
+                    $app->close();
+
+                } else {
+
+                    $app->enqueueMessage("No contents in the file.", 'error');
+                    $app->redirect($_SERVER['HTTP_REFERER']);
+                }
+            } else {
+
+                $app->enqueueMessage("No file record found in the database.", 'error');
+                $app->redirect($_SERVER['HTTP_REFERER']);
+            }
+
+        } else {
+
+            $app->enqueueMessage("Parameters missing.", 'error');
+            $app->redirect($_SERVER['HTTP_REFERER']);
+        }
+    }
+
+    public function copyMapping(){
+        $user = JFactory::getUser();
+        if ( $user->id != 129 ){
+            AjaxHelper::error( JText::_("MAPPING_USER_VALIDATE") );
+        }
+        $model = new CobaltBModelRecord();
+        $ids[]   = $_POST['ids'];
+        $title = $_POST['title'];
+        $copyTitle = $_POST['copyTitle'];
+        if (empty($ids)) {
+            AjaxHelper::error( JText::_("MAPPING_ID_EMPTY") );
+        }
+        else {
+            $db = JFactory::getDbo();
+            $selectSql = 'SELECT `id` FROM `#__js_res_record` WHERE `title` = "'.$copyTitle.'"';
+            $db->setQuery($selectSql);
+            $res = $db->loadObject();
+            if ( $res->id ){
+                AjaxHelper::error( JText::_("MAPPING_NAME_EXIST") );
+            }
+            if (!$model->copy($ids)) {
+                AjaxHelper::error($model->getError());
+            }
+
+            $updateSql = 'UPDATE `#__js_res_record` SET `title` = \''.$copyTitle.'\' WHERE `title` = \''.$title.'\'';
+            $db->setQuery($updateSql);
+            $db->execute();
+        }
+        AjaxHelper::send("success");
+    }
+
+    /**
+     * Check delete status from portal engine.
+     * if success, call deleteRecord function.
+     * If failed, show error on portal, send email to administrator, and set 'published' as "1" to show the archived objects.
+     *
+     * Example: /index.php?option=com_cobalt&task=ajaxmore.deleteObject&status=success&objectType=API&objectId=301
+     * @author Crystal Liu<yunliu@tibco-support.com>
+     */
+    public function deleteObject(){
+        $app = JFactory::getApplication();
+        $db = JFactory::getDbo();
+        $object_id = $_REQUEST['objectId'];
+        $object_type = $_REQUEST['objectType'];
+        $sql = 'SELECT title,type_id FROM `#__js_res_record` WHERE id='.$object_id.'';
+        $db->setQuery($sql);
+        $result = $db->loadObject();
+        $type_id = $result->type_id;
+        $type_title = $result->title;
+        $user = JFactory::getUser();
+        $uuid = CreateSubscriptionApi::getUuid('');
+
+        if($_REQUEST['status'] == "success"){
+            $app->input->set('id', $object_id);
+            $result = TibcoTibco::deleteRecord($object_id,$type_id);
+            if($result){
+                AjaxHelper::send("success");
+            }else{
+                AjaxHelper::error("error");
+            }
+        }else{
+
+            $email_template = $this->_getEmailTemplateByAlias("delete_objects_failed_notify_admin_of_joomla");
+
+            if ($email_template -> subject && $email_template -> content) {
+                $title = $email_template -> subject;
+                $content = $email_template -> content;
+                $content = str_replace("{USERNAME}", $user->username, $content);
+                $content = str_replace("{USER_ID}", $user->id, $content);
+                $content = str_replace("{OBJECT_TYPE}", $object_type, $content);
+                $content = str_replace("{OBJECT_TITLE}", $type_title, $content);
+                $content = str_replace("{OBJECT_ID}", $object_id, $content);
+                $content = str_replace("{UUID}", $uuid, $content);
+
+                $admin_email_group = DeveloperPortalApi::getEmailsOfJoomlaAdmins();
+                DeveloperPortalApi::send_email($admin_email_group, $title, $content, $email_template->isHTML);
+            }
+
+            $_POST['log_type'] = "error";
+            $_POST['is_show'] = 0;
+            $_POST['org_id'] = 0;
+            $_POST['summary'] = $email_template -> subject;
+            $_POST['content'] = $email_template -> content;
+            $_POST['event'] = "delete";
+            $_POST['event_status'] = "second phase error";
+            $_POST['entity_type'] = $object_type;
+            $_POST['entity_id'] = $object_id;
+            $_POST['uid'] = $user->id ? $user->id : 0;
+            $_POST['uuid'] = $uuid;
+
+            $app->enqueueMessage(JText::_("PORTAL_UNREACHABLE_ERROR_MESSAGE").$uuid);
+            $this->asgLogs();
+        }
     }
 }
 ?>

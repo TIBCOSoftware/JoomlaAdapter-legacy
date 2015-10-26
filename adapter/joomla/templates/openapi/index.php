@@ -175,6 +175,8 @@ $oauthState = $comEmail->params->get('enable_oauth');
 			SUPPORT_USER_EMAIL = '<?php echo JFactory::getUser()->email; ?>',
             SUPPORT_PREPOPULATED_TEXT_UUID = '<?php echo JText::_("SUPPORT_PREPOPULATED_TEXT_UUID"); ?>',
             ARCHIVE_FAILED = '<?php echo JText::_("ARCHIVE_FAILED"); ?>',
+            DELETE_FAILED = '<?php echo JText::_("DELETE_FAILED"); ?>',
+            DELETE_SUCCESS = '<?php echo JText::_("CMSG_RECDELETEDOK"); ?>',
             FORM_TOKENS_DIFFERENT = '<?php echo JText::_("FORM_TOKENS_DIFFERENT"); ?>',
             DISABLE_KEYS_FAILED = '<?php echo JText::_("DISABLE_KEYS_FAILED"); ?>',
             FAILED_TO_DEACTIVATE_USER_AFTER_ARCHIVE_USERPROFILE = '<?php echo JText::_("FAILED_TO_DEACTIVATE_USER_AFTER_ARCHIVE_USERPROFILE"); ?>',
@@ -382,7 +384,6 @@ $oauthState = $comEmail->params->get('enable_oauth');
           cache: false
       });
     var _renderMessages = function(messages) {
-      	Joomla.removeMessages();
       	var container = document.id('system-message-container');
 
       	Object.each(messages, function (item, type) {
@@ -420,7 +421,8 @@ $oauthState = $comEmail->params->get('enable_oauth');
     Joomla.JText.load({
         "error": "Error",
         "warning": "Warning",
-        "success": "Success"
+        "success": "Success",
+        "info": "Info"
     });
 
     Joomla.showError = function(errorText) {
@@ -433,7 +435,11 @@ $oauthState = $comEmail->params->get('enable_oauth');
             "error": errorText
         });
     };
-    
+    Joomla._renderMessages = function(infoText) {
+        _renderMessages({
+            "info": infoText
+        });
+    };
     Joomla.showWarning = function(warningText) {
         _renderMessages({
             "warning": warningText

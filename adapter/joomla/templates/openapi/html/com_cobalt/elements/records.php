@@ -6,8 +6,10 @@
 defined('_JEXEC') or die();
 require_once JPATH_ROOT . "/includes/api.php";
 
-$fid = JRequest::getInt('field_id');
+$fid = (int)$_REQUEST['field_id'];
 $k = 0;
+
+$schema_id_map = array(202=>216, 203=>216);
 
 /**
  * Author Jackin
@@ -104,11 +106,12 @@ if($_GET['filter_type'] == 7) { // Only for Plans
 		    jQuery('#modal<?php echo $fid; ?>');
 		}
 	};
-	window.attachRecord = function(id, title) {
+	window.attachRecord = function(id, title, content) {
 		<?php if(JRequest::getVar('mode') == 'form'):?>
 			var multi = parent['multi<?php echo $fid; ?>'];
 			var limit = parent['limit<?php echo $fid; ?>'];
 			var inputname = parent['name<?php echo $fid; ?>'];
+            var contentname = 'content'+'_<?php echo $fid; ?>';
 
 			list = $('#recordslist');
 			if(!multi)
@@ -136,8 +139,11 @@ if($_GET['filter_type'] == 7) { // Only for Plans
 					'class': 'alert alert-info list-item',
 					rel: id
 				})
-				.html('<a class="close" data-dismiss="alert" href="#">x</a><span>'+title+'</span><input type="hidden" name="'+inputname+'" value="'+id+'">')
+				.html('<a class="close" data-dismiss="alert" href="#">x</a><span>'+title+'</span><input type="hidden" name="'+inputname+'" value="'+id+'">' +
+                        '<input type="hidden" name="'+ contentname +'" value=\'' +DeveloperPortal.java7DecodeURIComponent(content)+ '\'>')
 				.appendTo(list);
+
+
 		<?php else: ?>
             $.ajax({
               url: Cobalt.field_call_url,
@@ -232,7 +238,7 @@ if($_GET['filter_type'] == 7) { // Only for Plans
 				<?php foreach ($this->items AS $i => $item):?>
 					<tr class="cat-list-row<?php echo $k = 1 - $k; ?>" id="object_<?php echo $item->id; ?>">
 						<td><?php echo $this->pagination->getRowOffset($i); ?></td>
-						<td><a href="javascript:void(0)" onclick="attachRecord(<?php echo $item->id?>, '<?php echo htmlspecialchars($item->title, ENT_COMPAT, 'UTF-8')?>')"><?php echo $item->title?></a></td>
+						<td><a href="javascript:void(0)" onclick="attachRecord(<?php echo $item->id?>, '<?php echo htmlspecialchars($item->title, ENT_COMPAT, 'UTF-8')?>' , '<?php echo json_decode($item->fields,true)[$schema_id_map[$fid]] ; ?>')"><?php echo $item->title?></a></td>
 					</tr>
 				<?php endforeach;?>
 			</tbody>

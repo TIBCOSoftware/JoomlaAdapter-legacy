@@ -8,8 +8,12 @@
 	position: relative;
 	width: 100%;
 	text-align: right;
-	height: 0px;
+	height: 0;
 	overflow: visible;
+}
+#adminForm .btn-toolbar .btn-group{
+    width: 11%;
+    height:30px;
 }
 .get-started-page .trial-guide{
 	margin-top: -40px;

@@ -133,10 +133,10 @@ if(!$isAdmin){
 .accordion-inner{padding: 0;}
 
 #request-plan-form{
-	height:500px;
-	width:720px !important;
-	margin-top: -250px;
-	margin-left: -360px;
+  height:500px;
+  width:720px !important;
+  margin-top: -250px;
+  margin-left: -360px;
 }
 
 .request-form-detail-box{
@@ -168,42 +168,42 @@ if(!$isAdmin){
 }
 
 .accordion{
-	margin-bottom:0px;
+  margin-bottom:0px;
 }
 
 .accordion-group{
-	border:none;
-	border-bottom:1px solid #bcbcbc;
-	border-radius: 0px !important;
+  border:none;
+  border-bottom:1px solid #bcbcbc;
+  border-radius: 0px !important;
 }
 
 .accordion-heading .rwd-table-cell{
-	padding:5px 0;
+  padding:5px 0;
 }
 
 .accordion-heading .rwd-table-cell .rwd-table-column{
-	padding:0px;
-	font-size:12px;
+  padding:0px;
+  font-size:12px;
 }
 
 .rwd-table-cell li{
-	padding:0;
+  padding:0;
 }
 
 .rwd-table-cell .rwd-table-column:nth-child(1){
-	width:32%;
+  width:32%;
 }
 
 .accordion-inner tbody tr td:nth-child(1){
-	width:32%;
+  width:32%;
 }
 
 .rwd-table-cell .rwd-table-column:nth-child(n+2){
-	width:22%;
+  width:22%;
 }
 
 .accordion-inner tbody tr td:nth-child(n+2){
-	width:22%;
+  width:22%;
 }
 
 .accordion-inner thead tr th:first-child, .accordion-inner tbody tr td:first-child {
@@ -216,25 +216,25 @@ if(!$isAdmin){
     padding-right: 0;
 }
 .accordion-inner tbody tr td:nth-child(n+2) div b{
-	font-size:12px;
-	color:#afafaf;
+  font-size:12px;
+  color:#afafaf;
 }
 
 .accordion-heading .rwd-table-cell .rwd-table-column p{
-	padding:0;
-	margin:0;
-	font-weight:normal;
-	font-size:18px;
+  padding:0;
+  margin:0;
+  font-weight:normal;
+  font-size:18px;
 }
 
 .accordion-heading .rwd-table-cell .rwd-table-column img{
-	width:36px;
-	height:36px;
+  width:36px;
+  height:36px;
 }
 
 .accordion-heading .rwd-table-cell .rwd-table-column:last-child p{
-	font-size:12px;
-	color:#333;
+  font-size:12px;
+  color:#333;
 }
 
 .req-status:before{
@@ -271,59 +271,59 @@ if(!$isAdmin){
 }
 
 #subscriptions-tab .nav-tabs{
-	border-bottom:1px solid #006699;
+  border-bottom:1px solid #006699;
 }
 
 #subscriptions-tab .nav-tabs li:first-child{
-	margin-left:0px;
+  margin-left:0px;
 }
 
 #subscriptions-tab .nav-tabs li.end-ctl{
-	float:right;
-	line-height:35px;
-	height:35px;
+  float:right;
+  line-height:35px;
+  height:35px;
 }
 
 .accordion-inner{
-	border:none;
+  border:none;
 }
 
 .subscriptions-request-item-detail{
-	background-color:white;
+  background-color:white;
 }
 
 .subscriptions-request-item-detail tbody tr{
-	background: white !important;
+  background: white !important;
 }
 
 .subscriptions-request-item-detail tbody tr td{
-	background: white !important;
+  background: white !important;
 }
 
 .col-field div{
-	width:80%;
+  width:80%;
 }
 
 .col-field div p{
-	padding:0;
-	border-bottom:1px solid #cdcdcd;
+  padding:0;
+  border-bottom:1px solid #cdcdcd;
 }
 
 .col-field div div label:first-child{
-	float:left;
-	border:1px solid #efefef;
-	height:36px;
-	line-height:36px;
-	padding:0 15px;
+  float:left;
+  border:1px solid #efefef;
+  height:36px;
+  line-height:36px;
+  padding:0 15px;
   width: 50px;
   overflow: hidden;
 }
 
 .col-field div div label:last-child{
-	float:left;
-	height:36px;
-	line-height:18px;
-	margin-left:10px;
+  float:left;
+  height:36px;
+  line-height:18px;
+  margin-left:10px;
 }
 
 </style>
@@ -333,7 +333,7 @@ if(!$isAdmin){
   <ul class="nav nav-tabs">
     <li class="active"><a href="#subscriptions-request-list-container"  data-toggle="tab">Request</a></li>
     <li><a href="#subscriptions-subscripiton-list-container"  data-toggle="tab">Subscriptions</a></li>
-	<li id="req-ctl" class="end-ctl">
+  <li id="req-ctl" class="end-ctl">
         <form action='.' method="post" class="pull-right">
             <select name="status" id="status" onchange="this.form.submit();" value=''>
                 <option value="0" <?php echo $nowStatus == 0 ? 'selected' : '' ; ?> ><?php echo ' '. JText::_('COM_REQUEST_STATUS_0');?></option>
@@ -346,8 +346,8 @@ if(!$isAdmin){
             <input type="hidden" name="task" value="lists.userStatus" />
             <input type="hidden" name="return" value="<?php echo $this->return_page;?>" />
         </form>
-	</li>
-	<li id="sub-ctl" class="end-ctl" style="display:none;"></li>
+  </li>
+  <li id="sub-ctl" class="end-ctl" style="display:none;"></li>
   </ul>
 
   <div class="tab-content">
@@ -370,7 +370,7 @@ if(!$isAdmin){
                     $request_item->plan = JModelLegacy::getInstance('Record', 'CobaltModel')->_prepareItem(JModelLegacy::getInstance('Record', 'CobaltModel')->getItem($request_item->plan_id), 'full');
                 } else {
                     $custom = json_decode($request_item->custom);
-                    $request_item->plan = (Object)array('title'=>'custom', 'fields'=>array( 79=>$custom->rlimit, 80=>$custom->qlimit ));
+                    $request_item->plan = (Object)array('title'=>'custom', 'fields'=>array( 79=>$custom->rlimit, 80=>$custom->qlimit));
                 }
                 $request_item->user = JFactory::getUser($request_item->created_by);
         ?>
@@ -386,12 +386,12 @@ if(!$isAdmin){
                         alt="">
                         <p><?php echo $request_item->product;?></p>
                         <span>
-							<?php if ($request_item->plan->fields[39][0]<0 || empty($request_item->plan->fields[39][0])): ?>
-								<?php echo 'Custom';?>
-							<?php else: ?>
-								<?php echo JText::_('COM_REQUEST_LEVEL');?>&nbsp;<?php echo $request_item->plan->fields[39][0];?>
-							<?php endif ?>
-						</span>
+              <?php if ($request_item->plan->fields[39][0]<0 || empty($request_item->plan->fields[39][0])): ?>
+                <?php echo 'Custom';?>
+              <?php else: ?>
+                <?php echo JText::_('COM_REQUEST_LEVEL');?>&nbsp;<?php echo $request_item->plan->fields[39][0];?>
+              <?php endif ?>
+            </span>
                       </li>
                       <li class="rwd-table-column"><?php echo substr($request_item->requested_by, 0, strpos($request_item->requested_by,' '));?><br/>&nbsp;</li>
                       <li class="rwd-table-column"><?php echo  substr($request_item->updated, 0, strpos($request_item->updated,' '));?><br/>&nbsp;</li>
@@ -412,37 +412,46 @@ if(!$isAdmin){
                         <tbody>
                           <tr>
                             <td class="col-field">
-								<div>
-	                              <p><?php echo JText::_('COM_REQUEST_PLAN')?></p>
-								  <div>
-		  							  <label><?php echo $request_item->plan->title;?></label>
-									  <label><?php echo $request_item->plan->fields[79].JText::_('COM_REQUEST_PLAN_SLIMIT');?><br/>
-		                                <?php echo $request_item->plan->fields[80].JText::_('COM_REQUEST_PLAN_DLIMIT');?></label>
-								  </div>
-								</div>
+                <div>
+                                <p><?php echo JText::_('COM_REQUEST_PLAN')?></p>
+                  <div>
+                      <label><?php echo $request_item->plan->title;?></label>
+                      <?php 
+                            if(!empty($custom->climit))
+                            {
+                              $concurrent_calls = $custom->climit." ".JText::_("CONCURRENT_CALLS");
+                            }else{
+                              $concurrent_calls ='';
+                            }
+
+                      ?>
+                    <label><?php echo str_replace("/"," calls per ", $request_item->plan->fields[79]);?><br/>
+                        <?php echo str_replace("/"," calls per ", $request_item->plan->fields[80]);?><br/><?php echo $concurrent_calls; ?></label>
+                  </div>
+                </div>
                             </td>
                             <td>
-								<div>
-									<b><?php echo JText::_('COM_REQUEST_REQUESTOR');?></b><?php echo $request_item->user->name;?>
-	                                <br/>
-									<b><?php echo JText::_('COM_REQUEST_EMAIL');?></b><?php echo $request_item->user->email;?>
-	                                <br/>
+                <div>
+                  <b><?php echo JText::_('COM_REQUEST_REQUESTOR');?></b><?php echo $request_item->user->name;?>
+                                  <br/>
+                  <b><?php echo JText::_('COM_REQUEST_EMAIL');?></b><?php echo $request_item->user->email;?>
+                                  <br/>
                                     <br/>
-	                                <b><?php echo JText::_('COM_REQUEST_APPLICATION');?></b> <?php echo TibcoTibco::getAppName($request_item->application_id);?>
-								</div>
+                                  <b><?php echo JText::_('COM_REQUEST_APPLICATION');?></b> <?php echo TibcoTibco::getAppName($request_item->application_id);?>
+                </div>
 
                             </td>
                             <td>
-								<div>
-						  		</div>
+                <div>
+                  </div>
                             </td>
                             <td>
                               <?php if($request_item->status == 1):?>
                               <button
                             class="btn request-dialog" data-request='{"request_id":"<?php echo $request_item->id;?>","request_product":"<?php echo $request_item->product;?>",
                             "request_product_thumbnail":"<?php echo JURI::base().TibcoTibco::getProductImage($request_item->product_id);?>","request_plan_name":"<?php echo
-                            $request_item->plan->title;?>","request_dlimit":<?php echo $request_item->plan->fields[80];?>,"request_slimit":<?php echo
-                            $request_item->plan->fields[79];?>,"request_status":"<?php echo $request_item->status;?>","request_user_name":"<?php echo $request_item->user->name;?>","user_note":"<?php if($request_item->user_note && $request_item->user_note !== 'null'){echo addslashes($request_item->user_note);}else{echo '';}?>"}'>Cancel</button>
+                            $request_item->plan->title;?>","request_dlimit":<?php echo (int)$request_item->plan->fields[80];?>,"request_slimit":<?php echo
+                            (int)$request_item->plan->fields[79];?>,"request_status":"<?php echo $request_item->status;?>","request_user_name":"<?php echo $request_item->user->name;?>","user_note":"<?php if($request_item->user_note && $request_item->user_note !== 'null'){echo addslashes($request_item->user_note);}else{echo '';}?>"}'>Cancel</button>
                             <?php endif;?>
 
                             <?php if($request_item->status == 2):?>
@@ -456,8 +465,8 @@ if(!$isAdmin){
                             <?php if($request_item->status == 4):?>
                             <button class="btn request-dialog" data-request='{"request_id":"<?php echo $request_item->id;?>","request_product":"<?php echo $request_item->product;?>",
                             "request_product_thumbnail":"<?php echo JURI::base().TibcoTibco::getProductImage($request_item->product_id);?>","request_plan_name":"<?php echo
-                            $request_item->plan->title;?>","request_dlimit":<?php echo $request_item->plan->fields[80];?>,"request_slimit":<?php echo
-                            $request_item->plan->fields[79];?>,"request_status":"<?php echo $request_item->status;?>","request_user_name":"<?php echo $request_item->user->name;?>","user_note":"<?php if($request_item->user_note && $request_item->user_note !== 'null'){echo addslashes($request_item->user_note);}else{echo '';}?>"}'><?php echo JText::_('COM_REQUEST_CONFIRM_RESUBMIT');?></button>
+                            $request_item->plan->title;?>","request_dlimit":<?php echo (int)$request_item->plan->fields[80];?>,"request_slimit":<?php echo
+                            (int)$request_item->plan->fields[79];?>,"request_status":"<?php echo $request_item->status;?>","request_user_name":"<?php echo $request_item->user->name;?>","user_note":"<?php if($request_item->user_note && $request_item->user_note !== 'null'){echo addslashes($request_item->user_note);}else{echo '';}?>"}'><?php echo JText::_('COM_REQUEST_CONFIRM_RESUBMIT');?></button>
                             <?php endif;?>
                             <?php if($request_item->status == 3):?>
                               <a class="btn btn-primary" href="<?php echo JURI::base().'index.php/support';?>"><?php echo JText::_('COM_REQUEST_CONTACT_ADMINISTRATOR_BUTTON');?></a>
@@ -754,16 +763,19 @@ if(!$isAdmin){
           </div>
           <div>
             <div class="span4" style="margin-right:10px;">
-				<p></p>
-              <div class="span8 request-form-detail-box">
+        <p></p>
+              <div class="span8 request-form-detail-box" style="height:218px">
                 <div class="request-form-product">
                   <img class="request-product-thumbnail" alt=""/>
                   <span class="request-product-title"></span>
                 </div>
                 <div class="plan-block">
                   <b style="width:50px;display:inline-block;"><?php echo JText::_('COM_REQUEST_PLAN');?>:&nbsp;</b><span class="request-plan-title"></span><br/>
-                  <span style="width:50px;display:inline-block;"></span><span class="request-plan-dlimit"></span><?php echo JText::_('COM_REQUEST_PLAN_DLIMIT');?><br/>
-                  <span style="width:50px;display:inline-block;"></span><span class="request-plan-slimit"></span><?php echo JText::_('COM_REQUEST_PLAN_SLIMIT');?>
+                    <span style="width:50px;display:inline-block;"></span><span class="request-plan-dlimit"></span><?php echo ' calls per '.substr($request_item->plan->fields[80]
+                            , strpos($request_item->plan->fields[80],'/')+1);?><br/>
+                  <span style="width:50px;display:inline-block;"></span><span class="requestSlimit"><span class="request-plan-slimit"></span><?php echo ' calls per '.substr($request_item->plan->fields[79]
+, strpos($request_item->plan->fields[79],'/')+1);?></span>
+                  <span style="width:50px;display:inline-block;"></span><span class="request-plan-dlimit"></span><?php echo $concurrent_calls; ;?><br/>
                 </div>
 
               </div>
@@ -794,9 +806,9 @@ if(!$isAdmin){
                     <div style="display:none;margin-right:5px;" class="alert alert-error"></div>
                   </div>
               </div>
-              <div class="control-group request-note-block">
+              <div class="control-group request-note-block" >
                 <label for=""><?php echo JText::_('COM_REQUEST_NOTE_COMMENT_LABEL');?></label>
-                <textarea name="user_note" id=""></textarea>
+                <textarea name="user_note" id="" style="height:205px"></textarea>
                 <div class="control-group" style="text-align:right;">
                   <input type="hidden" name="option" value="com_request">
                   <input type="hidden" name="id" value="">
@@ -852,8 +864,8 @@ if(!$isAdmin){
         var task = '';
         $(obj).find(".request-product-thumbnail").attr("src",data.request_product_thumbnail);
         $(obj).find(".request-product-title").text(data.request_product);
-		var tipsStr = $(obj).find(".request-tips").html();
-		$(obj).find(".request-tips").html(tipsStr.replace(/Product pro/,data.request_product));
+    var tipsStr = $(obj).find(".request-tips").html();
+    $(obj).find(".request-tips").html(tipsStr.replace(/Product pro/,data.request_product));
         $(obj).find(".request-plan-title").text(data.request_plan_name);
         $(obj).find(".request-plan-dlimit").text(data.request_dlimit);
         $(obj).find(".request-plan-slimit").text(data.request_slimit);
@@ -899,29 +911,29 @@ if(!$isAdmin){
       }
 
       $("#adminForm").prependTo("#sub-ctl");
-	  $("#adminForm").css({
-		  "height":"35px",
-		  "line-height":"35px",
-		  "background-color":"white",
-		  "padding":"0px",
-		  "margin":"0px",
-		  "margin-right":"1px",
-		  "box-shadow":"none"
-	  });
-	  $("#adminForm").find(".search-form").css({
-		  "padding":"0px",
-		  "margin":"0px",
-		  "margin-right":"10px",
-		  "float":"none"
-	  });
-	  $("#adminForm").find(".order-by").css({
-		  "padding":"0px",
-		  "margin":"0px"
-	  });
-	  $("#adminForm").find(".order-by a.dropdown-toggle").css({
-		  "margin":"0px",
-		  "height":"30px"
-	  });
+    $("#adminForm").css({
+      "height":"35px",
+      "line-height":"35px",
+      "background-color":"white",
+      "padding":"0px",
+      "margin":"0px",
+      "margin-right":"1px",
+      "box-shadow":"none"
+    });
+    $("#adminForm").find(".search-form").css({
+      "padding":"0px",
+      "margin":"0px",
+      "margin-right":"10px",
+      "float":"none"
+    });
+    $("#adminForm").find(".order-by").css({
+      "padding":"0px",
+      "margin":"0px"
+    });
+    $("#adminForm").find(".order-by a.dropdown-toggle").css({
+      "margin":"0px",
+      "height":"30px"
+    });
 
       $(".termsToggle").click(function(e) {
         $(this).parent().find(".termsBlock").toggle();
@@ -930,7 +942,12 @@ if(!$isAdmin){
 
       $(".request-dialog").on("click",function(){
         $(this).addClass("clicked");
+        var requestData = jQuery.parseJSON(jQuery('.request-dialog').attr('data-request'));
+        if(requestData.request_slimit == 0){
+           jQuery('.requestSlimit').remove();
+        }
         $("#request-plan-form").modal('show');
+
       });
 
       $("#request-plan-form").on("show",function(){
@@ -1010,26 +1027,26 @@ if(!$isAdmin){
         return false;
       });
 
-	  //toggle controls for tabs
-	  $(document).on('click','#subscriptions-tab .nav-tabs li a',function(){
-		  var hrefVal = $(this).attr('href');
-		  if (hrefVal == '#subscriptions-request-list-container') {
-			  $('#sub-ctl').hide();
-			  $('#req-ctl').show();
-		  }else if(hrefVal == '#subscriptions-subscripiton-list-container'){
-			  $('#sub-ctl').show();
-			  $('#req-ctl').hide();
-		  }
-	  });
+    //toggle controls for tabs
+    $(document).on('click','#subscriptions-tab .nav-tabs li a',function(){
+      var hrefVal = $(this).attr('href');
+      if (hrefVal == '#subscriptions-request-list-container') {
+        $('#sub-ctl').hide();
+        $('#req-ctl').show();
+      }else if(hrefVal == '#subscriptions-subscripiton-list-container'){
+        $('#sub-ctl').show();
+        $('#req-ctl').hide();
+      }
+    });
 
-	  //change background-color for requests
-	  $(document).on('click','.accordion-heading',function(){
-		  if ($(this).next(".accordion-body").height()==0) {
-		  	$(this).css("background-color","#fffef3");
-		  }else {
-		  	$(this).css("background-color","white");
-		  }
-	  });
+    //change background-color for requests
+    $(document).on('click','.accordion-heading',function(){
+      if ($(this).next(".accordion-body").height()==0) {
+        $(this).css("background-color","#fffef3");
+      }else {
+        $(this).css("background-color","white");
+      }
+    });
     });
 
   })(jQuery);

@@ -40,11 +40,13 @@ if(isset($item->fields[7])) {
             echo '<div class="inline-doc-content">'.$item->fields[117].'</div>';
             echo "</div>";
 			foreach($apis as $key => $api):
-                echo "<div class=\"inline-doc\">";
-				echo '<h2><a>'.$api->title.'</a></h2>';
-                $tmp = json_decode($api->fields,true);
-				echo '<div class="inline-doc-content">'.$tmp[44].'</div>';
-                echo "</div>";
+                if($api->published == 1){
+                    echo "<div class=\"inline-doc\">";
+                    echo '<h2><a>'.$api->title.'</a></h2>';
+                    $tmp = json_decode($api->fields,true);
+                    echo '<div class="inline-doc-content">'.$tmp[44].'</div>';
+                    echo "</div>";
+                }
             endforeach
     ?>
     </div>
@@ -67,10 +69,12 @@ if(isset($item->fields[7])) {
             echo "</div>";
             echo "</div>";
 			foreach($apis as $key => $api):
-                echo "<div class=\"download-doc\">";
-                $tmp = json_decode($api->fields,true);
-                echo '<h2><a>'.$api->title.'</a></h2>';
-                echo "<div>";
+                if($api->published == 1) {
+                    echo "<div class=\"download-doc\">";
+                    $tmp = json_decode($api->fields, true);
+                    echo '<h2><a>' . $api->title . '</a></h2>';
+                    echo "<div>";
+                }
         // Attached documentation file goes here.
 				$attachments = $tmp[24];
 				foreach($attachments as $k => $attach):
@@ -109,7 +113,7 @@ if(isset($item->fields[7])) {
                         $filename = $attach['realname'];
                     }
                     $doctype = DeveloperPortalApi::getDocType($filename);
-					echo '<a class="download-link" target="blank" href="uploads/apiDocumentation/'.$attach['fullpath'].'"><div><div class="doctype-'.$doctype.'"></div><span class="doc-filename">'.$filename.'</span></div></a>';
+					echo '<a class="download-link" href="index.php?option=com_cobalt&task=ajaxmore.getFacadeWSDL&file_id='. $attach['id'] .'"><div><div class="doctype-'.$doctype.'"></div><span class="doc-filename">'.$filename.'</span></div></a>';
                     echo "<span class=\"download-desc\">".$attach['description']."</span>";
 				endforeach;
         }

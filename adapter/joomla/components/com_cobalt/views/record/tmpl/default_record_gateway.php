@@ -22,11 +22,12 @@ $author = array();
 $details = array();
 $started = FALSE;
 $i = $o = 0;
-if(JComponentHelper::getParams('com_emails')->get('enable_archiving_objects') == 1) {
-  $tasks_to_hide = DeveloperPortalApi::isReferencedByDownstreamSubs($this->item->id, "gateway") ? array(DeveloperPortalApi::TASK_ARCHIVE) : array();
+if(JComponentHelper::getParams('com_emails')->get('enable_deleting_objects') == 1) {
+  $tasks_to_hide = array();
 } else {
-  $tasks_to_hide = array(DeveloperPortalApi::TASK_ARCHIVE);
+  $tasks_to_hide = array(DeveloperPortalApi::TASK_DELETE);
 }
+$parent_env_id = TibcoTibco::getEnvIdByGatewayId($this->item->id);
 /**
  * the comment line is for disabled deleting button
  */
@@ -45,6 +46,11 @@ if(JComponentHelper::getParams('com_emails')->get('enable_archiving_objects') ==
 // 	array_splice($item->controls,5,1);
 // }
 ?>
+<script type="text/javascript">
+
+var parent_env_id = <?php echo $parent_env_id; ?>;
+
+</script>
 <style>
 	.dl-horizontal dd {
 		margin-bottom: 10px;

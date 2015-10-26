@@ -23,10 +23,10 @@ $details = array();
 $started = FALSE;
 $i = $o = 0;
 $create_proxy_for_api = -1;
-if(JComponentHelper::getParams('com_emails')->get('enable_archiving_objects') == 1) {
+if(JComponentHelper::getParams('com_emails')->get('enable_deleting_objects') == 1) {
   $tasks_to_hide = array();
 } else {
-  $tasks_to_hide = array(DeveloperPortalApi::TASK_ARCHIVE);
+  $tasks_to_hide = array(DeveloperPortalApi::TASK_DELETE);
 }
 foreach($this->item->fields_by_groups[null] AS $field) {
     if($field->id == 145) {

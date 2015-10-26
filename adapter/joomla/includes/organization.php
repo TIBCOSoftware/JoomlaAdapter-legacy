@@ -98,8 +98,8 @@ class CreateOrganizationApi {
         $organization = new stdClass();
         $app = JFactory::getApplication();
         $contact = new stdClass();
-        $contact->address = (object) array("country"=>"US","state"=>"CA","city"=>"Palo Alto","zip"=>"94304","address1"=>"3303 Hillview Ave","address2"=>"");
-        $contact->contacts = (object) array("tel"=>"000-000-0000");
+        $contact->address = (object) array("country"=>"US","state"=>$options['state'],"city"=>$options['city'],"zip"=>$options['zipcode'],"address1"=>$options['street'],"address2"=>"");
+//         $contact->contacts = (object) array("tel"=>"000-000-0000");
 
         $fields = new stdClass();
 
@@ -112,7 +112,7 @@ class CreateOrganizationApi {
         
         $fields->{'17'}   =   '';
         $fields->{'19'}    =   $user->get('email');
-        $fields->{'20'}    =   null;
+        $fields->{'20'}    =   $contact;
         $fields->{'41'}    =   null;
         $fields->{'48'}    =   null;
         $fields->{'43'}    =   null;

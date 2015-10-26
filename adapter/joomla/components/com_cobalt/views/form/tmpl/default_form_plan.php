@@ -85,13 +85,11 @@ $k = 0;
 }
 	
 </style>
-
 <div class="form-horizontal">
 <?php if(in_array($params->get('tmpl_params.form_grouping_type', 0), array(1, 4))):?>
 	<div class="tabbable<?php if($params->get('tmpl_params.form_grouping_type', 0) == 4) echo ' tabs-left' ?>">
 		<ul class="nav nav-tabs" id="tabs-list">
 			<li><a href="#tab-main" data-toggle="tab"><?php echo JText::_($params->get('tmpl_params.tab_main', 'Main'));?></a></li>
-
 			<?php if(isset($this->sorted_fields)):?>
 				<?php foreach ($this->sorted_fields as $group_id => $fields) :?>
 					<?php if($group_id == 0) continue;?>
@@ -273,8 +271,9 @@ $k = 0;
 
 				<div class="controls<?php if(in_array($field->params->get('core.label_break'), array(1,3))) echo '-full'; ?><?php echo (in_array($field->params->get('core.label_break'), array(1,3)) ? ' line-brk' : NULL) ?><?php echo $field->fieldclass  ?>">
 					<div id="field-alert-<?php echo $field->id?>" class="alert alert-error" style="display:none"></div>
-					<?php echo $field->result; ?>
+					<?php echo $field->result; ?>					
 				</div>
+
 			</div>
 		<?php endforeach;?>
 		<?php unset($this->sorted_fields[0]);?>
@@ -301,6 +300,7 @@ $k = 0;
 
 	<?php if(isset($this->sorted_fields)):?>
 		<?php foreach ($this->sorted_fields as $group_id => $fields) :?>
+
 			<?php $started = true;?>
 			<?php group_start($this, $this->field_groups[$group_id]['name'], 'tab-'.$group_id);?>
 			<?php if(!empty($this->field_groups[$group_id]['descr'])):?>
@@ -406,64 +406,73 @@ $k = 0;
 	<?php elseif(in_array($params->get('tmpl_params.form_grouping_type', 0), array(2))):?>
 		jQuery('#tab-main').collapse('show');
 	<?php endif;?>
-	
 	Joomla.beforesubmitform = function(fCallback, fErrorback) {
 		  var plan_title = jQuery("#jform_title").val().trim();
 		  var product_id = jQuery("input[name='jform[fields][53]']").val();
 		  var plan_id = jQuery("#adminForm input[name='id']").val();
-		  var quota_limit= parseInt(jQuery("input[name='jform[fields][80]']").val());
-		  var rate_limit= parseInt(jQuery("input[name='jform[fields][79]']").val());
-
-		  if(quota_limit < rate_limit){
-			  var msg= '<?php echo JText::_("RATE_LIMIT_CANT_EXCEED_QUOTA_LIMIT"); ?>';
+		  var quota_limit= jQuery("#field_80").val();
+          var rate_limit= jQuery("#field_79").val();
+          if(quota_limit==""){
+          	  var msg= '<?php echo JText::_('PLAN_REQUEST_INVALID_DLIMIT'); ?>';
 			  fErrorback(msg);
+			}else{
+			  if(parseInt(quota_limit, 10) < parseInt(rate_limit, 10)){
+				  var msg= '<?php echo JText::_("RATE_LIMIT_CANT_EXCEED_QUOTA_LIMIT"); ?>';
+				  fErrorback(msg);
 
-		  }else{
-			
-		  var data = {};
-			data.options = 'com_cobalt';
-			data.task = 'ajaxmore.validatePlanTitle';
-			data.plan_title = plan_title;
-			data.product_id = product_id;
-			data.plan_id = plan_id;
-		
-			jQuery.ajax({
-			  url: document.location.pathname,
-			  type: "POST",
-			  dataType: 'json',
-			  data: data
-			}).done(function(rv){
-			 if (rv.success == "1") {
-			    <?php if ($this->item->id): ?>
-			  	var originRate = <?php echo DeveloperPortalApi::valueForKeyFromJson($this->item->fields,79,$this->item->id);?>;
-			  	var originQuota = <?php echo DeveloperPortalApi::valueForKeyFromJson($this->item->fields,80,$this->item->id);?>;
-				var originPlanType = '<?php echo DeveloperPortalApi::valueForKeyFromJson($this->item->fields,131);?>';
-				var nowRate = jQuery("#field_79").val();
-				var nowQuota = jQuery("#field_80").val();
-				var nowPlanType = jQuery("#field_131").val();
-				var paraObj = {};
-				if (originRate !== parseInt(nowRate,10)) {
-				  paraObj[79] = parseInt(originRate,10);
-			    }
-
-				if (originQuota !== parseInt(nowQuota,10)) {
-				  paraObj[80] = parseInt(originQuota,10);
-			    }
-				
-				if (originPlanType !== nowPlanType) {
-				  paraObj[131] = '"'+originPlanType+'"';
-			    }
-
-				if (!jQuery.isEmptyObject(paraObj)) {
-				  window.oUpdatedFields = paraObj;
-			    }	
-				<?php endif ?>
-
-				fCallback();
 			  }else{
-			    fErrorback(rv.error);
-				}
-			});	
+				
+			  var data = {};
+				data.options = 'com_cobalt';
+				data.task = 'ajaxmore.validatePlanTitle';
+				data.plan_title = plan_title;
+				data.product_id = product_id;
+				data.plan_id = plan_id;
+				jQuery.ajax({
+				  url: document.location.pathname,
+				  type: "POST",
+				  dataType: 'json',
+				  data: data
+				}).done(function(rv){
+				 if (rv.success == "1") {
+				    <?php if ($this->item->id): ?>
+				  	var originRate = "<?php echo DeveloperPortalApi::valueForKeyFromJson($this->item->fields,79,$this->item->id);?>".split('/')[0];
+				  	var originQuota = "<?php echo DeveloperPortalApi::valueForKeyFromJson($this->item->fields,80,$this->item->id);?>".split('/')[0];
+					var originPlanType = '<?php echo DeveloperPortalApi::valueForKeyFromJson($this->item->fields,131);?>';
+                    var originConcurrentLimit = "<?php echo DeveloperPortalApi::valueForKeyFromJson($this->item->fields,152,$this->item->id);?>".split('/')[0];
+                    var nowRate = jQuery("#field_79").val();
+					var nowQuota = jQuery("#field_80").val();
+                    var nowPlanType = jQuery("#field_131").val();
+                    var nowConcurrentLimit = jQuery("#field_152").val();
+
+					var paraObj = {};
+					if (originRate !== parseInt(nowRate,10)) {
+					  paraObj[79] = parseInt(originRate,10);
+				    }
+
+					if (originQuota !== parseInt(nowQuota,10)) {
+					  paraObj[80] = parseInt(originQuota,10);
+				    }
+					
+					if (originPlanType !== nowPlanType) {
+					  paraObj[131] = '"'+originPlanType+'"';
+				    }
+                    if (originConcurrentLimit !== nowConcurrentLimit) {
+                      paraObj[152] = '"'+originConcurrentLimit+'"';
+                    }
+
+
+                     if (!jQuery.isEmptyObject(paraObj)) {
+					  window.oUpdatedFields = paraObj;
+				    }	
+					<?php endif ?>
+
+					fCallback();
+				  }else{
+				    fErrorback(rv.error);
+					}
+				});	
+			}
 		}};
 	
 </script>

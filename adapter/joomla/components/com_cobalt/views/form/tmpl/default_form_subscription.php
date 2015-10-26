@@ -497,6 +497,7 @@ if($orgID){
 											if(!data.success){
 												DeveloperPortal.storeErrMsgInCookie(['<?php echo JText::_("EMAIL_RETURN_NOTES_5");?>']);
 											}
+
 											window.location.href = sRedirectUrl;
 										}).fail(function(){
 										    DeveloperPortal.storeErrMsgInCookie(['<?php echo JText::_("EMAIL_RETURN_NOTES_5");?>']);
@@ -507,7 +508,6 @@ if($orgID){
 							      			var data = {};
 							      			data.product_id = $("#parent_list114 > .list-item").eq(0).attr("rel");
 							      			data.subscription_id = getRecordIdFromRedirectURI(sRedirectUrl);
-
 						      			  <?php if($productID && $sub_uid):?>
 							      				data.requester_uid = '<?php echo $sub_uid;?>';
 							      			<?php else:?>
@@ -545,6 +545,12 @@ if($orgID){
 		function isEndDateValid() {
 		    var sStartDate = $('input[name="jform[fields][71][]"]').val(),
 		        sEndDate = $('input[name="jform[fields][72][]"]').val(), rv = false;
+
+		    if(typeof(sEndDate) ==="undefined"){
+		    	sEndDate = "2038-01-01";
+				jQuery('#field_container72').append(jQuery('<input type="hidden" name="jform[fields][72][]" value="">'));
+				jQuery('input[name="jform[fields][72][]"]').val(sEndDate);
+		    }
 	        if(sStartDate && sEndDate) {
 	            try {
 	                if(Date.parse(sEndDate).getTime() >= Date.parse(sStartDate).getTime()) {

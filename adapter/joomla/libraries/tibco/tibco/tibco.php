@@ -1,6 +1,6 @@
 <?php
 
-/* @copyright Copyright © 2013, TIBCO Software Inc. All rights reserved.
+/* @copyright Copyright © 2013-2015, TIBCO Software Inc. All rights reserved.
  * @license GNU General Public License version 2; see LICENSE.txt
  */
 
@@ -286,6 +286,23 @@ class TibcoTibco {
     	return json_decode($ruleJson->params,true);
     }
 
+    /**
+     * Get the id of the environment to which the gateway is attached.
+     *  
+     * @author Kevin Li<huali@tibco-support.com>
+     * @param int $gateway_id The id of the gateway of which the parent environment is to be retrieved.
+     * @return int The id of the environment to which the gateway is attached.
+     */
+    public static function getEnvIdByGatewayId($gateway_id) {
+    	$ret = 0;
+    	$db = JFactory::getDbo();
+    	$sql = "SELECT * FROM `#__js_res_record_values` WHERE field_id=16 AND record_id=" . $gateway_id;
+    	$db->setQuery($sql);
+    	if($result = $db->loadAssoc()) {
+    		$ret = $result["field_value"];
+    	}
+    	return $ret;
+    }
     
     /**
      * Tell whether an environment is managed by gateway.
@@ -306,4 +323,238 @@ class TibcoTibco {
         }
         return $ret;
     }
+
+    /**
+     * Delete all records when the related record is being delete
+     * 
+     * @author Vivian Ma<xima@tibco-support.com>
+     * @param integer $n_parent_type_id The type id of related record.
+     * @param integer $n_parent_record_id The type value of the field.
+     * @return boolean True if the records are deleted. False otherwise.
+     */
+    public static function deleteRelatedRecords($n_parent_record_id, $n_parent_type_id, $user_id) {
+        require_once JPATH_COMPONENT . "/controllers/records.php";
+        $ret = TRUE;
+        switch ($n_parent_type_id) {
+            case 1:
+                $n_type_id = 7;
+                $n_field_id = 53;
+                break;
+            case 2:
+                $n_type_id = 6;
+                $n_field_id = 30;
+                break;
+            case 4:
+                $n_type_id = 3;
+                $n_field_id = 16;
+                break;
+            case 5:
+                $n_type_id = 8;
+                $n_field_id = 47;
+                break;
+            case 8:
+                if(isset($user_id) && !empty($user_id)){
+                    $ret = TibcoTibco::deleteUser($user_id);
+                }
+                break;
+        }
+        if(isset($n_type_id) && isset($n_field_id)){      
+            $app  = JFactory::getApplication();
+            $controller = new CobaltControllerRecords();
+            $db = JFactory::getDbo();              
+            $sql = "SELECT record_id FROM `#__js_res_record_values` WHERE field_id= ". $n_field_id ." AND field_value=" . $n_parent_record_id ." AND type_id=" . $n_type_id ;
+            $db->setQuery($sql);
+            if($result = $db->loadObjectList()) {
+                foreach ($result as $record) {
+                    $app->input->set('id', $record->record_id);
+                    $ret = $ret && $controller->delete();
+                }
+            }
+        }
+        return $ret;
+    }
+
+    /**
+     * Used for deleting user.
+     * 
+     * @author Vivian Ma<xima@tibco-support.com>
+     * @param integer $user_id The id of the user.
+     * @return boolean True if the user are deleted. False otherwise.
+     */
+    public static function deleteUser($user_id){
+        $ret = FALSE;
+        $db = JFactory::getDbo();
+        if(!empty($user_id)){
+
+            $sql1 = 'DELETE FROM `#__users` WHERE `id` = '.$user_id;
+            $db->setQuery($sql1);
+            $db->execute();
+
+            $sql2 = 'DELETE FROM `#__user_profiles` WHERE `user_id` = '.$user_id;
+            $db->setQuery($sql2);
+            $db->execute();
+
+            $sql3 = 'DELETE FROM `#__user_usergroup_map` WHERE `user_id` = '.$user_id;
+            $db->setQuery($sql3);
+            $db->execute();            
+
+            $sql4 = 'DELETE FROM `#__user_keys` WHERE `user_id` = '.$user_id;
+            $db->setQuery($sql4);
+            $db->execute();
+
+            $sql5 = 'DELETE FROM `#__user_notes` WHERE `user_id` = '.$user_id;
+            $db->setQuery($sql5);
+            $db->execute();
+            $ret = TRUE;
+        }
+        return $ret;
+    }
+
+    /**
+     * Used for deleting a record.
+     * 
+     * @author Vivian Ma<xima@tibco-support.com>
+     * @param integer $id The id of the record.
+     * @param integer $type_id The type id of the record.
+     * @return boolean True if the user are deleted. False otherwise.
+     */
+    public static function deleteRecord($id, $type_id){
+        $result = FALSE;
+        require_once JPATH_COMPONENT . "/controllers/records.php";
+        if($type_id==8){
+            $user_id = DeveloperPortalApi::getUserIdByProfileId($id);
+        }
+        $controller = new CobaltControllerRecords();
+        $result = $controller->delete();
+        TibcoTibco::deleteRelatedRecords($id,$type_id,$user_id);
+        return $result;
+
+    }
+
+    public static function getWSDLSubfolder() {
+
+        $ret = '';
+        $db = JFactory::getDbo();
+        $sql = 'SELECT params FROM #__js_res_fields WHERE id=127';
+        $db->setQuery($sql);
+
+        if($result = $db->loadObject()) {
+
+            $wsdl_params = json_decode($result->params);
+            $ret = $wsdl_params->params->subfolder;
+        }
+
+        return $ret;
+    }
+
+    /**
+     * Find the WSDL file with the given file id and replace the value of the "location" properties of all "address"
+     * elements with the base path of the facade environment of that API. Then return the modified content.
+     *
+     * @author Kevin Li<huali@tibco-support.com>
+     * @param mixed $file_record An object containing the information of the file record.
+     * @param string $subfolder The value of the "subfoler" property set in the WSDL file field setting of the Cobalt
+     * back-end.
+     * @return string The modified content of the WSDL file or empty string if the file doesn't exist or doesn't
+     * readable.
+     */
+    public static function replaceLocationsInWSDL($file_record) {
+
+        $ret = "";
+
+        if($file_record != null) {
+
+            $subfolder = TibcoTibco::getWSDLSubfolder();
+            $file_path = JPATH_BASE . "/uploads/" . $subfolder . "/" . $file_record->fullpath;
+            $regexp = '/(location=")[^\/]*\/\/[^\/]+(\/)/i';
+
+            if (is_readable($file_path)) {
+
+                $file = fopen($file_path, "r");
+                $contents = fread($file, filesize($file_path));
+                fclose($file);
+
+                $facade_basepath = TibcoTibco::getFacadeBasePath($file_record->record_id);
+
+                $ret = preg_replace($regexp, '${1}' . $facade_basepath . '${2}', $contents);
+            }
+        }
+
+        return $ret;
+    }
+
+    /**
+     * Get the file record with the provided id in the database.
+     *
+     * @author Kevin Li<huali@tibco-support.com>
+     * @param int $file_id The id of the file to be found.
+     * @return mixed An object containing the information about the file record or an empty object if nothing
+     * was found.
+     */
+    public static function getFileById($file_id) {
+
+        $db = JFactory::getDbo();
+        $sql = "SELECT * FROM #__js_res_files WHERE id=" . $file_id;
+        $query = $db->setQuery($sql);
+
+        if($result = $query->loadObject()) {
+            return $result;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Insert the string "facade" in the given file name.
+     *
+     * @param string $filename The file name to be inserted.
+     * @return string A new file name with the string "facade" inserted right before the extension and delimited by dots.
+     */
+    public static function insertFacadeInFileName($filename) {
+
+        $array_filename = explode('.', $filename);
+        $extension = array_pop($array_filename);
+        array_push($array_filename, 'facade');
+        array_push($array_filename, $extension);
+        return implode('.', $array_filename);
+    }
+
+    /**
+     * Get the base base path of the facade environment of an API.
+     *
+     * @author Kevin Li<huali@tibco-support.com>
+     * @param int $api_id The id of the API.
+     * @return string The value of the base path of the facade environment of the API whose id equals the one in the
+     * argument or an empty string if nothing was found.
+     */
+    private static function getFacadeBasePath($api_id) {
+
+        $ret = '';
+
+        $db = JFactory::getDbo();
+        $sql = 'SELECT * FROM openapi_js_res_record_values WHERE field_id=14 AND record_id IN (SELECT record_id FROM openapi_js_res_record_values WHERE field_id=25 AND field_value=' . $api_id . ')';
+        $db->setQuery($sql);
+
+        if($result = $db->loadObject()) {
+            $ret = $result->field_value;
+        }
+
+        return $ret;
+    }
+
+    /**
+     * @author Crystal Liu<yunliu@tibco-support.com>
+     * @return The fields.
+     */
+    public static function getFields($id) {
+
+        $db = JFactory::getDbo();
+        $sql = 'SELECT fields FROM #__js_res_record WHERE id=' . $id . '';
+        $db->setQuery($sql);
+        $result = $db->loadObject();
+        return $result;
+    }
+
+
+
 }

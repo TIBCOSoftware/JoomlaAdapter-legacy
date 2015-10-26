@@ -2,7 +2,7 @@
 /*
  * $HeadURL: http://svn.tibco.com/asg/branches/1.0/runtime/functions/asg_functions/src/main/java/com/tibco/asg/asg_functionsVersion.tag $ $Revision: 47285 $ $Date: 2012-01-20 15:54:53 -0800 (Fri, 20 Jan 2012) $
  *
- * Copyright (c) 2013-2015, TIBCO Software Inc. All rights reserved.
+ * Copyright (c) 2013-2014, TIBCO Software Inc. All rights reserved.
  *
  * GNU General Public License version 2; see LICENSE.txt
  *

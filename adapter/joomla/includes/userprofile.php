@@ -209,7 +209,7 @@ class CreateUserprofileApi {
         $fields->{'101'}   =   $user->username;
         $fields->{'102'}   =   $user->email;
         $fields->{'113'}   =   self::getUuid('');
-        $fields->{'121'}   =   '';
+        $fields->{'121'}   =   $options['phone-no'] ? $options['phone-no']:'';
 
 
         $userprofile->id          =   null;

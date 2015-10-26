@@ -27,7 +27,7 @@ class UsersControllerUser extends UsersController
 	 */
 	public function login()
 	{
-		JSession::checkToken('post') or jexit(JText::_('JInvalid_Token'));
+		JSession::checkToken('post') or jexit(JText::_('JINVALID_TOKEN'));
 
 		$app    = JFactory::getApplication();
 		$input  = $app->input;
@@ -39,7 +39,7 @@ class UsersControllerUser extends UsersController
 		// Validate that it is internal.
 		if (!JUri::isInternal($data['return']))
 		{
-			$data['return']='';
+			$data['return'] = '';
 		}
 		$data['username']  = $input->$method->get('username', '', 'USERNAME');
 		$data['password']  = $input->$method->get('password', '', 'RAW');
@@ -64,7 +64,6 @@ class UsersControllerUser extends UsersController
 		$credentials['username']  = $data['username'];
 		$credentials['password']  = $data['password'];
 		$credentials['secretkey'] = $data['secretkey'];
-		session_regenerate_id();
         JSession::getFormToken(true);
 		// Perform the log in.
 		if (true === $app->login($credentials, $options))
@@ -96,7 +95,7 @@ class UsersControllerUser extends UsersController
 	 */
 	public function logout()
 	{
-		JSession::checkToken('request') or jexit(JText::_('JInvalid_Token'));
+		JSession::checkToken('request') or jexit(JText::_('JINVALID_TOKEN'));
 
 		$app = JFactory::getApplication();
 

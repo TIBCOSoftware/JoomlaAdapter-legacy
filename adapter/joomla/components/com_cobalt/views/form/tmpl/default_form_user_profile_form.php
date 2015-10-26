@@ -568,7 +568,7 @@ Joomla.submitform = function(task) {
         </div>
         <?php if($userprofile): ?>
         <div class="control-group" id="asg-userprofile-oldPwd">
-              <label class="control-label"> <span class="pull-left" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>Current Password</label>
+              <label class="control-label"> <span class="pull-left" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>Current password</label>
               <div class="controls ">
                 <div style="display:none" class="alert alert-error"></div>
                   <input type="password" size="30" class="validate-password" autocomplete="off" value="" id="jform_oldPassword" name="jform[oldPassword]" aria-invalid="false">
@@ -577,7 +577,7 @@ Joomla.submitform = function(task) {
         <?php endif; ?>
         <div class="control-group" id="asg-userprofile-pwd1">
 
-              <label class="control-label"> <span class="pull-left" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>Password</label>
+              <label class="control-label"> <span class="pull-left" rel="tooltip" data-original-title="<?php echo JText::_('CREQUIRED')?>"><?php echo HTMLFormatHelper::icon('asterisk-small.png');  ?></span>New password</label>
               <div class="controls ">
                 <div style="display:none" class="alert alert-error"></div>
                   <input type="password" size="30" class="validate-password" autocomplete="off" value="" id="jform_password1" name="jform[password1]" aria-invalid="false">

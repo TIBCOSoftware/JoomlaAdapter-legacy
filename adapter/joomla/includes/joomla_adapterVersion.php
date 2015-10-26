@@ -2,7 +2,7 @@
 /*
  * $HeadURL: http://svn.tibco.com/asg/branches/1.0/runtime/functions/asg_functions/src/main/java/com/tibco/asg/asg_functionsVersion.tag $ $Revision: 47285 $ $Date: 2012-01-20 15:54:53 -0800 (Fri, 20 Jan 2012) $
  *
- * Copyright (c) 2013-2015, TIBCO Software Inc. All rights reserved.
+ * Copyright (c) 2013-2014, TIBCO Software Inc. All rights reserved.
  *
  * GNU General Public License version 2; see LICENSE.txt
  *
@@ -35,9 +35,9 @@ class joomla_adapterVersion
 	static $asterisks       = "**********************************************************************";
 	static $copyright       = "Copyright(c) 2004-2015 TIBCO Software Inc. All rights reserved.";
 	static $line_separator  = "\n"; //In Java we use: System.getProperty("line.separator");
-	static $version = "2.1.1";
-	static $build = "110";
-	static $buildDate = "2015-07-22";
+	static $version = "2.2.0";
+	static $build = "095";
+	static $buildDate = "2015-10-22";
 	static $company = "TIBCO Software Inc.";
 	static $component = "Adapter Code for TIBCO API Exchange and Joomla!";
 	static $license = "";

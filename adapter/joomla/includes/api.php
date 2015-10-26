@@ -28,7 +28,7 @@ class DeveloperPortalApi {
 
     public static function list_controls($ctrls, $tasks_to_hide = array(), $rec_id = 0, $type_id = 0) {
     	$out = "";
-      array_push($tasks_to_hide, DeveloperPortalApi::TASK_DELETE, DeveloperPortalApi::TASK_PUBLISH, DeveloperPortalApi::TASK_UNPUBLISH, DeveloperPortalApi::TASK_HIDE);
+      array_push($tasks_to_hide, DeveloperPortalApi::TASK_ARCHIVE, DeveloperPortalApi::TASK_PUBLISH, DeveloperPortalApi::TASK_UNPUBLISH, DeveloperPortalApi::TASK_HIDE);
 	  // Change associated records message based on type
       switch ($type_id)
       {
@@ -41,15 +41,16 @@ class DeveloperPortalApi {
       		break;
       }
         if(isset($ctrls)) {
-        	foreach($ctrls as $key => $link) {
+
+            foreach($ctrls as $key => $link) {
         		if(is_array($link)) {
         			$out .= "<li class=\"dropdown-submenu\">" . $key;
         			$out .= "<ul class=\"dropdown-menu\">";
         			$out .= DeveloperPortalApi::list_controls($link);
         			$out .= "</ul></li>";
-        		} else {
+                } else {
         		    if(!DeveloperPortalApi::hide_link($link, $tasks_to_hide)) {
-        		        if(strpos($link, DeveloperPortalApi::TASK_ARCHIVE) != FALSE) {
+        		        if(strpos($link, DeveloperPortalApi::TASK_DELETE) != FALSE) {
                         if(in_array($type_id, array(5)) && self::getObejectCountsAttachedToCotentType($type_id, $rec_id))
                         {
                            $out .= "<li>" . preg_replace('/href="[^"]+"/', 'href="javascript:void(0)" onclick="Joomla.showError([\''.JText::_($can_not_delete_msg).'\']);return false;"', $link) . "</li>";
@@ -727,26 +728,44 @@ where type_id=10)');
      * @param int rec_id The id of the record to be archived.
      * @return boolean True if the operation is successful. False otherwise.
      */
-    public static function archiveRecord($rec_id) {
-    	if(isset($rec_id)) {
-    		$db = JFactory::getDbo();
-        $sql = "SELECT title from #__js_res_record WHERE id=" . $rec_id;
-        $db->setQuery($sql);
-        if($result = $db->loadResult()) {
-          $newTitle = $result . '_' . strval(time());
-          $sql = "UPDATE #__js_res_record SET published=2,title='" . $newTitle . "' WHERE id=" . $rec_id;
-          $db->setQuery($sql);
-          if(!$db->execute()) {
-            return false;
-          } else {
-            return true;
-          }
+    public static function archiveRecord($rec_id,$type_id) {
+        if(isset($rec_id)) {
+            switch ($type_id) {
+                case 1:
+                    $field_id = 53;
+                    break;
+                case 2:
+                    $field_id = 30;
+                    break;
+                case 4:
+                    $field_id = 16;
+                    break;
+                case 5:
+                    $field_id = 47;
+                    break;
+                default:
+                    $field_id = 0;
+                    break;
+            }
+
+            $db = JFactory::getDbo();
+
+            if($type_id == "11" || $type_id == "12" || $type_id == "8"){
+                return TibcoTibco::deleteRecord($rec_id,$type_id);
+            }else{
+                $sql = "UPDATE #__js_res_record SET published=2,title= concat(title,'_',UNIX_TIMESTAMP(now())) WHERE id=" . $rec_id ." or id in (select record_id from `#__js_res_record_values` where field_value=" . $rec_id  . " and field_id=". $field_id .")";
+                $db->setQuery($sql);
+
+                if(!$db->execute()) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+
         } else {
-    			return true;
-    		}
-    	} else {
-    		return false;
-    	}
+            return false;
+        }
     }
 
     /**
@@ -1098,25 +1117,38 @@ where type_id=10)');
         return $arr;
     }
 
-    function getUserOrganizationId($user_id) {
+    public static function getUserOrganizationId($user_id) {
         if (!$user_id)
             return '';
 
         $db = JFactory::getDbo();
-        $query = $db -> getQuery(true);
-        $db -> setQuery('SELECT `title` FROM #__usergroups WHERE `title` LIKE "Oganization %" AND `id` IN (SELECT `group_id` FROM #__user_usergroup_map WHERE `user_id`=' . $user_id . ')');
-        $db -> query();
+        $db -> setQuery('SELECT `title` FROM #__usergroups WHERE `title` LIKE "Organization %" AND `id` IN (SELECT `group_id` FROM #__user_usergroup_map WHERE `user_id`=' . $user_id . ')');
         $result = $db -> loadColumn();
 
         if (empty($result))
-            return '';
-
-        preg_match('/^oganization\s+([0-9]+)/i', $result[0], $result);
+        {  
+          return false;
+        } 
+        preg_match('/^Organization\s+([0-9]+)/i', $result[0], $result);
 
         if (!$result)
-            return "Inleggal organization!!";
+        {   
+          return false;
+        }
 
         return $result[1];
+    }
+    
+    public static function fromSameOrg($current_user,$target_user){
+      if(empty($current_user)||empty($target_user)){
+        return false;
+      }
+      $org_current_user = DeveloperPortalApi::getUserOrganizationId($current_user);
+      $org_target_user =  DeveloperPortalApi::getUserOrganizationId($target_user);
+      if($org_current_user!=$org_target_user){
+        return false;
+      }
+      return true;
     }
 
     function getApiFieldsForProduct($api_id) {
@@ -1547,6 +1579,47 @@ where type_id=10)');
         return $result;
 
     }
+    public static function getApis($apis) {
+
+        $apisArr = array();
+        $db = JFactory::getDbo();
+        foreach( $apis as $idx => $value ) {
+          $sql = 'SELECT title FROM `#__js_res_record` WHERE `published` =1 AND `id` = '.$value;
+          $db->setQuery($sql);
+          $idsArr = $db->loadObject();
+            $apisArr[$idx]['title'] = $idsArr->title;
+           $apisArr[$idx]['operations'] = self::getOperationsForApi($value);
+        }
+        return $apisArr;
+    }
+
+    private static function getOperationsForApi($api_id=0)
+    {
+        $returnArr = array();
+        if($ids = self::getOperationsOfApiByApiId($api_id)){
+          $ids = json_encode($ids);
+          $ids = str_replace( '[', '(',$ids);
+          $ids = str_replace( ']', ')', $ids );
+          $ids = str_replace( '"', '', $ids );
+          $ids = str_replace( '\'', '', $ids );
+          $db = JFactory::getDbo();
+          $sql = 'SELECT id, title ,fieldsdata FROM `#__js_res_record` WHERE `id` in '.$ids;
+          $db->setQuery($sql);
+          $idsArr = $db->loadObjectList();
+          foreach( $idsArr as $idx => $val ) {
+              $returnArr[$idx]['title'] = $val->title;
+              $sql2 = 'SELECT field_label, field_value FROM `#__js_res_record_values` WHERE `record_id` = '. $val->id;
+              $db->setQuery($sql2);
+              $ops = $db->loadObjectList();
+              foreach ( $ops as $value ) {
+                  $returnArr[$idx][$value->field_label] = $value->field_value;
+              }
+          }
+        }
+        return $returnArr;
+
+    }
+    
     /**
      * Get all applications for the current user's Organization
      *

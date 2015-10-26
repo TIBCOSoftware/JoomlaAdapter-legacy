@@ -841,6 +841,9 @@ pre code {
 form {
 	margin: 0 0 18px;
 }
+#form-login .controls > .btn-group {
+    width: 100%;
+}
 fieldset {
 	padding: 0;
 	margin: 0;

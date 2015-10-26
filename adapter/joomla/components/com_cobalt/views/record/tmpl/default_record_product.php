@@ -21,7 +21,7 @@ $app = JFactory::getApplication();
 $app_id = $app->input->getInt('app_id');
 $item = $this->item;
 JFactory::getDocument()->setTitle($item->title);
-
+$doc = JFactory::getDocument();
 
 $product_id = JRequest::getVar("id");
 
@@ -37,6 +37,8 @@ if($product_id)
       $app->redirect(JRoute::_($url));
   }
 }
+$api_ids = $item->fields[7];
+$old_operations_of_api = DeveloperPortalApi::getApis($api_ids);
 $params = $this->tmpl_params['record'];
 $icons = array();
 $category = array();
@@ -45,10 +47,10 @@ $details = array();
 $started = FALSE;
 $i = $o = 0;
 $fields = array();
-if(JComponentHelper::getParams('com_emails')->get('enable_archiving_objects') == 1) {
-  $tasks_to_hide = DeveloperPortalApi::isReferencedByDownstreamSubs($this->item->id, "product") ? array(DeveloperPortalApi::TASK_ARCHIVE) : array();
+if(JComponentHelper::getParams('com_emails')->get('enable_deleting_objects') == 1) {
+  $tasks_to_hide = DeveloperPortalApi::isReferencedByDownstreamSubs($this->item->id, "product") ? array(DeveloperPortalApi::TASK_DELETE) : array();
 } else {
-  $tasks_to_hide = array(DeveloperPortalApi::TASK_ARCHIVE);
+  $tasks_to_hide = array(DeveloperPortalApi::TASK_DELETE);
 }
 $item_contact_email = '';
 if(isset($item->fields_by_id)) {
@@ -286,6 +288,42 @@ if($params->get('tmpl_core.item_follow_num'))
 	article h4{
 		margin-left:20px;
 	}
+ .operations2 li{ 
+    list-style: none; margin: 10px; 
+    border: 1px solid #dddddd;
+    font: normal 16px Arial, Helvetica, sans-serif;
+    background: #ffffff; 
+    height: 30px; 
+    line-height: 30px;
+  }
+  .operations2 li span{
+    display: block;
+    margin-right: 20px;
+    padding:0 5px;
+  }
+  .operations2 li span.method{
+    background: #aaa;
+    color: white;
+    width: 40px;
+    float: left;
+    font-size: 0.7em;
+    text-align: center;
+  }
+
+  .operations2 li span.path{
+    float: left;
+    width: 40%;
+    font-weight: bold;
+  }
+  .operations2 li span.desc{
+    float: right;
+    text-align: right;
+    color: #0f6ab4;
+    font-size:0.7em;
+  }
+  #message-bar{
+    display: none;
+  }  
 </style>
 <!-- <link rel="stylesheet" type="text/css" href="libraries/swagger-ui/css/screen.css" /> -->
 <!-- <link rel="stylesheet" type="text/css" href="libraries/swagger-ui/css/highlight.default.css" /> -->
@@ -300,18 +338,19 @@ if($params->get('tmpl_core.item_follow_num'))
 <!-- <script src="libraries/swagger-ui/swagger-ui.js" type="text/javascript"></script> -->
 <!-- <script src="libraries/swagger-ui/lib/highlight.7.3.pack.js" type="text/javascript"></script> -->
 
+<link rel="stylesheet" type="text/css" href="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/css/typography.css" />
 <link rel="stylesheet" type="text/css" href="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/css/screen.css" />
-<link rel="stylesheet" type="text/css" href="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/css/highlight.default.css" />
-<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/shred.bundle.js" type="text/javascript"></script>
+<!--<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/shred.bundle.js" type="text/javascript"></script>-->
 <script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/jquery.slideto.min.js" type="text/javascript"></script>
 <script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/jquery.wiggle.min.js" type="text/javascript"></script>
 <script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/jquery.ba-bbq.min.js" type="text/javascript"></script>
-<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/handlebars-1.0.0.js" type="text/javascript"></script>
+<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/handlebars-2.0.0.js" type="text/javascript"></script>
 <script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/underscore-min.js" type="text/javascript"></script>
 <script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/backbone-min.js" type="text/javascript"></script>
-<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/swagger.js" type="text/javascript"></script>
 <script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/swagger-ui.js" type="text/javascript"></script>
 <script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/highlight.7.3.pack.js" type="text/javascript"></script>
+<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/marked.js" type="text/javascript"></script>
+<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/swagger-oauth.js" type="text/javascript"></script>
 
 <article class="<?php echo $this->appParams->get('pageclass_sfx')?><?php if($item->featured) echo ' article-featured' ?>">
     <div class="container-fluid featured-items">
@@ -482,6 +521,7 @@ if($params->get('tmpl_core.item_follow_num'))
                             url: GLOBAL_CONTEXT_PATH + 'asg/internal/product/<?php echo $item->id; ?>',
                             dom_id: 'swagger_ui_div',
                             useJQuery: true,
+                            showRequestHeaders: true,
                             supportHeaderParams: true,
                             supportedSubmitMethods: ['get', 'post', 'put'],
                             highlightSizeThreshold: 1024 * 1024, // 1Mb
@@ -495,22 +535,40 @@ if($params->get('tmpl_core.item_follow_num'))
                             jQuery('pre code').each(function(i, e) {hljs.highlightBlock(e);});
                             },
                             onFailure: function(data) {
-                            if(console) {
-                                  console.log('Unable to Load SwaggerUI');
-                                  console.log(data);
-                              }
-                              jQuery('#tabs-list a[href="#tab-api-explorer"]').removeAttr('data-toggle').addClass("tab-disabled");
+                                  //jQuery('#tabs-list a[href="#tab-api-explorer"]').removeAttr('data-toggle').addClass("tab-disabled");
+                                  if(!window.first){
+                                    //portal engine is down
+                                    if(data.indexOf("50")!=-1){
+                                        handleError(data,"<?php echo JText::_('API_EXPLORER_ERROR'); ?>");
+                                        <?php foreach($old_operations_of_api as $idx=>$item): ?>
+                                          var poerations = jQuery("#swagger_ui_div").append("<h2><?php echo $item['title']; ?></h2>")
+                                          jQuery("#swagger_ui_div").append("<ul class='operations2 list<?php echo $idx; ?>'></ul>");
+                                          var lis = "";
+                                          <?php foreach($item['operations'] as $operation): ?>
+                                             lis = lis + "<li><span class='method'><?php echo $operation['REST method']; ?></span><span class='path'><?php echo $operation['URI path']; ?></span><span class='desc'><?php echo explode(':',$operation['Description'])[1]; ?></span></li>";
+                                          <?php endforeach; ?>
+                                          jQuery(".list<?php echo $idx; ?>").append(lis);
+                                        <?php endforeach; ?>                    
+                                    }else{
+                                      //portal engine is up, but no operations
+                                      Joomla._renderMessages(["<?php echo JText::_('NO_OPERATIONS'); ?>"]);
+                                    }
+                                    window.first = true;   
+                                  }
+
                             },
                             docExpansion: 'none'
                       }), setKeyInHeader = function() {
-                          var key = jQuery('#input_apiKey').val();
-                          if(key && key.trim && key.trim() !== "") {
-                              window.authorizations.add("key", new ApiKeyAuthorization("Apikey", key, "header"));
-                          } else {
-                              if(window.authorizations.authz && window.authorizations.authz.key) {
-                                  delete window.authorizations.authz.key;
-                              }
-                          }
+                            var key = jQuery('#input_apiKey').val();
+                            if(window.swaggerUi.api) {
+                                if (key && key.trim && key.trim() !== "") {
+                                    window.swaggerUi.api.clientAuthorizations.add("api_key", new SwaggerClient.ApiKeyAuthorization("Apikey", key, "header"));
+                                } else {
+                                    if (window.swaggerUi.api.clientAuthorizations.authz && window.swaggerUi.api.clientAuthorizations.authz.api_key) {
+                                        delete window.swaggerUi.api.clientAuthorizations.authz.api_key;
+                                    }
+                                }
+                            }
                       };
                       jQuery('#input_apiKey').change(function() {
                           setKeyInHeader();
@@ -529,6 +587,25 @@ if($params->get('tmpl_core.item_follow_num'))
                         jQuery('#input_apiKey').val(jQuery('#apps').val());
                         setKeyInHeader();
                       }
+                      function handleError(data,error){
+                        var sUUID = UUID.generate(),
+                        sErrMsg = PORTAL_UNREACHABLE_ERROR_MESSAGE;
+                        //Joomla.showError(["The API Explorer is currently in non-interactive mode."]);
+                        DeveloperPortal._saveLogInDatabase({
+                            log_type: '',
+                            status: '503',
+                            statusText:'',
+                            content: data,
+                            summary: error,
+                            entity_type: 'product',
+                            entity_id: "<?php echo $product_id ?>",
+                            event: 'Request',
+                            event_status: 'error',
+                            uuid: sUUID
+                        }, function(sErrMsg) {
+                            Joomla.showError([error,sErrMsg]);
+                        }, [DeveloperPortal._urlifySupport(sUUID, sErrMsg) + sUUID]);
+                      };                      
                     });
 
                 </script>

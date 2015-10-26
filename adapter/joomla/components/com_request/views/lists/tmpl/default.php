@@ -1,10 +1,12 @@
 <?php
 // no direct access
 defined('_JEXEC') or die;
+require_once JPATH_BASE . "/includes/api.php";
 JHtml::stylesheet('com_request/style.css', false, true, false);
 JFactory::getDocument()->addScript(JURI::root(TRUE) . '/media/system/js/calendar.js');
 JFactory::getDocument()->addScript(JURI::root(TRUE) . '/media/system/js/calendar-setup.js');
 JFactory::getDocument()->addStyleSheet(JURI::root(TRUE) . '/media/system/css/calendar-jos.css');
+
 ?>
 <script type="text/javascript">
     Calendar._DN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -111,6 +113,7 @@ JFactory::getDocument()->addStyleSheet(JURI::root(TRUE) . '/media/system/css/cal
         <div class="clearfix "></div>
         <?php $show = true; ?>
         <?php for( $i = 0; $i < $this->count; $i++ ): ?>
+        <?php $plan_id = $this->items[$i]->plan_id;?> 
         <?php if ( $this->items[$i]->org_id != $prev ):?>
         <?php $org = $this->getOrginfo($this->items[$i]->org_id);?>
         <!-- request-tbody S -->
@@ -182,13 +185,25 @@ JFactory::getDocument()->addStyleSheet(JURI::root(TRUE) . '/media/system/css/cal
 
                             </h4>
                         </div>
+                        <?php 
+                          $concurrent_calls = JText::sprintf($this->showJson($this->items[$i]->custom, 'climit'));
+                          if(!empty($concurrent_calls))
+                          {
+                            $concurrent_calls = $concurrent_calls . " " . JText::_("CONCURRENT_CALLS");
+                          }else{
+                            $concurrent_calls ='';
+                          }
+
+                        ?>
                         <div id="content<?php echo $this->items[$i]->id;?>" class="pull-left span4 request-accordion-col2">
                                <p class="plan-status pull-left"><?php echo $this->items[$i]->plan;?></p>
                                 <p class="pull-left">
-                                    <span class="quota-limit"><?php echo JText::sprintf($this->showJson($this->items[$i]->custom, 'qlimit'));  ?><?php echo JText::_('COM_REQUEST_PLAN_DLIMIT');?></span><br>
-                                    <span class="rate-limit"><?php echo JText::sprintf($this->showJson($this->items[$i]->custom, 'rlimit'));?><?php echo JText::_('COM_REQUEST_PLAN_SLIMIT');?></span><br>
+                                    <span class="quota-limit"><?php echo str_replace("/"," calls per ", JText::sprintf($this->showJson($this->items[$i]->custom, 'qlimit')));  ?></span><br>
+                                    <span class="rate-limit"><?php echo str_replace("/"," calls per ", JText::sprintf($this->showJson($this->items[$i]->custom, 'rlimit')));?></span><br>
+                                    <span class="quota-limit"><?php echo $concurrent_calls;?></span><br>
                                  <input type="hidden" name="rate_limit" value="<?php echo $this->showJson($this->items[$i]->custom, 'rlimit'); ?>"/>
                                  <input type="hidden" name="quota_limit" value="<?php echo $this->showJson($this->items[$i]->custom, 'qlimit');  ?>"/>
+                                 <input type="hidden" name="concurrent_calls" value="<?php echo $concurrent_calls;  ?>"/>
                                  <input type="hidden" name="username" class="" value="<?php echo $this->items[$i]->username; ?>">
                                 </p>
                         </div>
@@ -272,8 +287,8 @@ JFactory::getDocument()->addStyleSheet(JURI::root(TRUE) . '/media/system/css/cal
                 </div>
                 <div class="clearfix"></div>
                 <div id ="aprove_planType">
-	                <strong><?php echo JText::_('COM_REQUEST_PLAN_TYPE');?></strong> <br>
-	                <input type="text" name="jform[plan_type]" value="" style="max-width: 200px; min-height: 22px;"/>
+                    <strong><?php echo JText::_('COM_REQUEST_PLAN_TYPE');?></strong> <br>
+                    <input type="text" name="jform[plan_type]" value="" style="max-width: 200px; min-height: 22px;"/>
                 </div>
                 <strong><?php echo JText::_('COM_REQUEST_COMMENT');?></strong> <br>
                 <textarea rows="3" name="jform[admin_note]" style="max-width: 200px; min-height: 65px;"></textarea>
@@ -329,7 +344,7 @@ JFactory::getDocument()->addStyleSheet(JURI::root(TRUE) . '/media/system/css/cal
 <script type="text/javascript">
     jQuery(function() {
 
-    	requestForm  =  jQuery("[id^='myModalLabel']");
+        requestForm  =  jQuery("[id^='myModalLabel']");
         jQuery(".submit-approve-request:button").click(function(e) {
             var flag = jQuery(this).parent().parent().parent().attr('id');
             var status = jQuery("[data-target=#" + flag + "] .status").text();
@@ -338,13 +353,16 @@ JFactory::getDocument()->addStyleSheet(JURI::root(TRUE) . '/media/system/css/cal
             var id = jQuery('#' + flag + ' [name="id"]').val();
             var rateLimit = jQuery('#' + flag + ' [name="rate_limit"]').val();
             var quotaLimit = jQuery('#' + flag + ' [name="quota_limit"]').val();
+            var concurrent_calls = jQuery('#' + flag + ' [name="concurrent_calls"]').val();
             var username = jQuery('#' + flag + ' [name="username"]').val();
             var request_thumbnail = jQuery('#' + flag + ' .request-product-thumbnail').html();
+            rateLimit = rateLimit.split('/').join(" calls per ");
+            quotaLimit = quotaLimit .split('/').join(" calls per ");
             if ( planStatus != 'Custom' && planStatus != 'custom' ) {
-				jQuery('#aprove_planType').remove();
+                jQuery('#aprove_planType').remove();
             }
 
-            var dialog = "<li><p class='plan-status pull-left'>"+planStatus+"</p><p class='pull-left'><span class='quota-limit '>"+ quotaLimit +"<?php echo JText::_('COM_REQUEST_PLAN_DLIMIT');?></span><br><span class='rate-limit'>"+ rateLimit +"<?php echo JText::_('COM_REQUEST_PLAN_SLIMIT');?></span></p><div class='clearfix'></div><p><?php echo JText::_("COM_REQUEST_STATUS_HEAD_REQUEST_BY");?>:<br><a href=''>"+ username + "</a></p></li>";
+            var dialog = "<li><p class='plan-status pull-left'>"+planStatus+"</p><p class='pull-left'><span class='quota-limit '>"+ quotaLimit +"</span><br><span class='rate-limit'>"+ rateLimit +"</span><br><span class='rate-limit'>"+ concurrent_calls +"</span></p><div class='clearfix'></div><p><?php echo JText::_("COM_REQUEST_STATUS_HEAD_REQUEST_BY");?>:<br><a href=''>"+ username + "</a></p></li>";
             jQuery(".request_list").html(dialog);
             jQuery('.plan-name').html(request_thumbnail+product);
             jQuery("[name='jform[id]']").val(id);
@@ -363,6 +381,10 @@ JFactory::getDocument()->addStyleSheet(JURI::root(TRUE) . '/media/system/css/cal
             var jsonData = {};
 
             function isEndDateValid() {
+                if(end_time == ""){
+                    end_time = "2038-01-01";
+                    form.find("[name='jform[publish_down]']").val(end_time);
+                }
                 if(start_time && end_time) {
                     try {
                         if(Date.parse(end_time).getTime() >= Date.parse(start_time).getTime()) {
@@ -442,14 +464,14 @@ JFactory::getDocument()->addStyleSheet(JURI::root(TRUE) . '/media/system/css/cal
 
         //  console.log(res);
          DeveloperPortal.sendCreateNotification(res.result.record_id, DeveloperPortal.PORTAL_OBJECT_TYPE_SUBSCRIPTION, function(data){
-           	if (res.result.appIds){
-           		sendNotifyForUpdatedApplication(res,message_container);
+            if (res.result.appIds){
+                sendNotifyForUpdatedApplication(res,message_container);
              }
               else{
                   window.location.reload();
               }
-				  }, function(error){
-				      window.location.reload();
+                  }, function(error){
+                      window.location.reload();
          });
        }
 
@@ -462,8 +484,8 @@ JFactory::getDocument()->addStyleSheet(JURI::root(TRUE) . '/media/system/css/cal
             }else{
               updatedfields = {115:[]};
             }
-         	 DeveloperPortal.sendUpdateNotification(appid, DeveloperPortal.PORTAL_OBJECT_TYPE_APPLICATION,updatedfields,function(data){
-         	     window.location.reload();
+             DeveloperPortal.sendUpdateNotification(appid, DeveloperPortal.PORTAL_OBJECT_TYPE_APPLICATION,updatedfields,function(data){
+                 window.location.reload();
            }, function(error){
                window.location.reload();
            });

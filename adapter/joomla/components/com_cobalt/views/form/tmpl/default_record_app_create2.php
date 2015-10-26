@@ -192,6 +192,11 @@ $active_key = DeveloperPortalApi::getActiveKeyOfApplication($this->item->id);
                       
                       $plan = DeveloperPortalApi::getRecordById(DeveloperPortalApi::valueForKeyFromJson("", 69, $item->id));
                       $limit = DeveloperPortalApi::valueForKeyFromJson($plan->fields,79);
+                      if(!empty(DeveloperPortalApi::valueForKeyFromJson($plan->fields,152))){
+                        $concurrent_calls = DeveloperPortalApi::valueForKeyFromJson($plan->fields,152) . " " . JText::_("CONCURRENT_CALLS");
+                      }else{
+                        $concurrent_calls="";
+                      }
                       $burst = DeveloperPortalApi::valueForKeyFromJson($plan->fields,80);
                       $ownedFlag = in_array($item->id, $ownedSubscriptions);
                       $row_count++;
@@ -205,7 +210,7 @@ $active_key = DeveloperPortalApi::getActiveKeyOfApplication($this->item->id);
                         <?php echo $plan->title; ?>
                       </td>
                       <td>
-                        <p><?php echo $limit.' per second<br/>'.$burst.' per day'; ?></p>
+                        <p><?php echo str_replace("/"," calls per ", $limit) .'<br/>'.str_replace("/"," calls per ", $burst) .'<br/>'. $concurrent_calls; ?></p>
                       </td>
                       <td>
                         <?php

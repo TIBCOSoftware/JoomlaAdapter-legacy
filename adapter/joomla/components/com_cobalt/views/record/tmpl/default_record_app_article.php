@@ -209,7 +209,7 @@ if($params->get('tmpl_core.item_follow_num'))
             <div class="details_panel_right">
             <?php if(count($app_oauth) == 0 || $app_oauth[0]->use_oauth == -1): ?>
     			<div class="keyinfo ">
-                    <span class="k_title">API key:</span><span id="span_api_key"><?php echo (isset($active_key[0]->apiKey) ? $active_key[0]->apiKey : JText::_("NO_ACTIVE_KEY")); ?></span><a href="javascript:void(0);" id="copyAction" data-clipboard-target="span_api_key" data-clipboard-text="API Key"><?php echo JText::_('APPLICATION_COPY_ACTION'); ?></a>
+                    <span class="k_title">API key:</span><span id="span_api_key"><?php echo (isset($active_key[0]->apiKey) ? $active_key[0]->apiKey : JText::_("NO_ACTIVE_KEY")); ?></span>
                 </div>
             <?php else: ?>
           <div class="clientinfo">
@@ -309,16 +309,16 @@ if($params->get('tmpl_core.item_follow_num'))
 	}
 	
 	.app-products-row div:nth-child(2) div span:first-child{
-		width:40%;
+		width:60%;
 	}
 	
 	.app-products-row div:nth-child(2) div span:last-child{
-		width:60%;
+		width:40%;
 	}
 	
 	p.app-prod-detail{
 		height:40px;
-		line-height:20px;
+		line-height:14px;
 		overflow:hidden;
 		font-size:12px;
 		color:#666;
@@ -383,13 +383,18 @@ if($params->get('tmpl_core.item_follow_num'))
 									<?php
 										$plan = DeveloperPortalApi::getRecordById(DeveloperPortalApi::valueForKeyFromJson("", 69, $item->id));
 										$limit = DeveloperPortalApi::valueForKeyFromJson($plan->fields,80);
-										$burst = DeveloperPortalApi::valueForKeyFromJson($plan->fields,79);
+                                        $burst = DeveloperPortalApi::valueForKeyFromJson($plan->fields,79);
+										if(!empty(DeveloperPortalApi::valueForKeyFromJson($plan->fields,152))){
+					                        $concurrent_calls = DeveloperPortalApi::valueForKeyFromJson($plan->fields,152) . " " . JText::_("CONCURRENT_CALLS");
+					                      }else{
+					                        $concurrent_calls="";
+					                      }
 										$i ++;
-									?>		
+									?>	
 								<div>
 									<span>
 										<h5 style="font-weight:normal"><?php echo $plan->title; ?></h5>
-										<p class="app-prod-detail"><?php echo 'Daily limit: '.$limit.JText::_('DASHBOARD_PLAN_UNIT_DAY').' <br/>Burst limit: '.$burst.JText::_('DASHBOARD_PLAN_UNIT_SECOND'); ?></p>
+										<p class="app-prod-detail"><?php echo 'Quota limit: '.str_replace("/"," calls per ", $limit).' <br/>Burst limit: '.str_replace("/"," calls per ", $burst)."<br/> Concurrent Limit:".$concurrent_calls; ?></p>
 									</span>
 									<span>
 										<h5 style="font-weight:normal">

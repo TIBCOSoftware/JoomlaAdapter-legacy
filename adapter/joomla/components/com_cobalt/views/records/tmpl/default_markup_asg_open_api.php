@@ -19,7 +19,7 @@ $markup = $this->tmpl_params['markup'];
 
 $listOrder  = @$this->ordering;
 $listDirn = @$this->ordering_dir;
-$type_ids_to_create = array(1, 2, 4, 5, 9, 10,12);
+$type_ids_to_create = array(1, 2, 4, 5, 9, 10,12,20,21);
 
 $back = NULL;
 if($this->input->getString('return'))

@@ -37,10 +37,10 @@ class PlgAuthenticationEmail extends JPlugin
 		$username = $credentials['username'];
 		$password = $credentials['password'];
 		// Joomla does not like blank passwords
-		if (empty($username) || empty($credentials['password']) || strstr($username, "@")==false)
+		if (empty($username) || empty($credentials['password']))
 		{
 			$response->status = JAuthentication::STATUS_FAILURE;
-			$response->error_message = JText::_('JGLOBAL_AUTH_EMPTY_PASS_NOT_ALLOWED');
+			$response->error_message = JText::_('JGLOBAL_AUTH_INCORRECT');
 			return false;
 		}
 

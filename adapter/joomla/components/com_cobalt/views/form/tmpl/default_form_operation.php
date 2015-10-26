@@ -272,7 +272,7 @@ if($api_id)
 
 	<?php if(isset($this->sorted_fields[0])):?>
 		<?php foreach ($this->sorted_fields[0] as $field_id => $field):?>
-            <?php if($field->id != 149 || $parent_api_create_proxy == "1"): ?>
+            <?php if($field->id != 151 && ($field->id != 149 || $parent_api_create_proxy == "1")): ?>
                 <?php if (($api_type=='REST' && in_array($field->id, array(128))) || ($parent_api_create_proxy == "1" && $api_type != "REST" && $field->id == 29)): ?>
                     <?php continue; ?>
                 <?php endif ?>
@@ -450,7 +450,60 @@ jQuery(function(){
         oOldValues.targetPath = jQuery("#field_149").length > 0 ? jQuery("#field_149").val() : '';
         oOldValues.method = jQuery("#form_field_list_29").val();
         oOldValues.soapAction = jQuery("#field_128").length > 0 ? jQuery("#field_128").val() : '';
+
+
+
+
+
 });
+
+var originalRequestPreprocess = getRequestPreprocess();
+var originalRequestTransform = getRequestTransform();
+var originalResponseTransform = getResponseTransform();
+var originalFaultTransform = getFaultTransform();
+var originalRequestPreprocessOverriding = getRequestPreprocessOverriding();
+var originalRequestTransformOverriding = getRequestTransformOverriding();
+var originalResponseTransformOverriding = getResponseTransformOverriding();
+var originalFaultTransformOverriding = getFaultTransformOverriding();
+
+function getRequestPreprocess(){
+    return _getSelectedItems('parent_list210');
+}
+function getRequestTransform(){
+    return _getSelectedItems('parent_list231');
+}
+function getResponseTransform(){
+    return _getSelectedItems('parent_list232');
+}
+function getFaultTransform(){
+    return _getSelectedItems('parent_list233');
+}
+
+function getRequestPreprocessOverriding(){
+    return jQuery('select[name="jform[fields][213]"] option:selected').text();
+}
+function getRequestTransformOverriding(){
+    return jQuery('select[name="jform[fields][234]"] option:selected').text();
+}
+function getResponseTransformOverriding(){
+    return jQuery('select[name="jform[fields][235]"] option:selected').text();
+}
+function getFaultTransformOverriding(){
+    return jQuery('select[name="jform[fields][236]"] option:selected').text();
+}
+
+
+function _getSelectedItems(id) {
+    var envWrap = jQuery("#" + id),
+        targetArray = [];
+    envWrap.find(".list-item").each(function(i,ele){
+        targetArray.push(jQuery(ele).attr("rel"));
+    });
+
+    targetArray = targetArray.sort();
+    envWrap.attr("original",targetArray);
+    return targetArray.sort();
+}
 
   Joomla.beforesubmitform = function(fCallback, fErrorback) {
         oNewValues.name = jQuery("#jform_title").val();
@@ -458,6 +511,15 @@ jQuery(function(){
         oNewValues.targetPath = jQuery("#field_149").length > 0 ? jQuery("#field_149").val() : '';
         oNewValues.method = jQuery("#form_field_list_29").val();
         oNewValues.soapAction = jQuery("#field_128").length > 0 ? jQuery("#field_128").val() : '';
+
+      var currentRequestPreprocess = getRequestPreprocess();
+      var currentRequestTransform = getRequestTransform();
+      var currentResponseTransform = getResponseTransform();
+      var currentFaultTransform = getFaultTransform();
+      var currentRequestPreprocessOverriding = getRequestPreprocessOverriding();
+      var currentRequestTransformOverriding = getRequestTransformOverriding();
+      var currentResponseTransformOverriding = getResponseTransformOverriding();
+      var currentFaultTransformOverriding = getFaultTransformOverriding();
 
         if(oOldValues.name !== oNewValues.name) {
             (window.oUpdatedFields &&
@@ -498,6 +560,46 @@ jQuery(function(){
                 149: oOldValues.targetPath
             });
         }
+
+      if(!DeveloperPortal.arrayEqual(originalRequestPreprocess, currentRequestPreprocess)) {
+          window.oUpdatedFields = window.oUpdatedFields || {};
+          window.oUpdatedFields[210] = originalRequestPreprocess;
+      }
+
+      if(!DeveloperPortal.arrayEqual(originalRequestTransform, currentRequestTransform)) {
+          window.oUpdatedFields = window.oUpdatedFields || {};
+          window.oUpdatedFields[231] = originalRequestTransform;
+      }
+
+      if(!DeveloperPortal.arrayEqual(originalResponseTransform, currentResponseTransform)) {
+          window.oUpdatedFields = window.oUpdatedFields || {};
+          window.oUpdatedFields[232] = originalResponseTransform;
+      }
+
+      if(!DeveloperPortal.arrayEqual(originalFaultTransform, currentFaultTransform)) {
+          window.oUpdatedFields = window.oUpdatedFields || {};
+          window.oUpdatedFields[233] = originalFaultTransform;
+      }
+
+      if(!DeveloperPortal.arrayEqual(originalRequestPreprocessOverriding, currentRequestPreprocessOverriding )) {
+          window.oUpdatedFields = window.oUpdatedFields || {};
+          window.oUpdatedFields[213] = originalRequestPreprocessOverriding ;
+      }
+
+      if(!DeveloperPortal.arrayEqual(originalRequestTransformOverriding, currentRequestTransformOverriding )) {
+          window.oUpdatedFields = window.oUpdatedFields || {};
+          window.oUpdatedFields[234] = originalRequestTransformOverriding ;
+      }
+
+      if(!DeveloperPortal.arrayEqual(originalResponseTransformOverriding, currentResponseTransformOverriding )) {
+          window.oUpdatedFields = window.oUpdatedFields || {};
+          window.oUpdatedFields[235] = originalResponseTransformOverriding;
+      }
+
+      if(!DeveloperPortal.arrayEqual(originalFaultTransformOverriding, currentFaultTransformOverriding)) {
+          window.oUpdatedFields = window.oUpdatedFields || {};
+          window.oUpdatedFields[236] = originalFaultTransformOverriding;
+      }
 
         if(oNewValues.name !== oOldValues.name){
             validateOperationTitle(fCallback, fErrorback);

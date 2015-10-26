@@ -23,10 +23,10 @@ $author = array();
 $details = array();
 $started = FALSE;
 $i = $o = 0;
-if(JComponentHelper::getParams('com_emails')->get('enable_archiving_objects') == 1) {
+if(JComponentHelper::getParams('com_emails')->get('enable_deleting_objects') == 1) {
   $tasks_to_hide = array();
 } else {
-  $tasks_to_hide = array(DeveloperPortalApi::TASK_ARCHIVE);
+  $tasks_to_hide = array(DeveloperPortalApi::TASK_DELETE);
 }
 $auth_group_ids = $this->user->getAuthorisedGroups();
 $path = JRequest::getURI();
