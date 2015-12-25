@@ -3279,12 +3279,12 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
                     valid = validator.validate(validateData, schemaV1);
                 }
 
-                var errors = validator.getLastErrors();
+                var errors = validator.getLastErrors() ? validator.getLastErrors() : [];
                 var MISSING_METHOD_HTTPMETHOD = "Missing required property: method, or httpMethod and method are mixed together."
                 var errorArr = [];
                 var mixFlag = false;
 
-                for (var i = 0; i < apis.length; i++) {
+              for (var i = 0; i < apis.length; i++) {
                     var api = apis[i];
                     for (var j = 0; j < api.operations.length; j++) {
                         var operation = api.operations[j];
@@ -3299,31 +3299,36 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
                     }
                 }
                 if (countHTTPMethod <= tempKey.length && countHTTPMethod != 0) {
-                    for (var error in errors) {
-                        if (errors[error].params && errors[error].params.length && errors[error].params[0] == "httpMethod") {
+                   for(var i = errors.length -1; i >= 0 ; i--){
+                        if (errors[i].params && errors[i].params.length && errors[i].params[0] == "httpMethod") {
                             if (!mixFlag) {
-                                errors[error].message = MISSING_METHOD_HTTPMETHOD;
-                                errorArr.push(errors[error].message);
+                                errors[i].message = MISSING_METHOD_HTTPMETHOD;
+                                errorArr.push(errors[i].message);
                                 mixFlag = true;
+								
                             } else {
-                                delete errors[error];
+                                errors.splice(i, 1);
+							
                             }
                         } else {
-                            errorArr.push(errors[error].message);
+                            errorArr.push(errors[i].message);
+							
                         }
                     }
                 }
-
-                if (countHTTPMethod == 0) {
-                    for (var error in errors) {
-                        if (errors[error].params && errors[error].params.length && errors[error].params[0] == "httpMethod") {
-                            delete errors[error];
-                        } else {
-                            errorArr.push(errors[error].message);
+				
+				if (countHTTPMethod == 0) {
+					for(var i = errors.length -1; i >= 0 ; i--){
+					if (errors[i].params && errors[i].params.length && errors[i].params[0] == "httpMethod") {
+						errors.splice(i, 1);
+					}
+					else {
+                            errorArr.push(errors[i].message);
                         }
-                    }
-                }
-
+					}
+					}
+	
+				
                 if (errorArr.length > 0) {
                     Joomla.showError(errorArr);
                     validateFlag = false;

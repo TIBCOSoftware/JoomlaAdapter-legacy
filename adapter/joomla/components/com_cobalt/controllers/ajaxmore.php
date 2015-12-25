@@ -12,11 +12,14 @@ require_once JPATH_BASE . "/includes/api.php";
 require_once JPATH_ROOT . '/components/com_cobalt/api.php';
 require_once JPATH_BASE . "/includes/subcreate.php";
 require_once JPATH_BASE . "/administrator/components/com_cobalt/models/record.php";
+use Joomla\Utilities\ArrayHelper;
 
 class CobaltControllerAjaxMore extends JControllerAdmin {
     
     public function updateStatusOfKey() {
         $ids = $_REQUEST['keyList'];
+        ArrayHelper::toInteger($ids);
+
         $ids = implode(',', $ids);
         if (empty($ids)) {
             AjaxHelper::send('Related key has updated', $key = 'result');
@@ -37,7 +40,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
             AjaxHelper::error("You didn't select any apis");
         }
         $db = JFactory::getDbo();
-        $db -> setQuery('SELECT record_id,count(record_id) as record_num FROM `#__js_res_record_values` where field_id=25  and field_value in (' . $apis . ') group by record_id order by record_num desc');
+        $db -> setQuery('SELECT record_id,count(record_id) as record_num FROM `#__js_res_record_values` where field_id=25  and field_value in (' . (int) $apis . ') group by record_id order by record_num desc');
         $db -> query();
         $result = array();
         $api_count = count(explode(",", $apis));
@@ -96,17 +99,19 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
                 }
 
                 if (count($titlesArray)>0) {
+                    ArrayHelper::toString($titlesArray);
                     $titles = implode(",",$titlesArray);
                     $db = JFactory::getDbo();
-                    $sql = 'Select id from `#__js_res_record` where id in (select record_id from `#__js_res_record_values` where field_id=30 and field_value='.$apiID.') and title in ('.$titles.') and published <> 2';
+                    $sql = 'Select id from `#__js_res_record` where id in (select record_id from `#__js_res_record_values` where field_id=30 and field_value='.(int) $apiID.') and title in ('.$titles.') and published <> 2';
                     $db->setQuery($sql);
                     $result = array();
                     foreach ($db->loadObjectList() as $key => $value) {
                         $result[] = $value->id;
                     }
                     if (count($result)>0) {
+                        ArrayHelper::toInteger($result);
                         $ids = implode(",",$result);
-                        $sql = 'Update `#__js_res_record` set published=2 where id in ('.$ids.')';
+                        $sql = 'Update `#__js_res_record` set published=2 where id in ('. $ids .')';
                         $db->setQuery($sql);
                         if ($db -> query()) {
                             AjaxHelper::send($result);
@@ -159,7 +164,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
 
         	if ($response[$key]['fields'][30] == $apiID)
 			{
-				$sql = "Update #__js_res_record SET published=2 WHERE id = " . $response[$key]['id'];
+				$sql = "Update #__js_res_record SET published=2 WHERE id = " . (int) $response[$key]['id'];
 				$results = $db->setQuery($sql);
 				$db->query();
 			}
@@ -197,7 +202,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
 	
     public function _getEmailTemplateByAlias($alias){
       $db = JFactory::getDbo();
-      $db -> setQuery('SELECT * FROM #__email_templates WHERE alias="'.$alias.'" AND published = 1 LIMIT 1');
+      $db -> setQuery('SELECT * FROM #__email_templates WHERE alias="'. $db->quote($alias) .'" AND published = 1 LIMIT 1');
       return $db -> loadObject();
     }
     /**
@@ -343,15 +348,15 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
      * verify if there is same plan title existed in same product. 
      */
     public function validatePlanTitle() {
-      $plan_title = $_POST["plan_title"];
+      $plan_title = urlencode($_POST["plan_title"]);
       $product_id = $_POST["product_id"];
       $plan_id = $_POST["plan_id"];
       if ($plan_title && $product_id) {
         $db = JFactory::getDbo();
         $sql = "SELECT COUNT(r.id) AS sum  FROM openapi_js_res_record AS r, openapi_js_res_record_values AS rv ";
         $sql.= " WHERE rv.field_id=53 AND rv.type_id=7 AND rv.record_id=r.id";
-        $sql.= " AND rv.field_value=".$product_id." AND LOWER(r.title)='".strtolower($plan_title)."'";
-        $sql.= $plan_id ? " AND r.id!=".$plan_id : "";
+        $sql.= " AND rv.field_value=". (int) $product_id." AND LOWER(r.title)='".strtolower($plan_title)."'";
+        $sql.= $plan_id ? " AND r.id!=". (int) $plan_id : "";
         $db->setQuery($sql);
         $result = $db->loadObject();
         if ($result->sum==0) {
@@ -367,15 +372,16 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
      * verify if there is same gateway title existed in same environments.
      */
     public function validateGatewayTitle() {
-      $gateway_title  = $_POST["gateway_title"];
+      $gateway_title  = urlencode($_POST["gateway_title"]);
+
       $environment_id = $_POST["environment_id"];
       $gateway_id = $_POST["gateway_id"];
       if ($gateway_title && $environment_id) {
         $db = JFactory::getDbo();
         $sql = "SELECT COUNT(r.id) AS sum  FROM openapi_js_res_record AS r, openapi_js_res_record_values AS rv ";
         $sql.= " WHERE rv.field_id=16 AND rv.type_id=3 AND rv.record_id=r.id";
-        $sql.= " AND rv.field_value=".$environment_id." AND LOWER(r.title)='".strtolower($gateway_title)."'";
-        $sql.= $gateway_id ? " AND r.id!=".$gateway_id : "";
+        $sql.= " AND rv.field_value=". (int) $environment_id." AND LOWER(r.title)='".strtolower($gateway_title)."'";
+        $sql.= $gateway_id ? " AND r.id!=". (int) $gateway_id : "";
         $db->setQuery($sql);
         $result = $db->loadObject();
         if ($result->sum==0) {
@@ -398,8 +404,8 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
         $db = JFactory::getDbo();
         $sql = "SELECT COUNT(r.id) AS sum  FROM openapi_js_res_record AS r, openapi_js_res_record_values AS rv ";
         $sql.= " WHERE rv.field_id=30 AND rv.type_id=6 AND rv.record_id=r.id";
-        $sql.= " AND rv.field_value=".$api_id." AND LOWER(r.title)='".strtolower($operation_title)."'";
-        $sql.= $operation_id ? " AND r.id!=".$operation_id : "";
+        $sql.= " AND rv.field_value=". (int) $api_id." AND LOWER(r.title)='".strtolower($operation_title)."'";
+        $sql.= $operation_id ? " AND r.id!=". (int) $operation_id : "";
         $db->setQuery($sql);
         $result = $db->loadObject();
         if ($result->sum==0) {
@@ -420,7 +426,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
       if (count($urls)>0) {
         $db = JFactory::getDbo();
         for($i=0;$i<count($urls);$i++) {
-          $sql = "select count(id) as sum from #__js_res_record where published!=2 and id in (select record_id from #__js_res_record_values where field_id=89 and type_id=3 and field_value='" . $urls[$i] . "')";
+          $sql = "select count(id) as sum from #__js_res_record where published!=2 and id in (select record_id from #__js_res_record_values where field_id=89 and type_id=3 and field_value=' . $db->quote($urls[$i]) . ')";
           $db->setQuery($sql);
           $result = $db->loadObject();
           if ($result->sum!=0) {
@@ -498,11 +504,13 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
           if (count($records)>0) {
         $results = array();
         $db = JFactory::getDbo();
+        ArrayHelper::toInteger($records);
         $sql = 'select title as productName from `#__js_res_record` where id in (SELECT field_value FROM `#__js_res_record_values` WHERE field_id=114 and record_id in ('.implode(',',$records).'))';
         $db -> setQuery($sql);
         $results['products'] = $db->loadObjectList();
         $sql = 'select fields as planDetail from `#__js_res_record` where id in (SELECT field_value FROM `#__js_res_record_values` WHERE field_id=69 and record_id in ('.implode(',',$records).'))';
         if (!empty($plan_ids)) {
+            ArrayHelper::toInteger($plan_ids);
           $sql = 'select id,title,fields as planDetail from `#__js_res_record` where id in ('.implode(',',$plan_ids).')';
         }
         $db -> setQuery($sql);
@@ -648,14 +656,14 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
   
     $res_id = $_REQUEST['id'];
     $db = JFactory::getDbo();
-    $db->setQuery('select `field_value` from #__js_res_record_values where `field_id`=77 and `record_id`='.$res_id);
+    $db->setQuery('select `field_value` from #__js_res_record_values where `field_id`=77 and `record_id`='. (int) $res_id);
     $result = $db->loadColumn();
     if(empty($result))
     {
       $app->redirect( $retunrUrl, $msg=JText::_("RESEND_ACTIVATION_EMAIL_FAIL_NO_USER_ATTACHED"), $msgType='message');
     }
 
-    $db->setQuery('select `id` from #__users where `id`="'.($result[0]?$result[0]:0).'"');
+    $db->setQuery('select `id` from #__users where `id`="'. (int) ($result[0]?$result[0]:0).'"');
     $user_id = $db->loadColumn();
     if(empty($user_id))
     {
@@ -674,7 +682,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
         $userParams = json_decode($db->loadResult());
         $userParams->activation_time = date('Y-m-d H:i:s');
         $params = json_encode($userParams);
-        $db->setQuery('UPDATE `#__users` SET `params` = \'' . $params . '\' WHERE `id` = ' . $result[0]);
+        $db->setQuery('UPDATE `#__users` SET `params` = \'' . $params . '\' WHERE `id` = ' . (int) $result[0]);
         $result = $db->execute();
         $app->redirect( $retunrUrl, $msg=JText::_("RESEND_ACTIVATION_EMAIL_SUCCESS"), $msgType='message');
     }
@@ -729,7 +737,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
         $db = JFactory::getDbo();
         $query = $db->getQuery(true);
 
-        $query->select("record_id")->from("#__js_res_record_values")->where('field_id=16 and field_value='.$object_id);
+        $query->select("record_id")->from("#__js_res_record_values")->where('field_id=16 and field_value='. (int) $object_id);
         $db->setQuery($query);
         $result = $db->loadColumn();
 
@@ -790,7 +798,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
 
 
       //Delete attached environment from databse for the record
-      $query->delete("#__js_res_record_values")->where('field_id = 34 AND field_value = '.$record_id);
+      $query->delete("#__js_res_record_values")->where('field_id = 34 AND field_value = '. (int) $record_id);
       $db->setQuery($query);
 
       //if delete failed, refesh page
@@ -803,7 +811,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
     $fieldsValue = str_replace('\\','\\\\',$fields);
     $fieldsValue = str_replace("'","\'",$fieldsValue);
       $query = $db->getQuery(true);
-    $query->update($db->quoteName('#__js_res_record'))->set($db->quoteName('fields') . "='" .  $fieldsValue ."'")->where($db->quoteName('id') . '=' . $record_id);
+    $query->update($db->quoteName('#__js_res_record'))->set($db->quoteName('fields') . "='" .  $fieldsValue ."'")->where($db->quoteName('id') . '=' . (int) $record_id);
       $db->setQuery($query);
 
       if($db->query()){
@@ -1015,22 +1023,22 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
 
       }else{
         $db = JFactory::getDbo();
-        $sql = 'select record_id from #__js_res_record_values where field_value='.$user_id;
+        $sql = 'select record_id from #__js_res_record_values where field_value='. (int)$user_id;
         $db->setQuery($sql);
         if ($result = $db -> loadObjectList()) {
           foreach($result as $record) {
-            $db->setQuery('delete from #__js_res_record where id='.$record->record_id);
+            $db->setQuery('delete from #__js_res_record where id='.(int)$record->record_id);
             $db -> execute();
-            $db->setQuery('delete from #__js_res_record_values where record_id='.$record->record_id);
+            $db->setQuery('delete from #__js_res_record_values where record_id='.(int)$record->record_id);
             $db -> execute();
           }
         }
         if(in_array(12, $user->getAuthorisedGroups())) { // User has already joined an organization.
-          $db->setQuery('select * from #__user_usergroup_map where user_id='.$user_id);
+          $db->setQuery('select * from #__user_usergroup_map where user_id='.(int)$user_id);
           if ($result = $db -> loadObjectList()) {
             foreach($result as $record) {
               if ($record->group_id > 12) {
-                $db->setQuery('update #__user_usergroup_map set group_id='.$group_id.' where user_id='.$user_id.' and group_id='.$record->group_id);
+                $db->setQuery('update #__user_usergroup_map set group_id='.(int)$group_id.' where user_id='.(int)$user_id.' and group_id='.(int)$record->group_id);
                 if($db -> execute()) {
                   AjaxHelper::send("");
                 } else {
@@ -1040,7 +1048,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
             }
           }
         } else {
-          $db->setQuery('insert into #__user_usergroup_map values ('.$user_id.','.$group_id.')');
+          $db->setQuery('insert into #__user_usergroup_map values ('.(int)$user_id.','.(int)$group_id.')');
           if($db -> execute()) {
             AjaxHelper::send("");
           } else {
@@ -1118,7 +1126,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
 
         $db = JFactory::getDbo();
 
-        $db->setQuery('select * from #__user_usergroup_map where user_id='.$user_id.' and group_id='.$old_group_id);
+        $db->setQuery('select * from #__user_usergroup_map where user_id='.(int)$user_id.' and group_id='.(int)$old_group_id);
 
         if ($result = $db -> loadObjectList()) {
 
@@ -1128,7 +1136,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
 
             if ($record->group_id > 12) {
 
-              $db->setQuery('update #__user_usergroup_map set group_id='.$group_id.' where user_id='.$user_id.' and group_id='.$record->group_id);
+              $db->setQuery('update #__user_usergroup_map set group_id='.(int)$group_id.' where user_id='.(int)$user_id.' and group_id='.(int)$record->group_id);
 
               if($db -> execute()) {
 
@@ -1266,7 +1274,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
                 // Generate the new password hash.
                 $crypted = JUserHelper::hashPassword($new_password);
                 $new_password_hash = $crypted;
-                $sql = 'UPDATE #__users SET password="'.$new_password_hash.'" WHERE id='.$user->id;
+                $sql = 'UPDATE #__users SET password="'.$new_password_hash.'" WHERE id='.(int)$user->id;
                 $db->setQuery($sql);
                 $db -> execute();
                 AjaxHelper::send("");
@@ -1291,7 +1299,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
 
       $db = JFactory::getDbo();
       $query = $db->getQuery(true);
-      $query->update($db->quoteName('asg_product_show_map'))->set($db->quoteName('is_show') . '="' . $flag . '"')->where($db->quoteName('product_id') . '=' . $product_id);
+      $query->update($db->quoteName('asg_product_show_map'))->set($db->quoteName('is_show') . '="' . $flag . '"')->where($db->quoteName('product_id') . '=' . (int)$product_id);
       $db->setQuery($query);
       $flag = $db->query();
       if($flag){
@@ -1331,7 +1339,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
        $query->select("e.field_value AS product_id, e.record_id AS environment_id")->from("#__js_res_record_values AS e")
              ->where("e.record_id IN (" . implode(",", $deletedEnvs) . ")")
              ->where("e.field_id = 34")
-             ->where('e.field_value IN ( SELECT a.field_value from #__js_res_record_values AS a where a.field_id = 6 and a.record_id = ' . $record_id . ')' );
+             ->where('e.field_value IN ( SELECT a.field_value from #__js_res_record_values AS a where a.field_id = 6 and a.record_id = ' . (int) $record_id . ')' );
 
       $db->setQuery($query);
 
@@ -1361,7 +1369,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
       $return = base64_decode($return);
 
 
-      $query->delete()->from("#__user_profiles")->where($db->quoteName('user_id') . '=' . $user_id . ' and ' . $db->quoteName('profile_key') . 'IN (' . $db->quote("guide.show") . " , " . $db->quote("guide.step") . ")");
+      $query->delete()->from("#__user_profiles")->where($db->quoteName('user_id') . '=' . (int)$user_id . ' and ' . $db->quoteName('profile_key') . 'IN (' . $db->quote("guide.show") . " , " . $db->quote("guide.step") . ")");
 
       $db->setQuery($query);
       $db->query();
@@ -1401,13 +1409,13 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
       $group_name = 'Organization '.$org_id.' '.$user_type;
           $db = JFactory::getDbo();
           //get user id
-          $userIdSql = "SELECT * FROM `#__users` WHERE `email` LIKE '".$user_email."' ORDER BY id DESC";
+          $userIdSql = "SELECT * FROM `#__users` WHERE `email` LIKE '".$db->quote($user_email)."' ORDER BY id DESC";
           $db->setQuery($userIdSql);
           $userObj = $db->loadObject();
           $user_id = $userObj->id;
         
           //get group id
-          $getGroupIdSql = 'SELECT `id` FROM `#__usergroups` WHERE title = "'.$group_name.'" LIMIT 1';
+          $getGroupIdSql = 'SELECT `id` FROM `#__usergroups` WHERE title = "'.$db->quote($group_name).'" LIMIT 1';
           $db->setQuery($getGroupIdSql);
           $groupObj = $db->loadObject();
           $group_id = $groupObj->id;
@@ -1448,7 +1456,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
         $old_password = $_POST['oldPassword'];
         if ( !empty( $email ) && !empty( $old_password ) ) {
             $db = JFactory::getDbo();
-            $sql = "SELECT `password` FROM `#__users` WHERE `email` = '".$email."' ";
+            $sql = "SELECT `password` FROM `#__users` WHERE `email` = '".$db->quote($email)."' ";
             $db->setQuery( $sql );
             $obj = $db->loadObject();
             if ( JUserHelper::verifyPassword( $old_password, $obj->password ) ) {
@@ -1615,19 +1623,19 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
      */
     private function checkOldOperation( $title, $apiID ){
         $db = JFactory::getDbo();
-        $sql = 'SELECT `record_id` FROM `#__js_res_record_values` WHERE `field_id` = 30 and `field_value` = '.$apiID;
+        $sql = 'SELECT `record_id` FROM `#__js_res_record_values` WHERE `field_id` = 30 and `field_value` = '.(int)$apiID;
         $db->setQuery($sql);
         $operation = $db->loadObjectList();
         foreach ( $operation as $opt ) {
             if ( !empty( $opt->record_id ) ) {
-                $sql2 = 'SELECT `title` FROM `#__js_res_record` WHERE `id` = '.$opt->record_id;
+                $sql2 = 'SELECT `title` FROM `#__js_res_record` WHERE `id` = '.(int)$opt->record_id;
                 $db->setQuery($sql2);
                 $record = $db->loadObject();
                 if ( !empty ( $record->title ) && $record->title == $title ) {
-                    $sql3 = 'DELETE FROM `#__js_res_record` WHERE `id` = '.$opt->record_id;
+                    $sql3 = 'DELETE FROM `#__js_res_record` WHERE `id` = '.(int)$opt->record_id;
                     $db->setQuery($sql3);
                     $db->execute();
-                    $sql4 = 'DELETE FROM `#__js_res_record_values` WHERE `record_id` = '.$opt->record_id;
+                    $sql4 = 'DELETE FROM `#__js_res_record_values` WHERE `record_id` = '.(int) $opt->record_id;
                     $db->setQuery($sql4);
                     $db->execute();
                 }
@@ -1724,7 +1732,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
         }
         else {
             $db = JFactory::getDbo();
-            $selectSql = 'SELECT `id` FROM `#__js_res_record` WHERE `title` = "'.$copyTitle.'"';
+            $selectSql = 'SELECT `id` FROM `#__js_res_record` WHERE `title` = "'.$db->quote($copyTitle).'"';
             $db->setQuery($selectSql);
             $res = $db->loadObject();
             if ( $res->id ){
@@ -1734,7 +1742,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
                 AjaxHelper::error($model->getError());
             }
 
-            $updateSql = 'UPDATE `#__js_res_record` SET `title` = \''.$copyTitle.'\' WHERE `title` = \''.$title.'\'';
+            $updateSql = 'UPDATE `#__js_res_record` SET `title` = \''. $db->quote($copyTitle).'\' WHERE `title` = \''.$db->quote($title).'\'';
             $db->setQuery($updateSql);
             $db->execute();
         }
@@ -1754,7 +1762,7 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
         $db = JFactory::getDbo();
         $object_id = $_REQUEST['objectId'];
         $object_type = $_REQUEST['objectType'];
-        $sql = 'SELECT title,type_id FROM `#__js_res_record` WHERE id='.$object_id.'';
+        $sql = 'SELECT title,type_id FROM `#__js_res_record` WHERE id='. (int)$object_id.'';
         $db->setQuery($sql);
         $result = $db->loadObject();
         $type_id = $result->type_id;

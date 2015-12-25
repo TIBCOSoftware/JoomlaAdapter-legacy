@@ -22,9 +22,25 @@ $app = JFactory::getApplication();
 $doc = JFactory::getDocument();
 $this->language = $doc->language;
 $this->direction = $doc->direction;
-
 $menus = &JSite::getMenu();
 $currentMenu = $menus->getActive();
+
+// Access Level View Permissions
+$title = $currentMenu->params->page_title?$currentMenu->params->page_title:$currentMenu->title;
+$doc->title = $title;
+
+    /**
+     *      * For overide the browser's title
+     * @var [type]
+     */
+    $menu = $app->getMenu();
+    if($active = $menu->getActive())
+    {
+        $title = $active->params->get('page_title');
+        $doc->title = $title ? $title : $active->title;
+    }
+
+
 
 // Detecting Active Variables
 $option   = $app->input->getCmd('option', '');

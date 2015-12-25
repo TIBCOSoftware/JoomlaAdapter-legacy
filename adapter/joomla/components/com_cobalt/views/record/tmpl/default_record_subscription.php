@@ -34,6 +34,7 @@ $sub_org_id = TibcoTibco::getSubOrgId($this->item->id);
 $current_user_org_id = TibcoTibco::getCurrentUserOrgId();
 if(strpos($path,'userprofile') || strpos($path, 'dashboard')){
   if(!($current_user_org_id == $sub_org_id || in_array(7, $auth_group_ids) || in_array(8, $auth_group_ids))){
+
     JFactory::getApplication()->enqueueMessage(JText::_('USERPROFILE_CUSTOM_ACCESS_DENIED_ERROR'), 'error');
     return;
   }
@@ -207,7 +208,7 @@ if(!(in_array(7, $user->getAuthorisedGroups()) || in_array(8, $user->getAuthoris
 ?>
 <script type="text/javascript">
 jQuery(function () {
- 	Joomla.showError(['<?php echo JText::_("CWARNING_NO_ACCESS_ARTICLE"); ?>']);
+ 	Joomla.showError(['<?php echo JText::_("USERPROFILE_CUSTOM_ACCESS_DENIED_ERROR"); ?>']);
 })
 
 </script><?php else: ?>  

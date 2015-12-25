@@ -32624,10 +32624,10 @@
             } else {
                 // Default validator
                 if (window.location.protocol === 'https') {
-                    this.model.validatorUrl = 'https://online.swagger.io/validator';
+                    this.model.validatorUrl = null;
                 }
                 else {
-                    this.model.validatorUrl = 'http://online.swagger.io/validator';
+                    this.model.validatorUrl = null;
                 }
             }
         },
