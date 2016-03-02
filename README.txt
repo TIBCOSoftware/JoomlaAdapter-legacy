@@ -1,7 +1,7 @@
 ==================================================================================
 Project Name    : Adapter Code for TIBCO(R) API Exchange and Joomla!
-Release Version : 2.1.1_HF-003
-Release Date    : July 2015
+Release Version : 2.1.1_HF-004
+Release Date    : March 2016
 ==================================================================================
 DISCLAIMER
 
@@ -15,7 +15,7 @@ on TIBCO's open source support plans.
 ==================================================================================
 CONTENTS OF THE DISTRIBUTION
 
-The Adapter Code for TIBCO(R) API Exchange and Joomla! distribution is 
+The Adapter Code for TIBCO(R) API Exchange and Joomla! distribution is
 contained in a zip file.
 
 The distribution zip file contains the following folders:
@@ -23,10 +23,10 @@ The distribution zip file contains the following folders:
 /cobalt - Contains Cobalt extensions required for the API management portal.
           You must install these extensions after initial installation of
           the Joomla adapter code.  For detailed information see the Adapter
-          Code for API Exchange Manager and Joomla! Installation and 
+          Code for API Exchange Manager and Joomla! Installation and
           Configuration Guide.
-   
-/joomla -  Contains the basic Joomla distribution (Joomla 3.3.6)
+
+/joomla -  Contains the basic Joomla distribution
 
 /adapter - Contains code developed for Joomla and MySQL to support
            integration with TIBCO(R) API Exchange Manager.
@@ -41,39 +41,39 @@ Contents of the /adapter Directory:
 /sql-scripts - Contains a full SQL copy of the entire Joomla database.
                The SQL files include:
 
-             - baseline&seed_data directory	           - Scripts for fresh 
-                                                             install and upload the 
+             - baseline&seed_data directory	           - Scripts for fresh
+                                                             install and upload the
                                                              samples data.
-                                                
-             - com_migrate(upgrade_2.1.0_to_2.1.0-HF4).zip - Scripts to migrate 
+
+             - com_migrate(upgrade_2.1.0_to_2.1.0-HF4).zip - Scripts to migrate
                                                              from 2.1.0 to 2.1.0 HF4
 
-             - com_migrate(upgrade_2.1.0-HF4_to_2.1.1).zip - Scripts to migrate 
+             - com_migrate(upgrade_2.1.0-HF4_to_2.1.1).zip - Scripts to migrate
                                                              from 2.1.0 HF4 to 2.1.1
 
-             - com_migrate(upgrade_2.1.1_to_2.1.1-hf1).zip - Scripts to migrate 
+             - com_migrate(upgrade_2.1.1_to_2.1.1-hf1).zip - Scripts to migrate
                                                              from 2.1.1 to 2.1.1 HF1
 
              - com_migrate(upgrade_2.1.1_or_2.1.1-hf1_to_2.1.1-hf2).zip - Scripts
-                                                             to migrate from 2.1.1 
+                                                             to migrate from 2.1.1
                                                              or 2.1.1 HF1 to
                                                              2.1.1 HF2
 
              - com_migrate(upgrade_2.1.1_or_2.1.1-hfx_to_2.1.1-hf3).zip - Scripts
-                                                             to migrate from 2.1.1 
+                                                             to migrate from 2.1.1
                                                              (including HF1, HF2)
                                                              to 2.1.1 HF3
 
              - access_field_type_int(10).zip               - Scripts to update access
                column in openapi_js_res_record table from tinyint(1) to int(10)
-                                                             
+
 ==================================================================================
 DOCUMENTATION
 
 The following is the documentation for the Adapter Code for TIBCO API Exchange
 and Joomla!:
 
-- Adapter Code for TIBCO API Exchange and Joomla! Installation  -- 
+- Adapter Code for TIBCO API Exchange and Joomla! Installation  --
   Describes installation of prerequisite software (MySQL, PHP, Apache, and Cobalt),
   installation of the Adapter Code for API Exchange Manager and Joomla!, and
   selected configuration topics.
@@ -81,33 +81,30 @@ and Joomla!:
 - Adapter Code for TIBCO API Exchange and Joomla! Administration --  Describes
   using the API Exchange Manager Joomla administration interface to set up users,
   user groups, and core configuration.  Also describes how to use the Joomla-based
-  API Exchange Manager developer portal to perform administrative tasks for 
+  API Exchange Manager developer portal to perform administrative tasks for
   API Exchange; for example, creation of APIs, products, and operations, setting
   up plans and subscriptions, and so on.
-  
-- Adapter Code for TIBCO API Exchange and Joomla! User's Guide -- Describes how 
+
+- Adapter Code for TIBCO API Exchange and Joomla! User's Guide -- Describes how
   developers use the portal to create applications, associate plans
   with then, request subscriptions, request API keys, and run
-  analytics to evaluate APIs.  
-  
-  The Adapter Code for TIBCO API Exchange Manager and Joomla! documentation
-  is available at the following URL: 
-     https://github.com/API-Exchange/JoomlaAdapter/wiki
-    
-==================================================================================
-Migration for Adapter Code for TIBCO API Exchange and Joomla! from "Release 2.1.1 
-or Release 2.1.1_HF-002" to "Release 2.1.1_HF-003"
+  analytics to evaluate APIs.
 
-Follow these steps to migrate "Release 2.1.1 
-or Release 2.1.1_HF-002" of 
-Adapter Code for TIBCO API Exchange and Joomla! to "Release 2.1.1_HF-003":
+  The Adapter Code for TIBCO API Exchange Manager and Joomla! documentation
+  is available at the following URL:
+     https://github.com/API-Exchange/JoomlaAdapter/wiki
+
+==================================================================================
+Migration for Adapter Code for TIBCO API Exchange and Joomla! from
+"Release 2.1.1", Release 2.1.1_HF-002" or "Release 2.1.1_HF-003" to
+"Release 2.1.1-HF_004"
 
 Task A) Back up Existing Database
-Before upgrading to API Exchange 2.1.1_HF-003, it is best practice to 
-create a backup of both the Joomla files and the database. 
-Refer to the "Adapter Code for TIBCO(R) API Exchange and Joomla!" Release Notes 
+Before upgrading to API Exchange 2.1.1_ENGR-004, it is best practice to
+create a backup of both the Joomla files and the database.
+Refer to the "Adapter Code for TIBCO(R) API Exchange and Joomla!" Release Notes
 Version 2.1.1 for the instructions to backup the database and Joomla files.
-Note: There are several different tools you can use to backup the database. 
+Note: There are several different tools you can use to backup the database.
       Adjust the following instructions as necessary for your chosen method.
 
 Follow these steps if you are using "phpMyAdmin."
@@ -121,16 +118,16 @@ Follow these steps if you are using "phpMyAdmin."
  6. Copy your Joomla installation folder to another location as a back up.
 
 
-Task B) Migrate to Release 2.1.1_HF-003
+Task B) Migrate to Release 2.1.1_HF-004
 
-Follow these steps to update to Release 2.1.1_HF-003:
+Follow these steps to update to Release 2.1.1_HF-004:
  1. Log in to the Joomla administration utility.
  2. Choose Extensions > Extension Manager.
  3. Choose the extension package "Joomla_3.4.1-Stable-Update_Package.zip".
  4. Click the "Upload and Install" button. The migration installation might take a while.
  5. Choose Extensions > Extension Manager.
  6. Choose the latest Cobalt package: "pkg_cobalt.j3.everything.v.8.652_pathch02.zip."
- 7. Click the "Upload and Install" button. The migration installation might take a while. 
+ 7. Click the "Upload and Install" button. The migration installation might take a while.
  8. Choose Extensions > Extension Manager.
  9. Choose the latest Mint package: "pkg.mint.j3.media.v.8.82_patch01.zip."
 10. Click the "Upload and Install" button. The migration installation might take a while.
@@ -143,16 +140,25 @@ Follow these steps to update to Release 2.1.1_HF-003:
     the directly contents before copying.
 15. Clear the expired cache by clicking on the menu item located in the "System" menu.
 
-
-Note: Your project installation is now upgraded to version 2.1.1_HF-003.
+Note: Your project installation is now upgraded to version 2.1.1_HF-ENGR-004.
 Clear your browser to ensure that the latest content is being used in the portal.
 
 Task C) Restore Installation with Backup Data (Optional)
-If anything goes wrong during the migration process, you can easily restore your data 
-by restoring the database using the backup data you retained after backing up your 
-original data. Refer to the 
-"Adapter Code for TIBCO(R) API Exchange and Joomla!" Release Notes 
+If anything goes wrong during the migration process, you can easily restore your data
+by restoring the database using the backup data you retained after backing up your
+original data. Refer to the
+"Adapter Code for TIBCO(R) API Exchange and Joomla!" Release Notes
 Version 2.1.1 for the instructions to restore the installation with backup data.
+==================================================================================
+Closed Issues in 2.1.1_HF-ENGR-004 (This Release)
+
+ASG-7296
+API Explorer passes the request header content type as “application/json”
+when the user selected the option “application/xml”.
+
+ASG-7326
+The user registration recaptcha is not displayed.
+
 ==================================================================================
 Closed Issues in 2.1.1_HF-003 (This Release)
 
@@ -168,43 +174,43 @@ Follow these steps to upgrade Joomla!:
     "pkg.mint.j3.media.v.8.82_patch01.zip" folder.
  3. Copy over all of the files inside the following folder:
     "TIB_api-exchange-joomla-adapter_2.1.1_HF-003/adapter/joomla" into your
-    Joomla's root folder. 
+    Joomla's root folder.
  4. Overwrite any existing files.
  5. Install the "com_baseline.zip" file located in the "TIB_api-exchange-joomla
-    -adapter_2.1.1_HF-003/adapter/sql-scripts/baseline&seed_data" folder in the 
+    -adapter_2.1.1_HF-003/adapter/sql-scripts/baseline&seed_data" folder in the
     Extension Manager of Joomla.
  6. Install the migration package which is the "com_migrate(upgrade_2.1.1_or
     -2.1.1-hfx_to_2.1.1.-hf3).zip" file located in the "adapter/sql-scripts" folder
     from the Extension Manager of Joomla.
- 7. If you see any "Notice" shown on top of the page, go to the "Global Configuration"  
+ 7. If you see any "Notice" shown on top of the page, go to the "Global Configuration"
     by clicking the menu in the "System" menu.
  8. On the "Global Configuration" page, click the "Server" tab. Then change the
     "Error Reporting" to "None." Click the "Save and Close" button.
 
-Note: Your Joomla! version has been upgraded. When you navigate to the API Manager 
-      by clicking on the menu item in the "Components" menu, you will find the 
+Note: Your Joomla! version has been upgraded. When you navigate to the API Manager
+      by clicking on the menu item in the "Components" menu, you will find the
       version number, which should match the one in the file name of the API
       Explorer Adapter package.
 
 ASG-6744
-Support for reCAPTCHA v2. 
+Support for reCAPTCHA v2.
 Migration to reCAPTCHA v2 might require:
 
  1. Configuring the Captcha - ReCaptcha Plugin from the administrator user interface
     (Extensions > Plugin Manager). Click the plugin to configure the site key and
     secret key that can be obtained for free from Google.
- 2. Changing the Default Captcha on Global Configuration > Site Settings 
+ 2. Changing the Default Captcha on Global Configuration > Site Settings
     to “Captcha - ReCaptcha"
 
 ==================================================================================
 Closed Issues in 2.1.1_HF-002
 
 ASG-6287
-TIBCO API Exchange Manager threw an exception when the user created or edited 
+TIBCO API Exchange Manager threw an exception when the user created or edited
 more than one target environment containing more than one API.
 
 ASG-6281
-TIBCO API Exchange Manager did not allow the user to edit the application after 
+TIBCO API Exchange Manager did not allow the user to edit the application after
 a product had been enabled in the application.
 
 ==================================================================================
@@ -217,8 +223,8 @@ rather than method which is required for Swagger 1.2. Both are now supported.
 ==================================================================================
 COPYRIGHT & LICENSE INFORMATION
 
-Except as stated below, this code is made available under the 
-GNU General Public License, version 2.0. Copies of the applicable 
+Except as stated below, this code is made available under the
+GNU General Public License, version 2.0. Copies of the applicable
 licenses are contained in a file titled "LICENSE.txt" that is included
 with this code distribution.
 
@@ -228,7 +234,7 @@ TIBCO package:
       License, version 2.0)
     * Copyright (c) 2009-2012 Jeremy Ashkenas, DocumentCloud
       Inc. (licensed under the MIT license)
-    * Copyright (c) 2011 by Yehuda Katz 
+    * Copyright (c) 2011 by Yehuda Katz
     * Copyright (c) 2010 "Cowboy" Ben Alman (MIT and GPL licenses)
 
 Joomla package:

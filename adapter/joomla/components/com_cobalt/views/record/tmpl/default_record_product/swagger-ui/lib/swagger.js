@@ -1236,7 +1236,7 @@ SwaggerRequest.prototype.setHeaders = function(params, operation) {
   // if there's a body, need to set the accepts header via requestContentType
   if (body && (this.type === "POST" || this.type === "PUT" || this.type === "PATCH" || this.type === "DELETE")) {
     if (this.opts.requestContentType)
-      accepts = this.opts.requestContentType;
+      consumes = this.opts.requestContentType;
   } else {
     // if any form params, content type must be set
     if(definedFormParams.length > 0) {
@@ -1248,7 +1248,7 @@ SwaggerRequest.prototype.setHeaders = function(params, operation) {
     else if (this.type == "DELETE")
       body = "{}";
     else if (this.type != "DELETE")
-      accepts = null;
+      consumes = null;
   }
 
   if (consumes && this.operation.consumes) {
