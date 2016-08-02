@@ -16,6 +16,10 @@ use Joomla\Utilities\ArrayHelper;
 
 class CobaltControllerAjaxMore extends JControllerAdmin {
     
+    public function returnData() {
+        AjaxHelper::send('admin');
+    }
+
     public function updateStatusOfKey() {
         $ids = $_REQUEST['keyList'];
         ArrayHelper::toInteger($ids);
@@ -1204,6 +1208,92 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
         AjaxHelper::error(JText::_('EMAIL_RETURN_NOTES_4'));
       }
     }
+
+        /**
+     * get enabled subscriptions' product&plan in specific application. 
+     */
+  public function getDashboardData() {
+    $app_ids = $_POST["app_ids"];
+    $sub_ids = $_POST["sub_ids"];
+    $plan_ids = $_POST["plan_ids"];
+
+    $counter = array();
+    if (!empty($app_ids)) {
+      $counter = $app_ids;
+    }else if(!empty($sub_ids)){
+      $counter = array(1);
+    }else{
+      AjaxHelper::error("");
+    }
+    $returnValue = array();
+
+    foreach ($counter as $app_id) {
+
+      if (!empty($app_ids)) {
+        $records = DeveloperPortalApi::subscriptionsInApplication($app_id);
+      }
+      else{
+              $records = $sub_ids;
+              if (count($records)>0) {
+              $results = array();
+              $db = JFactory::getDbo();
+              ArrayHelper::toInteger($records);
+
+              /*
+              $sql = 'select title as productName from `#__js_res_record` where id in (SELECT field_value FROM `#__js_res_record_values` WHERE field_id=114 and record_id in ('.implode(',',$records).'))';
+              $db -> setQuery($sql);
+              $results['products'] = $db->loadObjectList();
+              */
+              $sql = 'select fields as planDetail from `#__js_res_record` where id in (SELECT field_value FROM `#__js_res_record_values` WHERE field_id=69 and record_id in ('.implode(',',$records).'))';
+              if (!empty($plan_ids)) {
+                  ArrayHelper::toInteger($plan_ids);
+                $sql = 'select id,title,fields as planDetail from `#__js_res_record` where id in ('.implode(',',$plan_ids).')';
+              }
+              $db -> setQuery($sql);
+              $results['plans'] = $db->loadObjectList(); 
+              $sql = 'select id,current_usage,pct from (select id from #__js_res_record where id in ('.implode(',',$records).')) a left join (SELECT subscription_id, current_usage, pct FROM  `asg_subscription_usage` WHERE subscription_id in ('.implode(',',$records).')) b on a.id=b.subscription_id';
+              $db -> setQuery($sql);
+              $results['usage'] = $db->loadObjectList();
+              $returnValue[] = $results;
+              }else {
+                $returnValue[] = array();
+              }
+
+               AjaxHelper::send($returnValue);
+      }
+      
+
+      if (count($records)>0) {
+
+              $results = array();
+              $db = JFactory::getDbo();
+              ArrayHelper::toInteger($records);
+
+              //Use API instead of a SQL call
+              $results['products'] = DeveloperPortalApi::getProductsInApplication($app_id);
+              $results['product_ids'] = DeveloperPortalApi::getProductIdsInApplication($app_id);
+              $results['plans'] = DeveloperPortalApi::getPlanModel();
+              $results['application_subscriptions'] = DeveloperPortalApi::getApplicationSubscriptions($app_id);
+              $results['subscriptions'] = DeveloperPortalApi::subscriptionsInApplication($app_id);
+             
+              $sql = 'select id,current_usage,pct from (select id from #__js_res_record where id in ('.implode(',',$records).')) a left join (SELECT subscription_id, current_usage, pct FROM  `asg_subscription_usage` WHERE subscription_id in ('.implode(',',$records).')) b on a.id=b.subscription_id';
+              $db -> setQuery($sql);
+              $results['usage'] = $db->loadObjectList();
+              $returnValue[] = $results;
+         }
+
+          else {
+            
+            $returnValue[] = array();
+
+          }
+    }
+    
+    AjaxHelper::send($returnValue);
+  }
+  
+
+
     /**
      * send email when they have completely used up their quota.
      * Example: /index.php?option=com_cobalt&task=ajaxmore.noticeAPILimitUsageFull&orgId=220&subId=238
@@ -1747,6 +1837,21 @@ class CobaltControllerAjaxMore extends JControllerAdmin {
             $db->execute();
         }
         AjaxHelper::send("success");
+    }
+
+    public function getAllswaggerJson(){
+        $db = JFactory::getDbo();
+        $product_id = (int) $_POST['id'];
+        $sql = 'SELECT `fields`FROM `#__js_res_record` WHERE `id` = '.$product_id;
+        $db->setQuery($sql);
+        $data = $db->loadObject();
+        $fields = json_decode($data->fields);
+        $ids = implode( ',', $fields->{7} );
+        $sql2 = 'SELECT `realname`, `filename`, `ctime` FROM `#__js_res_files` WHERE `record_id` IN (SELECT id from `#__js_res_record` WHERE id IN ('.$ids.') AND published = 1) AND `saved` = 1';
+        //$sql2 = 'SELECT `realname`, `filename`, `ctime` FROM `#__js_res_files` WHERE `record_id` IN ('.$ids.') AND `saved` = 1';
+        $db->setQuery($sql2);
+        $swaggers = $db->loadObjectList();
+        AjaxHelper::send($swaggers);
     }
 
     /**

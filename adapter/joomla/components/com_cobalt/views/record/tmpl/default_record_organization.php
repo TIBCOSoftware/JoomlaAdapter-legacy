@@ -1,9 +1,4 @@
 <?php
-/* Portions copyright © 2013, TIBCO Software Inc.
- * All rights reserved.
- */
-?>
-<?php
 /**
  * Cobalt by MintJoomla
  * a component for Joomla! 1.7 - 2.5 CMS (http://www.joomla.org)
@@ -11,36 +6,59 @@
  * @copyright Copyright (C) 2012 MintJoomla (http://www.mintjoomla.com). All rights reserved.
  * @license GNU/GPL http://www.gnu.org/copyleft/gpl.html
  */
+ 
+ /* Portions copyright © 2013, TIBCO Software Inc.
+ * All rights reserved.
+ */
 
 defined('_JEXEC') or die();
 require_once JPATH_BASE . "/includes/api.php";
 
+//PHP Variable Definitions
+
 $item = $this->item;
+
+
 $params = $this->tmpl_params['record'];
+
 $icons = array();
 $category = array();
 $author = array();
 $details = array();
+$tasks_to_hide = array();
+
 $started = FALSE;
 $i = $o = 0;
-$tasks_to_hide = array();
-$org_admin_group_id = TibcoTibco::getGroupByOrgAndType($this->item->id, DeveloperPortalApi::USER_TYPE_MANAGER);
-$auth_group_ids = $this->user->getAuthorisedGroups();
-$path = JRequest::getURI();
-$current_user_org_id = TibcoTibco::getCurrentUserOrgId();
-  if(!($current_user_org_id == $this->item->id || in_array(7, $auth_group_ids) || in_array(8, $auth_group_ids))){
-  	JFactory::getApplication()->enqueueMessage(JText::_('USERPROFILE_CUSTOM_ACCESS_DENIED_ERROR'), 'error');
-   return;
-  }
-if(!in_array(8, $auth_group_ids) || JComponentHelper::getParams("com_emails")->get("enable_deleting_objects") != 1) {
-  $tasks_to_hide = array(DeveloperPortalApi::TASK_DELETE);
-}
+
 $membersValue = (object)null;
 $contactInfo = (object)null;
 $subscriptionsValue = (object)null;
 $appsValue = (object)null;
 $threshold = (object)null;
+
 $thresholdValue = '99';
+
+$org_admin_group_id = TibcoTibco::getGroupByOrgAndType($this->item->id, DeveloperPortalApi::USER_TYPE_MANAGER);
+
+$auth_group_ids = $this->user->getAuthorisedGroups();
+
+$path = JRequest::getURI();
+
+$current_user_org_id = TibcoTibco::getCurrentUserOrgId();
+
+
+//Access Control
+if(!($current_user_org_id == $this->item->id || in_array(7, $auth_group_ids) || in_array(8, $auth_group_ids))){
+  	JFactory::getApplication()->enqueueMessage(JText::_('USERPROFILE_CUSTOM_ACCESS_DENIED_ERROR'), 'error');
+   return;
+  }
+
+//Enabling Deleting Objects
+if(!in_array(8, $auth_group_ids) || JComponentHelper::getParams("com_emails")->get("enable_deleting_objects") != 1) {
+  $tasks_to_hide = array(DeveloperPortalApi::TASK_DELETE);
+}
+
+// Variables?
 if(isset($this->item->fields_by_groups[null])){
 	foreach ($this->item->fields_by_groups[null] as $field_id => $field){
 		$started = true;
@@ -62,73 +80,337 @@ if(isset($this->item->fields_by_groups[null])){
 		}
 	}
 }
+
+//Maybe Start a Function here
+
+//Setting the JoomlaRoot to a JS variable.
+$hasJoomlaRoot= JUri::base(true);
+
+if($hasJoomlaRoot){
+
+	?>
+	<script type="text/javascript">
+
+	var hasJoomlaRoot='<?php echo $hasJoomlaRoot;?>';
+
+	</script>
+	<?php
+}
+
+else{
+
+	?>
+	<script type="text/javascript">
+	var hasJoomlaRoot=false;
+	</script>
+	<?php
+}
+
 ?>
 
-<script type="text/javascript">
-var hasJoomlaRoot=false;
-</script>
-<?php $hasJoomlaRoot= JUri::base(true);?>
-<?php if($hasJoomlaRoot):?>
-<script type="text/javascript">
-var hasJoomlaRoot='<?php echo $hasJoomlaRoot;?>';
-</script>
-<?php endif;?>
-<?php
-if($params->get('tmpl_core.item_categories') && $item->categories_links)
+<!-- Starting to Make the Page in HTML -->
+<style>
+#app-list .alert-container
 {
-	$category[] = sprintf('<dt>%s<dt> <dd>%s<dd>', (count($item->categories_links) > 1 ? JText::_('CCATEGORIES') : JText::_('CCATEGORY')), implode(', ', $item->categories_links));
-}
-if($params->get('tmpl_core.item_user_categories') && $item->ucatid)
-{
-	$category[] = sprintf('<dt>%s<dt> <dd>%s<dd>', JText::_('CUCAT'), $item->ucatname_link);
-}
-if($params->get('tmpl_core.item_author') && $item->user_id)
-{
-	$a[] = JText::sprintf('CWRITTENBY', CCommunityHelper::getName($item->user_id, $this->section));
-	if($params->get('tmpl_core.item_author_filter'))
-	{
-		$a[] = FilterHelper::filterButton('filter_user', $item->user_id, NULL, JText::sprintf('CSHOWALLUSERREC', CCommunityHelper::getName($item->user_id, $this->section, array('nohtml' => 1))), $this->section);
-	}
-	$author[] = implode(' ', $a);
-}
-if($params->get('tmpl_core.item_ctime'))
-{
-	$author[] = JText::sprintf('CONDATE', JHtml::_('date', $item->created, $params->get('tmpl_core.item_time_format')));
+  width:100%;
+
 }
 
-if($params->get('tmpl_core.item_mtime'))
+
+#app-list .org-container
 {
-	$author[] = JText::_('CMTIME').': '.JHtml::_('date', $item->modify, $params->get('tmpl_core.item_time_format'));
-}
-if($params->get('tmpl_core.item_extime'))
-{
-	$author[] = JText::_('CEXTIME').': '.($item->expire ? JHtml::_('date', $item->expire, $params->get('tmpl_core.item_time_format')) : JText::_('CNEVER'));
+  margin-top:18px;
 }
 
-if($params->get('tmpl_core.item_type'))
+.application_box
 {
-	$details[] = sprintf('%s: %s %s', JText::_('CTYPE'), $this->type->name, ($params->get('tmpl_core.item_type_filter') ? FilterHelper::filterButton('filter_type', $item->type_id, NULL, JText::sprintf('CSHOWALLTYPEREC', $this->type->name), $this->section) : NULL));
+  width:100%;
 }
-if($params->get('tmpl_core.item_hits'))
-{
-	$details[] = sprintf('%s: %s', JText::_('CHITS'), $item->hits);
-}
-if($params->get('tmpl_core.item_comments_num'))
-{
-	$details[] = sprintf('%s: %s', JText::_('CCOMMENTS'), CommentHelper::numComments($this->type, $this->item));
-}
-if($params->get('tmpl_core.item_favorite_num'))
-{
-	$details[] = sprintf('%s: %s', JText::_('CFAVORITED'), $item->favorite_num);
-}
-if($params->get('tmpl_core.item_follow_num'))
-{
-	$details[] = sprintf('%s: %s', JText::_('CFOLLOWERS'), $item->subscriptions_num);
-}
-?>
 
+.contact-info
+{
+  margin-left:0;
+  margin-right:0;
+  width:23%;
+  float:left;
+}
+
+.contact-info tbody tr td:last-child
+{
+  background-color:#ebebeb;
+  line-height:26px;
+  padding:0 5px;
+}
+
+.ctrl-org
+{
+  margin:12px 10px 0 0;
+}
+
+.dl-horizontal dd
+{
+  margin-bottom:10px;
+}
+
+.inline-doc
+{
+  padding:0;
+}
+
+.inline-doc h2
+{
+  cursor:pointer;
+  background-color:#f6f6f6;
+  font-weight:400;
+  margin:0;
+  padding:20px 0;
+}
+
+.inline-doc h2 span
+{
+  display:inline-block;
+  height:100%;
+  padding-left:30px;
+  font-size:25px;
+  line-height:25px;
+  color:#333;
+}
+
+.inline-doc-content
+{
+  border:0;
+  padding:4%;
+}
+
+.inline-doc-content dl
+{
+  margin-bottom:30px;
+  height:429px;
+  overflow:auto;
+  padding:0 30px;
+}
+
+.inline-doc-content dl dd
+{
+  margin-top:10px;
+  margin-left:0;
+  text-indent:0;
+  font-size:14px;
+  line-height:18px;
+  color:#666;
+}
+
+.inline-doc-content dl dd.time
+{
+  font-size:8px;
+  color:#888;
+  text-transform:uppercase;
+}
+
+.inline-doc-content dl dt
+{
+  margin-top:20px;
+  padding-right:10px;
+  overflow:hidden;
+  font-size:12px;
+  font-weight:700;
+  color:#000;
+}
+
+.line-brk
+{
+  margin-left:0!important;
+}
+
+.mem-email
+{
+  max-width:200px;
+}
+
+.mem-email a
+{
+  float:left;
+}
+
+.mem-email a.btn
+{
+  float:right;
+  margin-right:8%;
+}
+
+.mem-email p
+{
+  margin:0;
+}
+
+.member-details
+{
+  margin-right:2%;
+  width:68%;
+  float:left;
+}
+
+.menu-bar
+{
+  width:100%;
+  height:45px;
+  background-color:#eee;
+  box-shadow:inset 0 0 20px rgba(0,0,0,.1);
+}
+
+.menu-bar button
+{
+  margin-top:10px;
+  margin-left:10px;
+}
+
+.o-useage
+{
+  width:108px;
+  height:12px;
+  background-color:#e1e1e1;
+  border:1px solid #cbced4;
+  float:left;
+  margin-top:2px;
+  margin-bottom:4px;
+}
+
+.o-useage span
+{
+  display:inline-block;
+  height:12px;
+  line-height:12px;
+}
+
+.org-container .left-top .inline-doc-content
+{
+  min-height:150px;
+}
+
+.org-detail-table
+{
+  width:92%;
+  border-spacing:20px;
+}
+
+.org-detail-table tbody tr
+{
+  margin:15px 0;
+}
+
+.org-detail-table tbody tr td
+{
+  font-size:11px;
+  color:#2d2d2d;
+  line-height:20px;
+  vertical-align:top;
+  padding:5px 0;
+}
+
+.org-detail-table tbody tr td:last-child
+{
+  line-height:15px;
+  width:27%;
+}
+
+.org-detail-table.member-details tbody tr td:last-child
+{
+  width:12%;
+}
+
+.tag_list li
+{
+  display:block;
+  float:left;
+  list-style-type:none;
+  margin-right:5px;
+}
+
+.tag_list li *
+{
+  line-height:30px;
+  margin:0;
+  padding:0;
+}
+
+.tag_list li a
+{
+  background-color:#F2F8FF;
+  border-radius:8px;
+  border:1px solid #445D83;
+  color:#000;
+  text-decoration:none;
+  padding:5px 10px;
+}
+
+.tag_list li a:HOVER
+{
+  color:#000;
+  text-decoration:underline;
+}
+
+.tag_list li#tag-first
+{
+  line-height:30px;
+}
+
+td.o-plan-detail span
+{
+  float:left;
+  width:48px;
+  height:27px;
+  line-height:27px;
+  overflow:hidden;
+  margin-right:6px;
+  margin-top:5px;
+  color:#fff;
+  text-transform:uppercase;
+  text-align:center;
+}
+
+td.o-plan-detail span.line0
+{
+  background-color:#aba000;
+}
+
+td.o-plan-detail span.line1
+{
+  background-color:#a3620a;
+}
+
+td.o-plan-detail span.line2
+{
+  background-color:#898989;
+}
+
+td.o-plan-detail span.line3
+{
+  background-color:#448ccb;
+}
+
+td.time span
+{
+  display:inline-block;
+  width:40px;
+}
+
+th
+{
+  text-align:left;
+}
+
+th span
+{
+  width:92%;
+  font-size:10px;
+  color:#474747;
+  font-weight:700;
+  border-bottom:1px solid #d2d5db;
+  display:inline-block;
+}
+</style>
 <article class="<?php echo $this->appParams->get('pageclass_sfx')?><?php if($item->featured) echo ' article-featured' ?>">
-	<?php if($params->get('tmpl_core.item_title')):?>
+<?php if($params->get('tmpl_core.item_title')):?>
 		<?php if($this->type->params->get('properties.item_title')):?>
 			<div class="page-header">
 				<<?php echo $params->get('tmpl_params.title_tag', 'h1')?>>
@@ -138,274 +420,40 @@ if($params->get('tmpl_core.item_follow_num'))
 			</div>
 		<?php endif;?>
 	<?php endif;?>
-	<div class="clearfix"></div>
+<div class="clearfix"></div>
 
-<style>
-.dl-horizontal dd {
-	margin-bottom: 10px;
-}
-
-.tag_list li {
-	display: block;
-	float:left;
-	list-style-type: none;
-	margin-right: 5px;
-}
-.tag_list li#tag-first {
-	line-height: 30px;
-}
-.tag_list li * {
-	margin: 0px;
-	padding: 0px;
-	line-height: 30px;
-}
-
-.tag_list li a {
-	color: #000;
-	text-decoration: none;
-	border: 1px solid #445D83;
-	background-color: #F2F8FF;
-	border-radius: 8px;
-	padding: 5px 10px 5px 10px;
-}
-
-.tag_list li a:HOVER {
-	color: #000;
-	text-decoration: underline;
-}
-
-.line-brk {
-	margin-left: 0px !important;
-}
-
-.width-660 {
-  width: 660px;
-}
-
-#app-list .org-container{
-	margin-top:18px;
-}
-
-#app-list .alert-container{
-	width:264px;
-	float:right;
-}
-
-.org-container .left-top .inline-doc-content{
-	min-height:150px;
-}
-
-.inline-doc-content dl{
-	padding:0px 30px;
-	margin-bottom:30px;
-	height:429px;
-	overflow:auto;
-}
-
-.inline-doc-content dl dt{
-	margin-top:20px;
-	padding-right:10px;
-	overflow:hidden;
-	font-size: 12px;
-	font-weight: bold;
-	color: #000;
-}
-
-.inline-doc-content dl dd{
-	margin-top:10px;
-	margin-left:0px;
-	text-indent:0px;
-	font-size: 14px;
-	line-height: 18px;
-	color: #666;
-}
-
-.inline-doc-content dl dd.time{
-	font-size: 8px;
-	color: #888;
-	text-transform:uppercase;
-}
-
-td.time span{
-	display:inline-block;
-	width:40px;
-}
-
-td.o-plan-detail span{
-	float:left;
-	width: 48px;
-	height: 27px;
-	line-height:27px;
-	overflow:hidden;
-	margin-right:6px;
-	margin-top:5px;
-	color:#fff;
-	text-transform:uppercase;
-	text-align:center;
-}
-
-td.o-plan-detail span.line0{
-	background-color:#aba000;
-}
-
-td.o-plan-detail span.line1{
-	background-color:#a3620a;
-}
-
-td.o-plan-detail span.line2{
-	background-color:#898989;
-}
-
-td.o-plan-detail span.line3{
-	background-color:#448ccb;
-}
-
-.inline-doc{
-	padding:0;
-}
-
-.inline-doc-content{
-	border:0px;
-  padding:4%;
-}
-
-.inline-doc h2{
-	cursor:pointer;
-	margin:0px;
-	padding:20px 0px;
-	background-color: #f6f6f6;
-	font-weight:normal;
-}
-
-.inline-doc h2 span{
-	display:inline-block;
-	height:100%;
-	padding-left:30px;
-	font-size: 25px;
-	line-height:25px;
-	color: #333;
-}
-
-.org-detail-table{
-	width:92%;
-	border-spacing:20px;
-}
-
-.org-detail-table tbody tr{
-	margin:15px 0;
-}
-
-.org-detail-table tbody tr td{
-	font-size: 11px;
-	color: #2d2d2d;
-	line-height: 20px;
-	vertical-align:top;
-	padding:5px 0;
-}
-
-.org-detail-table tbody tr td:last-child{
-	line-height: 15px;
-	width:27%;
-}
-
-.o-useage{
-	width:108px;
-	height:12px;
-	background-color: #e1e1e1;
-	border:1px solid #cbced4;
-	float:left;
-	margin-top:2px;
-	margin-bottom:4px;
-}
-
-.o-useage span{
-	display:inline-block;
-	height:12px;
-	line-height:12px;
-}
-
-.member-details{
-	margin-right:2%;
-	width:68%;
-	float:left;
-}
-
-.contact-info{
-	margin-left:0px;
-	margin-right:0px;
-	width:23%;
-	float:left;
-}
-
-.contact-info tbody tr td:last-child{
-	background-color:#ebebeb;
-	line-height:26px;
-	padding:0px 5px;
-}
-
-th {
-	text-align:left;
-}
-
-th span{
-	width:92%;
-	font-size: 10px;
-	color: #474747;
-	font-weight: bold;
-	border-bottom:1px solid #d2d5db;
-	display:inline-block;
-}
-
-.mem-email{
-	max-width:200px;
-}
-
-.mem-email a{
-        float: left;
-}
-.mem-email a.btn{
-        float: right;margin-right:8%;
-}
-.org-detail-table.member-details tbody tr td:last-child{
-	width: 12%;
-}
-.mem-email p{
-        margin: 0;
-}
-.menu-bar{
-	width:100%;
-	height:45px;
-	background-color:#eee;
-	box-shadow:inset 0 0 20px rgba(0,0,0,.1);
-}
-
-button.resync-org{
-	/*height:34px;*/
-}
-
-.ctrl-org{
-  margin: 12px 10px 0px 0px;
-}
-
-.menu-bar button{
-	margin-top:10px;
-	margin-left:10px;
-}
-<?php echo $params->get('tmpl_params.css');?>
-</style>
-
+<!-- Starts Menu Bar -->
 <div class="menu-bar">
 	<?php if(!$this->print):?>
-		<?php if($this->user->get('isRoot')):?>
+	<?php if($this->user->get('isRoot')):?>
+
+	<?php
+
+	if ($current_user_org_id == $this->item->id){
+	?>
+	<!-- Resync Button -->
     <button class="btn btn-resync resync-org pull-left" onclick="DeveloperPortal.resync('<?php echo $this->item->id; ?>', 'Organization');"><?php echo JText::_('RESYNC');?></button>
-		<div class="hidden"><div id="system-message" class="alert alert-info"><a class="close" data-dismiss="alert">&#215;</a><h4 class="alert-heading"><?php echo JText::_('INFO');?></h4><div><p><?php echo JText::_('RESYNC_COMPLETE');?></p></div></div></div>
-    <?php endif;?>
-	<?php else:?>
+    
+    <!-- Show Statistics Button -->
+	<a href="<?php echo rtrim(JURI::root(), "/");?>/spotfire.php" class="btn btn-statistics pull-left" style="margin: 10px;" target="_blank"><?php echo JText::_('Show Statistics');?></a>
+
+    <!-- System Message Alert Divs -->
+	<div class="hidden"><div id="system-message" class="alert alert-info"><a class="close" data-dismiss="alert">&#215;</a><h4 class="alert-heading"><?php echo JText::_('INFO');?></h4><div><p><?php echo JText::_('RESYNC_COMPLETE');?></p></div></div></div>
+    <?php
+	}
+
+	endif;
+	else:
+	?>
+
 		<div class="pull-right controls">
 			<a href="#" class="btn btn-mini" rel="tooltip" data-original-title="<?php echo JText::_('CPRINT');?>" onclick="window.print();return false;"><?php echo HTMLFormatHelper::icon('printer.png');  ?></a>
 		</div>
 	<?php endif;?>
-	<a href="<?php echo rtrim(JURI::root(), "/");?>/spotfire.php" class="btn btn-statistics pull-left" style="margin: 10px;" target="_blank"><?php echo JText::_('Show Statistics');?></a>
+
+	
+
+<!--Settings Button and ICON-->
 <div class="pull-right controls ctrl-org">
 	<div class="btn-group">
 		<?php if($params->get('tmpl_core.item_print')):?>
@@ -414,11 +462,13 @@ button.resync-org{
 		<?php endif;?>
 
 		<?php if($this->user->get('id')):?>
-			<?php echo HTMLFormatHelper::bookmark($item, $this->type, $params);?>
-			<?php echo HTMLFormatHelper::follow($item, $this->section);?>
-			<?php echo HTMLFormatHelper::repost($item, $this->section);?>
-			<?php if($item->controls && (in_array(8, $auth_group_ids) || in_array($org_admin_group_id, $auth_group_ids))):?>
-    <!--<button data-toggle="dropdown" class="btn"><?php echo JText::_("ACTION_BUTTON_TEXT"); ?></button>-->
+			<!--Checks for Access Control on Edit-->
+			<?php if($item->controls && (in_array(8, $auth_group_ids) || in_array($org_admin_group_id, $auth_group_ids))):
+
+			//Removing Moderator from the UI controls
+			unset($item->controls[6]);
+			?>
+ 	
 	<a href="#" data-toggle="dropdown" class="dropdown-toggle btn-mini">
 		<?php echo HTMLFormatHelper::icon('gear.png');  ?></a>
 				<ul class="dropdown-menu">
@@ -429,46 +479,72 @@ button.resync-org{
 	</div>
 </div>
 		</div>
+<!-- Ends Menu Bar -->
 
 <div id="app-list">
+
+<!-- Begin the Alerts Box Container if this is the dashboard page -->
+
+<?php
+	
+	if ($current_user_org_id == $this->item->id)
+	{
+
+	?>
 	<div class="org-container alert-container">
-		<div class="inline-doc active">
-			<h2>
-				<span><?php echo JText::_('DASHBOARD_ALERTS');?></span>
-			</h2>
+
+		<div class="inline-doc">
+
+		<!-- Alert Box Title and UpandDownArrow embedded in the span css (Global LAnguage usage is what Jtext is it can be updated at Joomla\language\en-GB\en-GB.tpl_openapi.ini-->
+			<h2><span id="alert-title"><img src="<?php echo JURI::root(); ?>/images/icons/128x128/Alert_ic_128x128.png" style="vertical-align: middle; height:40px;" hspace="0" vspace="0">
+			<?php 
+			echo JText::_('DASHBOARD_ALERTS');
+			?></span></h2>
+
 			<div class="inline-doc-content">
+
 				<dl id="alert-msg" orgID="<?php echo $this->item->id; ?>">
+
 					<dt><?php echo JText::_('DASHBOARD_PLACEHOLDER_ALERT');?></dt>
+
 					<dd class="time"><?php echo date('Y-m-d H:i:s'); ?></dd>
+
 				</dl>
+
 			</div>
+
 		</div>
+
 	</div>
 
-	<div class="org-container pull-left width-660">
+	<?php
+	}
+	?>
+
+<!-- Start of the Applications Box -->
+
+	<div class="org-container pull-left application_box">
 		<div class="inline-doc active left-top">
-			<h2>
-				<?php if (isset($appsValue->label)&&isset($appsValue->content['ids'])): ?>
-					<span><?php echo $appsValue->label.' ('.count($appsValue->content['ids']).')'; ?></span>
-				<?php else: ?>
-					<span>Applications</span>
-				<?php endif ?>
-			</h2>
+			<h2><span>Applications</span></h2>
 			<div class="inline-doc-content">
 				<table class="org-detail-table">
 					<thead>
 						<tr>
 							<th><span><?php echo JText::_('DASHBOARD_APPLICATIONS');?></span></th>
 							<th><span><?php echo JText::_('DASHBOARD_PRODUCT');?></span></th>
-							<th><span><?php echo JText::_('DASHBOARD_PLAN');?></span></th>
-							<th style="width:140px;"><span><?php echo JText::_('DASHBOARD_USEAGE');?></span></th>
+							<th><span><?php echo (JText::_('DASHBOARD_PLAN'));?></span></th>
+							<th style="width:30%;"><span><?php echo JText::_('DASHBOARD_USEAGE');?></span></th>
 						</tr>
 					</thead>
 					<tbody>
+						<!--Get Data for Application Names-->
 						<?php if (isset($appsValue->content['list'])): ?>
 							<?php foreach ($appsValue->content['list'] as $key => $value): ?>
 							<tr style="<?php echo array_search($key, array_keys($appsValue->content['list']))%2==0?'':'background-color:#f6f6f6;'; ?>">
 								<td class="app-name" appID="<?php echo $value->id; ?>"><a href="<?php echo JRoute::_('index.php?option=com_cobalt&view=record&id='.$value->id);?>"><?php echo $value->title; ?></a></td>
+								
+								<!-- Put in Plan Names -->
+
 								<td><?php echo JText::_('DASHBOARD_PLACEHOLDER_LOADING');?></td>
 								<td><?php echo JText::_('DASHBOARD_PLACEHOLDER_LOADING');?></td>
 								<td></td>
@@ -480,8 +556,8 @@ button.resync-org{
 			</div>
 		</div>
 	</div>
-
-	<div class="org-container pull-left width-660">
+<!-- Start of the Subscription Box -->
+	<div class="org-container pull-left application_box">
 		<div class="inline-doc active left-top">
 			<h2>
 				<span><?php echo $subscriptionsValue->label?$subscriptionsValue->label:JFactory::getApplication()->getMenu()->getItem(114)->title; ?></span>
@@ -491,8 +567,8 @@ button.resync-org{
 					<thead>
 						<tr>
 							<th><span><?php echo JText::_('DASHBOARD_SUBSCRIPTION_PRODUCT');?></span></th>
-							<th><span><?php echo JText::_('DASHBOARD_SUBSCRIPTION_PERIOD');?></span></th>
-							<th style="width:23%;"><span><?php echo JText::_('DASHBOARD_PLAN');?></span></th>
+							<th  style="width: 16%;"><span><?php echo JText::_('DASHBOARD_SUBSCRIPTION_PERIOD');?></span></th>
+							<th><span><?php echo JText::_('DASHBOARD_QUOTA');?></span></th>
 							<th><span><?php echo JText::_('DASHBOARD_USEAGE');?></span></th>
 						</tr>
 					</thead>
@@ -500,7 +576,7 @@ button.resync-org{
 						<?php if (isset($subscriptionsValue->content['list'])): ?>
 							<?php foreach ($subscriptionsValue->content['list'] as $key => $value): ?>
 								<tr style="<?php echo array_search($key, array_keys($subscriptionsValue->content['list']))%2==0?'':'background-color:#f6f6f6;'; ?>">
-									<td style="max-width:150px;"><a href="<?php echo JRoute::_('index.php?option=com_cobalt&view=record&id='.$value->id);?>"><?php echo $value->title; ?></a></td>
+									<td style="max-width:150px; padding-right:1%;"><a href="<?php echo JRoute::_('index.php?option=com_cobalt&view=record&id='.$value->id);?>"><?php echo $value->title; ?></a></td>
 									<td class="time"><?php echo '<span>From</span>'.$value->fields[71][0].'<br/>'.'<span>To</span>'.$value->fields[72][0]; ?></td>
 									<td class="o-plan-detail" planID="<?php echo $value->fields[69]; ?>" subID="<?php echo $value->id; ?>">Loading...</td>
 									<td><div class="o-useage" subID="<?php echo $value->id; ?>">Loading...</div></td>
@@ -588,56 +664,6 @@ button.resync-org{
 	</ul>
 <?php endif;?> -->
 
-	<?php if($started):?>
-		<?php total_end($this);?>
-	<?php endif;?>
-	<?php if(in_array($params->get('tmpl_params.item_grouping_type', 0), array(1))  && count($this->item->fields_by_groups)):?>
-		</div>
-		<div class="clearfix"></div>
-		<br />
-	<?php endif;?>
-
-	<?php echo $this->loadTemplate('tags');?>
-
-	<?php if($category || $author || $details || $params->get('tmpl_core.item_rating')): ?>
-		<div class="well article-info">
-			<div class="row-fluid">
-				<?php if($params->get('tmpl_core.item_rating')):?>
-					<div class="span2">
-						<?php echo $item->rating;?>
-					</div>
-				<?php endif;?>
-				<div class="span<?php echo ($params->get('tmpl_core.item_rating') ? 8 : 10);?>">
-					<small>
-						<dl class="dl-horizontal user-info">
-							<?php if($category):?>
-								<?php echo implode(' ', $category);?>
-							<?php endif;?>
-							<?php if($author):?>
-								<dt><?php echo JText::_('Posted');?></dt>
-								<dd>
-									<?php echo implode(', ', $author);?>
-								</dd>
-							<?php endif;?>
-							<?php if($details):?>
-								<dt>Info</dt>
-								<dd class="hits">
-									<?php echo implode(', ', $details);?>
-								</dd>
-							<?php endif;?>
-						</dl>
-					</small>
-				</div>
-				<?php if($params->get('tmpl_core.item_author_avatar')):?>
-					<div class="span2 avatar">
-						<img src="<?php echo CCommunityHelper::getAvatar($item->user_id, $params->get('tmpl_core.item_author_avatar_width', 40), $params->get('tmpl_core.item_author_avatar_height', 40));?>" />
-					</div>
-				<?php endif;?>
-			</div>
-		</div>
-	<?php endif;?>
-</article>
-
 <?php if($started):?>
 	<script type="text/javascript">
 		<?php if(in_array($params->get('tmpl_params.item_grouping_type', 0), array(1))):?>
@@ -648,8 +674,13 @@ button.resync-org{
 	</script>
 <?php endif;?>
 
+<!-- Start one Huge JS call -->
+
 <script type="text/javascript">
+
     (function ($) {
+
+    	//Collapse the Apps/Alerts/Members/Subs Boxes
         $('.inline-doc h2').click(function (e) {
             if($(this).parent().hasClass("active")) {
                 $(this).parent().removeClass("active");
@@ -658,29 +689,74 @@ button.resync-org{
             }
         });
 
+		
+		//Function for removing alert messages
+		removeAlert = function(e) {	
+
+		  postData = {};
+		  postData.uuid = $(e).parent().attr("id");
+
+		  $.post(GLOBAL_CONTEXT_PATH+"index.php?option=com_cobalt&task=ajaxMore.unpublishDashboardAlertMessage", postData , function (response) {
+     		 alert(response);
+   			},'json');
+
+		  $(e).parent().remove();
+
+		  $('#alert-title').prop('count', ($('#alert-title').prop('count') - 1))
+
+		  $('#alert-title').html( '<img src="<?php echo JURI::root(); ?>/images/icons/128x128/Alert_ic_128x128.png" style="vertical-align: middle; height:40px;" hspace="0" vspace="0">' + ' ' + $('#alert-title').prop('count') + ' New Alerts ' );
+
+		}
+
+		//load alerts
+		loadAlerts($('dl#alert-msg'));
+
+		//load products / Load App Box
 		loadProducts($.makeArray($('.app-name')));
+
+		//load PlanDetails // Load Sub Box
+		loadPlanDetail($.makeArray($('td.o-plan-detail')));
+
 
 		function loadProducts(apps){
 			if (apps.length>0) {
 				app_ids = [];
 				$(apps).each(function(i){
 					app_ids.push($(this).attr('appID'));
+
 				});
 
+				//filter out any null or zero values so it doesn't mess up the UI down the Line.
+				app_ids = app_ids.filter(Number);
+
 			  	$.post(
-	GLOBAL_CONTEXT_PATH+"index.php?option=com_cobalt&task=ajaxMore.subscriptionsInApp",
+		GLOBAL_CONTEXT_PATH+"index.php?option=com_cobalt&task=ajaxMore.getDashboardData",
 				  {'app_ids':app_ids},
 				  function(data){
 					$(data.result).each(function(row){
 						node = $(apps[row]);
 					  	products = '';
+					  	subscriptions_id_array = [];
 						plans = '';
-						$(this.products).each(function(i){
-							products += $(this).attr('productName')+'<br/>';
-						});
+						total = [];
 
+						//console.log(data.result);
+
+						$(this.products).each(function(i){
+							products += $(this).attr('title')+'<br/>';
+						});
+						
+						$(this.application_subscriptions).each(function(i){
+							subscriptions_id_array.push($(this).attr('plan_ids')) ;
+						});	
+
+													//Render Plan Names for Application 
 						$(this.plans).each(function(i){
-							jsonObj = JSON.parse($(this).attr('planDetail'));
+							if ($.inArray($(this).attr('id'), subscriptions_id_array) !== -1)
+							{
+							plans += $(this).attr('plan_title')+'<br/>';
+
+							jsonObj = JSON.parse($(this).attr('plan_fields'));
                             var quotaVal = jsonObj[80] || "";
                             var rateVal = jsonObj[79] || "";
 							if(jsonObj[152]){
@@ -688,32 +764,44 @@ button.resync-org{
 							}else{
 							var concurrent_calls="";
 							}
-							plans += quotaVal.replace('/',' calls per ') +'<br/>' + concurrent_calls + '<br/>';
+							total.push(quotaVal.replace('/1 day',''));
+							}
 						});
 
+						//console.log('app');
+						//console.log(data.result);
+						//Render Useage for Application Box
 						$(this.usage).each(function(i){
 							node.next("td").next("td").next("td").append('<div class="o-useage rendered"></div>');
 							usageNode = $('.rendered:last-child');
-							usageValue = $(this).attr('pct');
-							renderUseage(usageNode, usageValue?usageValue:0);
+							usageValue = $(this).attr('current_usage');
+							pctValue = $(this).attr('pct') || 0;
+							renderUseage(usageNode, usageValue?usageValue:0,false,pctValue);
 						});
+
 
 						node.next("td").html(products);
 						node.next("td").next("td").html(plans);
+						
 					});
-					loadPlanDetail($.makeArray($('td.o-plan-detail')));
+					
+				
+
 				  },
 			      'json'
 			  	).fail(function(){
-					loadPlanDetail($.makeArray($('td.o-plan-detail')));
+				
+						
 			  	});
-			}else {
-				loadPlanDetail($.makeArray($('td.o-plan-detail')));
 			}
 		}
 
+
+		
 		function loadPlanDetail(subs){
 			if (subs.length>0) {
+
+				//console.log(subs);
 				sub_ids = [];
 				plan_ids = [];
 				postData = {};
@@ -726,18 +814,26 @@ button.resync-org{
 					postData.plan_ids = plan_ids;
 				}
 			  	$.post(
-	GLOBAL_CONTEXT_PATH+"index.php?option=com_cobalt&task=ajaxMore.subscriptionsInApp",
+	GLOBAL_CONTEXT_PATH+"index.php?option=com_cobalt&task=ajaxMore.getDashboardData",
 				  postData,
 				  function(data){
-					  $(data.result).each(function(){
-						$(this.usage).each(function(row){
-							node = $(subs[row]);
-							usageValue = $(this).attr('pct');
-							renderUseage(node.next("td").find("div"), usageValue?usageValue:0);
+					  $(data.result).each(function(row){
+					  	node = $(subs[row]);
+					  	usage_value = [];
+					  	usage_percent = [];
+					  	//console.log('sub');
+					  	//console.log(data.result);
+							
+						$(this.usage).each(function(i){
+							usage_value[i] = $(this).attr('current_usage') || 0;
+							usage_percent[i] = $(this).attr('pct') || 0;
+							//console.log(usage_value);
 						});
+									
 
 						$(this.plans).each(function(row){
-							if(plan_ids && plan_ids.length>1){
+							if(plan_ids && plan_ids.length>0){
+
 								for(i=0;i<plan_ids.length;i++){
 									jsonObj = JSON.parse(this.planDetail);
                                     var quotaVal = jsonObj[80] || "";
@@ -750,54 +846,74 @@ button.resync-org{
                                     plan = quotaVal.replace('/',' calls per ')+'<br/>' + rateVal.replace('/',' calls per ') + '<br/>' + concurrent_calls;
 									if(plan_ids[i]==this.id){
 										node = $(subs[i]);
-									node.html('<span class="line'+(i%4)+'">'+this.title+'</span>'+plan);
+									node.html(plan);
+									//node.prev('td').prev('td').html('<span class="line'+(row%4)+'">'+this.title+'</span>');
+									total = quotaVal.replace('/1 day','');
+									
+									renderUseage(node.next("td").find("div"), usage_value[row], total, usage_percent[row]);
 									}
 									}
-						}else {
-							jsonObj = JSON.parse(this.planDetail);
-                            var quotaVal = jsonObj[80] || "";
-                            var rateVal = jsonObj[79] || "";
-							if(jsonObj[152]){
-							var concurrent_calls = jsonObj[152] +" "+ "<?php echo JText::_('CONCURRENT_CALLS'); ?>"
-							}else{
-							var concurrent_calls="";
-							}
-                            plan = quotaVal.replace('/',' calls per ')+'<br/>'+rateVal.replace('/',' calls per ')+'<br/>'+concurrent_calls;
-							node = $(subs[row]);
-							node.html('<span class="line'+(row%4)+'">'+this.title+'</span>'+plan);
-							}
+
+							}else {
+								jsonObj = JSON.parse(this.planDetail);
+	                            var quotaVal = jsonObj[80] || "";
+	                            var rateVal = jsonObj[79] || "";
+								if(jsonObj[152]){
+								var concurrent_calls = jsonObj[152] +" "+ "<?php echo JText::_('CONCURRENT_CALLS'); ?>"
+								}else{
+								var concurrent_calls="";
+								}
+	                            plan = quotaVal.replace('/',' calls per ')+'<br/>'+rateVal.replace('/',' calls per ')+'<br/>'+concurrent_calls;
+								node = $(subs[row]);
+								node.html('<span class="line'+(row%4)+'">'+this.title+'</span>'+plan);
+								}
 							});
 
+							//console.log(total);
+
+								
+									
 					  });
-					  loadAlerts($('dl#alert-msg'));
+			
 				  },
 			      'json'
 			  	).fail(function(){
-					loadAlerts($('dl#alert-msg'));
+
 			  	});
 			}else {
-				loadAlerts($('dl#alert-msg'));
+
 			}
 		}
 
+		//A function to Load System Alerts into the HTML SELECTOR that you send it.
+		//alertNode - string (HTML SELECTOR)
+		
 		function loadAlerts(alertNode){
 			org_id = alertNode.attr('orgID');
 		  	$.post(
-GLOBAL_CONTEXT_PATH+"index.php?option=com_cobalt&task=ajaxMore.alertMessages",
+			  GLOBAL_CONTEXT_PATH+"index.php?option=com_cobalt&task=ajaxMore.alertMessages",
 			  {'org_id':org_id},
 			  function(data){
-				  elements = '';
+			  	 //var elements = '';
+				  var elements = new Array();
 				  $(data.result).each(function(){
+
 					  var element = '', aTagStart = '', aTagEnd = '';
 					  if (this.log_type == 'Request') {
 						  aTagStart = '<a href="index.php/subscriptions">';
 						  aTagEnd = '</a>';
 					  }
-					  element = '<dt class="'+renderAlertType(this.event_status)+'">'+aTagStart+this.entity_type+' : '+ (this.event||"")+aTagEnd+'</dt><dd>'+aTagStart+ (this.summary||"")+aTagEnd+'</dd><dd class="time">'+this.create_time+'</dd>';
-					  elements += element;
+					  //element = '<span id="'+this.uuid+'"><dt class="'+renderAlertType(this.event_status)+'">'+aTagStart+this.entity_type+' : '+ (this.event||"")+aTagEnd+'</dt><dd>'+aTagStart+ (this.summary||"")+aTagEnd+'</dd><dd class="time">'+this.create_time+'</dd> <button onclick="removeAlert(this)">Ignore</button></span>';
+					  element = '<span id="'+this.uuid+'"><dt class="'+renderAlertType(this.event_status)+'">'+aTagStart+this.entity_type+' : '+ (this.event||"")+aTagEnd+'</dt><dd>'+aTagStart+ (this.summary||"")+aTagEnd+'</dd><dd class="time">'+this.create_time+'</dd></span>';
+					  elements.push( element );
+				
 					  });
 				  if (elements.length>0) {
 				  	alertNode.html(elements);
+				    //Update Alert Count
+				  	//$('#alert-title').prop('count',elements.length);
+				  	//$('#alert-title').html('<img src="<?php echo JURI::root(); ?>/images/icons/128x128/Alert_ic_128x128.png" style="vertical-align: middle; height:40px;" hspace="0" vspace="0">' + ' ' + elements.length + ' New Alerts ');
+				  	
 				  }
 			  },
 		      'json'
@@ -806,8 +922,8 @@ GLOBAL_CONTEXT_PATH+"index.php?option=com_cobalt&task=ajaxMore.alertMessages",
 		  	});
 		}
 
-		function renderUseage(node, percent){
-			var percentage=Math.floor(percent*100)/100;
+		function renderUseage(node, value, total, pct){
+			var percentage=Math.floor(pct*100)/100;
 			var threshold= '<?php echo $thresholdValue; ?>';
 			barWidth = node.width()*percentage/100;
 			if (percentage<threshold ) {
@@ -818,8 +934,13 @@ GLOBAL_CONTEXT_PATH+"index.php?option=com_cobalt&task=ajaxMore.alertMessages",
 				bgColor = 'f66';
 			}
 			node.html('<span style="width:'+barWidth+'px;background:#'+bgColor+';"></span>');
-			node.after('<div style="float:left;height:14px;margin-top:2px;margin-left:2px;">'+percentage+'%'+'</div><div class="clearfix"></div>');
-		}
+				if (total){
+					node.after( '<span style="margin-left:1%";>' +pct+'% </span>' + '<div style="float:left;height:14px;margin-top:2px;margin-left:2px;">'+value+' out of '+total+' calls </div><div class="clearfix"></div>');
+				}
+				else{
+					node.after( '<span style="margin-left:1%";>' +pct+'% </span>' + '<div style="float:left;height:14px;margin-top:2px;margin-left:2px;"></div><div class="clearfix"></div>');
+				}
+			}
 
 		function renderAlertType(typeString){
 			var status=typeString.toLowerCase();

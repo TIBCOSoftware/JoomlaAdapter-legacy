@@ -283,18 +283,23 @@ if($params->get('tmpl_core.item_follow_num'))
 		font-weight:normal;
 	}
 </style>
-<link rel="stylesheet" type="text/css" href="components/com_cobalt/views/record/tmpl/default_record_asg_article/swagger-ui/css/screen.css" />
-<link rel="stylesheet" type="text/css" href="components/com_cobalt/views/record/tmpl/default_record_asg_article/swagger-ui/css/highlight.default.css" />
-<script src="components/com_cobalt/views/record/tmpl/default_record_asg_article/swagger-ui/lib/shred.bundle.js" type="text/javascript"></script>
-<script src="components/com_cobalt/views/record/tmpl/default_record_asg_article/swagger-ui/lib/jquery.slideto.min.js" type="text/javascript"></script>
-<script src="components/com_cobalt/views/record/tmpl/default_record_asg_article/swagger-ui/lib/jquery.wiggle.min.js" type="text/javascript"></script>
-<script src="components/com_cobalt/views/record/tmpl/default_record_asg_article/swagger-ui/lib/jquery.ba-bbq.min.js" type="text/javascript"></script>
-<script src="components/com_cobalt/views/record/tmpl/default_record_asg_article/swagger-ui/lib/handlebars-1.0.0.js" type="text/javascript"></script>
-<script src="components/com_cobalt/views/record/tmpl/default_record_asg_article/swagger-ui/lib/underscore-min.js" type="text/javascript"></script>
-<script src="components/com_cobalt/views/record/tmpl/default_record_asg_article/swagger-ui/lib/backbone-min.js" type="text/javascript"></script>
-<script src="components/com_cobalt/views/record/tmpl/default_record_asg_article/swagger-ui/lib/swagger.js" type="text/javascript"></script>
-<script src="components/com_cobalt/views/record/tmpl/default_record_asg_article/swagger-ui/swagger-ui.js" type="text/javascript"></script>
-<script src="components/com_cobalt/views/record/tmpl/default_record_asg_article/swagger-ui/lib/highlight.7.3.pack.js" type="text/javascript"></script>
+<link rel="stylesheet" type="text/css" href="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/css/typography.css" />
+<link rel="stylesheet" type="text/css" href="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/css/screen.css" />
+<!--<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/shred.bundle.js" type="text/javascript"></script>-->
+<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/jquery.slideto.min.js" type="text/javascript"></script>
+<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/jquery.wiggle.min.js" type="text/javascript"></script>
+<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/jquery.ba-bbq.min.js" type="text/javascript"></script>
+<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/handlebars-2.0.0.js" type="text/javascript"></script>
+<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/js-yaml.min.js" type="text/javascript"></script>
+<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/lodash.min.js" type="text/javascript"></script>
+<!--<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/underscore-min.js" type="text/javascript"></script>-->
+<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/backbone-min.js" type="text/javascript"></script>
+<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/swagger-ui.js" type="text/javascript"></script>
+<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/highlight.9.1.0.pack.js" type="text/javascript"></script>
+<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/highlight.9.1.0.pack_extended.js" type="text/javascript"></script>
+<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/jsoneditor.min.js" type="text/javascript"></script>
+<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/marked.js" type="text/javascript"></script>
+<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/swagger-oauth.js" type="text/javascript"></script>
 
 <article class="<?php echo $this->appParams->get('pageclass_sfx')?><?php if($item->featured) echo ' article-featured' ?>">
     <div class="container-fluid featured-items">

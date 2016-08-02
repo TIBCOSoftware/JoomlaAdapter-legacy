@@ -96,7 +96,7 @@ class DeveloperPortalApi {
         $db -> setQuery('select * from #__js_res_record as a WHERE a.id in
 (SELECT record_id FROM #__js_res_record_values
 where type_id=10)');
-        //$db->query();
+      
         if ($result = $db -> loadObjectList()) {
             return $result;
         }
@@ -192,12 +192,11 @@ where type_id=10)');
 
 	public static function subscriptionsInApplication($appId){
         $db = JFactory::getDbo();
-		$db -> setQuery('select * from #__js_res_record WHERE id in (select record_id from #__js_res_record_values where field_id=116 and field_value='.$appId.') and published <> 2');
-		$results = array();
-		foreach ($db -> loadObjectList() as $value) {
-			$results[] = $value->id;
-		}
-
+	      $db -> setQuery('select * from #__js_res_record WHERE id in (select record_id from #__js_res_record_values where field_id=116 and field_value='.$appId.') and published <> 2');
+		    $results = array();
+    		foreach ($db -> loadObjectList() as $value) {
+    			$results[] = $value->id;
+    		}
         return $results;
 	}
 
@@ -267,6 +266,22 @@ where type_id=10)');
         return $rv;
     }
 
+     /**
+     * Get some of the Fields that related to Plans, Almost consists of a kind of Model.
+     *
+     * @author Dyami Delia ddella@tibco.com
+     * @return an Array of Plan Deatils based of the DB Query
+     */
+    public static function getPlanModel() {
+        $rv = array();
+        $db = JFactory::getDbo();
+        $sql = "SELECT  r.fields AS plan_fields, r.title AS plan_title, rv.field_value AS product_id, r.id AS id FROM #__js_res_record AS r, #__js_res_record_values AS rv WHERE rv.field_id=53 AND rv.type_id=7 AND rv.record_id=r.id";
+        $db->setQuery($sql);
+        $result = $db->loadObjectList();
+
+        return $result;
+    }
+
     /**
      * Get all the plans that the organization(s) to which the user specified by $user_profile_id belongs has subscribed to.
      *
@@ -316,7 +331,7 @@ where type_id=10)');
     public static function getProductsInApplication($app_id) {
         if (isset($app_id)) {
             $db = JFactory::getDbo();
-            $db -> setQuery("SELECT * FROM #__js_res_record WHERE id in (SELECT record_id FROM #__js_res_record_values WHERE type_id=1 AND field_id=62 AND field_value=" . $app_id . ")");
+            $db -> setQuery("SELECT * FROM #__js_res_record WHERE id in (SELECT record_id FROM #__js_res_record_values WHERE type_id=1 AND field_id=62 AND field_value=" . $app_id . ") ORDER BY id ASC");
             if ($result = $db -> loadObjectList()) {
                 return $result;
             }
@@ -335,7 +350,7 @@ where type_id=10)');
         $rv = array();
         if (isset($app_id)) {
             $db = JFactory::getDbo();
-            $db -> setQuery("SELECT id FROM #__js_res_record WHERE id in (SELECT record_id FROM #__js_res_record_values WHERE type_id=1 AND field_id=62 AND field_value=" . $app_id . ")");
+            $db -> setQuery("SELECT id FROM #__js_res_record WHERE id in (SELECT record_id FROM #__js_res_record_values WHERE type_id=1 AND field_id=62 AND field_value=" . $app_id . ") ORDER BY id ASC");
             if ($result = $db -> loadObjectList()) {
                 foreach ($result as $product) {
                     array_push($rv, $product -> id);
@@ -529,6 +544,7 @@ where type_id=10)');
         return array();
       }
     }
+
     //Get the plans which are referecing current plan
     public static function getPlanByProductId($product_id) {
       if(isset($product_id)) {
@@ -561,6 +577,22 @@ where type_id=10)');
         return array();
       }
     }
+
+        //Get the subscriptions which are attached to an APP
+    public static function getApplicationSubscriptions($app_id) {
+     
+        $db = JFactory::getDbo();
+        $query = 'SELECT record_id FROM #__js_res_record_values WHERE field_label= "Owner application" and field_value =' . $app_id;
+        $query = 'SELECT field_value as plan_ids FROM #__js_res_record_values WHERE field_label= "Plan" and record_id IN (' . $query . ')';
+        $db->setQuery($query);
+        if($result = $db->loadObjectList()) {
+          return $result;
+        } else {
+          return array();
+        }
+      
+    }
+
     //Get the applications which are referencing current subscription.
     public static function getApplicationBySubscriptionId($subscription_id) {
       if(isset($subscription_id)) {

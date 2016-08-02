@@ -993,6 +993,7 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
         (function ($) {
             var specData, fileName, realName, deleted_operation_ids = [], operations_doc1, operations_doc2, is_deleted_operations = false;
             var originSpecName = "<?php echo $this->fields[23]->value[0]['realname'];?>";
+            var originSpecFileName = "<?php echo $this->fields[23]->value[0]['filename'];?>";
             var originalName = '';
             var originalEnvironments = [];
             var originalTargetEnvironments = [];
@@ -3512,9 +3513,9 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
                                             rootPath + fileName,
                                             {},
                                             function (data) {
-                                                if (validateSwagger(data) == true) {
+                                                //if (validateSwagger(data) == true) {
                                                     fCallback();
-                                                }
+                                               // }
                                             },
                                             'json'
                                         ).error(function () {
@@ -3549,9 +3550,9 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
                                             rootPath + fileName,
                                             {},
                                             function (data) {
-                                                if (validateSwagger(data) == true) {
+                                              //  if (validateSwagger(data) == true) {
                                                     fCallback();
-                                                }
+                                               // }
                                             },
                                             'json'
                                         ).error(function () {
@@ -3569,9 +3570,9 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
                                 rootPath + fileName,
                                 {},
                                 function (data) {
-                                    if (validateSwagger(data) == true) {
+                                   // if (validateSwagger(data) == true) {
                                         fCallback();
-                                    }
+                                   // }
                                 },
                                 'json'
                             ).error(function () {
@@ -3668,7 +3669,18 @@ $doc->addScriptDeclaration($old_operations_of_api_js);
                             } else {
                                 window.location.href = sRedirectUrl;
                             }
+
+                            if(originSpecFileName !== undefined && fileName === undefined){
+                            DeveloperPortal.sendDeleteNotification(nObjectId, DeveloperPortal.PORTAL_OBJECT_TYPE_API,
+                                function () {
+                                    window.location.href = sRedirectUrl;
+                                    }, function () {
+                                    window.location.href = sRedirectUrl;
+                                    });
                         }
+                        
+                        }
+                        
                     },
                     function (sRedirectUrl) {
                         window.location.href = sRedirectUrl;

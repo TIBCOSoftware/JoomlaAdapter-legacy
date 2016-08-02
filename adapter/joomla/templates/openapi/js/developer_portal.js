@@ -113,6 +113,34 @@ var DeveloperPortal = {};
     DeveloperPortal.DELETION_REDIRECT_URI[21] = '/mappings/schemas';
     DeveloperPortal.REGEXP_EXTRA_ENCODED = /[~!()']/g;
     DeveloperPortal.REGEXP_EXTRA_DECODED = /%7E|%21|%28|%29|%27/g;
+
+
+    /**
+     * Grabbing a Config Variable to send in headers.
+     * @returns {string} a string to be used as a header
+     */
+    DeveloperPortal._encodingGrabber = function() {
+   
+            var result = null;
+              $.ajax(
+              {
+                url: GLOBAL_CONTEXT_PATH+"index.php?option=com_cobalt&task=ajaxMore.returnData",
+                type: 'get',
+                dataType: 'json',
+                async: false,
+                cache: false,
+                success: function(data) 
+                {
+                    result = data.result;
+                }
+              });
+
+          return result;
+    };
+
+
+
+
     /**
      * Count how many properties one plain object owns.
      *
@@ -146,6 +174,7 @@ var DeveloperPortal = {};
     DeveloperPortal._portalEvent = function(oData, fCallback, fErrorback) {
         if (oData) {
             DeveloperPortal._makeAllValuesArray(oData.updatedFields);
+            var val = DeveloperPortal._encodingGrabber();
             oData.userId = _USER_ID;
             return $.ajax({
                 url: GLOBAL_CONTEXT_PATH + DeveloperPortal.PORTAL_EVENT_URI,
@@ -153,7 +182,8 @@ var DeveloperPortal = {};
                 data: JSON.stringify(oData),
                 dataType: 'text',
                 headers: {
-                    sessionId: _SESSION_ID
+                    sessionId: _SESSION_ID,
+                    "Authorization": "Basic " + btoa(val + ":" + val)
                 },
                 type: 'post',
                 success: function(data, textStatus, jqXHR) {
@@ -398,6 +428,7 @@ var DeveloperPortal = {};
      * string otherwise.
      */
     DeveloperPortal._requestKey = function(nApplicationId, fCallback, fErrorback) {
+        var val = DeveloperPortal._encodingGrabber();
         if (nApplicationId) {
             return $.ajax({
                 url: GLOBAL_CONTEXT_PATH + DeveloperPortal.REQUEST_KEY_URI,
@@ -407,7 +438,8 @@ var DeveloperPortal = {};
                 type: 'get',
                 dataType: 'text',
                 headers: {
-                    sessionId: _SESSION_ID
+                    sessionId: _SESSION_ID,
+                    "Authorization": "Basic " + btoa(val + ":" + val)
                 },
                 timeout: 30000,
                 success: function(data, testStatus, jqXHR) {

@@ -288,12 +288,12 @@ if($params->get('tmpl_core.item_follow_num'))
 	article h4{
 		margin-left:20px;
 	}
- .operations2 li{ 
-    list-style: none; margin: 10px; 
+ .operations2 li{
+    list-style: none; margin: 10px;
     border: 1px solid #dddddd;
     font: normal 16px Arial, Helvetica, sans-serif;
-    background: #ffffff; 
-    height: 30px; 
+    background: #ffffff;
+    height: 30px;
     line-height: 30px;
   }
   .operations2 li span{
@@ -323,7 +323,7 @@ if($params->get('tmpl_core.item_follow_num'))
   }
   #message-bar{
     display: none;
-  }  
+  }
 </style>
 <!-- <link rel="stylesheet" type="text/css" href="libraries/swagger-ui/css/screen.css" /> -->
 <!-- <link rel="stylesheet" type="text/css" href="libraries/swagger-ui/css/highlight.default.css" /> -->
@@ -345,10 +345,14 @@ if($params->get('tmpl_core.item_follow_num'))
 <script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/jquery.wiggle.min.js" type="text/javascript"></script>
 <script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/jquery.ba-bbq.min.js" type="text/javascript"></script>
 <script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/handlebars-2.0.0.js" type="text/javascript"></script>
-<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/underscore-min.js" type="text/javascript"></script>
+<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/js-yaml.min.js" type="text/javascript"></script>
+<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/lodash.min.js" type="text/javascript"></script>
+<!--<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/underscore-min.js" type="text/javascript"></script>-->
 <script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/backbone-min.js" type="text/javascript"></script>
 <script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/swagger-ui.js" type="text/javascript"></script>
-<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/highlight.7.3.pack.js" type="text/javascript"></script>
+<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/highlight.9.1.0.pack.js" type="text/javascript"></script>
+<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/highlight.9.1.0.pack_extended.js" type="text/javascript"></script>
+<script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/jsoneditor.min.js" type="text/javascript"></script>
 <script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/marked.js" type="text/javascript"></script>
 <script src="components/com_cobalt/views/record/tmpl/default_record_product/swagger-ui/lib/swagger-oauth.js" type="text/javascript"></script>
 
@@ -474,7 +478,7 @@ if($params->get('tmpl_core.item_follow_num'))
            <?php endif;?>
            <div id="tab-api-explorer" class="tab-pane">
 			   <div>
-			   				
+
                    <div class="pull-left" style="margin-left: 10px; margin-top: 10px;">
                      <?php if($this->user->id > 0): ?>
                      <select id="apps">
@@ -487,7 +491,7 @@ if($params->get('tmpl_core.item_follow_num'))
                        <span>API Key:&nbsp;</span>
                        <input type="text" id="input_apiKey" size="40" />
                    </div>
-                
+
                    <div class="pull-right" style="margin-right: 10px; margin-top: 10px;display:none;">
     				   <span>Environment:&nbsp;</span>
     				   <select id="select_environment" name="env">
@@ -513,83 +517,104 @@ if($params->get('tmpl_core.item_follow_num'))
 			   </div>
 			   <div class="swagger-section">
 			    <div id="message-bar" class="swagger-ui-wrap message-success"></div>
-                <div id="swagger_ui_div" class="swagger-ui-wrap"></div>
                 </div>
                 <script type="text/javascript">
-                	jQuery(function () {
-                	    window.swaggerUi = new SwaggerUi({
-                            url: GLOBAL_CONTEXT_PATH + 'asg/internal/product/<?php echo $item->id; ?>',
-                            dom_id: 'swagger_ui_div',
-                            useJQuery: true,
-                            showRequestHeaders: true,
-                            supportHeaderParams: true,
-                            supportedSubmitMethods: ['get', 'post', 'put'],
-                            highlightSizeThreshold: 1024 * 1024, // 1Mb
-                            onComplete: function(swaggerApi, swaggerUi){
-                              <?php if($app_id):?>
-                                  jQuery("#swagger_ui_div a[href^='#']").each(function(i,ele){
-                                      var link = jQuery(ele).attr("href");
-                                      jQuery(ele).attr("href","<?php echo JUri::getInstance()->toString();?>" + link);
-                                  });
-                              <?php endif;?>
-                            jQuery('pre code').each(function(i, e) {hljs.highlightBlock(e);});
-                            },
-                            onFailure: function(data) {
-                                  //jQuery('#tabs-list a[href="#tab-api-explorer"]').removeAttr('data-toggle').addClass("tab-disabled");
-                                  if(!window.first){
-                                    //portal engine is down
-                                    if(data.indexOf("50")!=-1){
-                                        handleError(data,"<?php echo JText::_('API_EXPLORER_ERROR'); ?>");
-                                        <?php foreach($old_operations_of_api as $idx=>$item): ?>
-                                          var poerations = jQuery("#swagger_ui_div").append("<h2><?php echo $item['title']; ?></h2>")
-                                          jQuery("#swagger_ui_div").append("<ul class='operations2 list<?php echo $idx; ?>'></ul>");
-                                          var lis = "";
-                                          <?php foreach($item['operations'] as $operation): ?>
-                                             lis = lis + "<li><span class='method'><?php echo $operation['REST method']; ?></span><span class='path'><?php echo $operation['URI path']; ?></span><span class='desc'><?php echo explode(':',$operation['Description'])[1]; ?></span></li>";
-                                          <?php endforeach; ?>
-                                          jQuery(".list<?php echo $idx; ?>").append(lis);
-                                        <?php endforeach; ?>                    
-                                    }else{
-                                      //portal engine is up, but no operations
-                                      Joomla._renderMessages(["<?php echo JText::_('NO_OPERATIONS'); ?>"]);
-                                    }
-                                    window.first = true;   
-                                  }
+                    jQuery.post(
+                        GLOBAL_CONTEXT_PATH + "index.php?option=com_cobalt&task=ajaxMore.getAllswaggerJson",
+                        {'id': '<?php echo $this->item->id;?>'},
+                        function (data) {
+                            if (data.success) {
+                                var swaggerSpecList = data.result;
+                                swaggerSpecList.forEach(function(swaggerSpec, n){
+                                    jQuery('.swagger-section').append('<div id="swagger_ui_div_' + n + '" class="swagger-ui-wrap"></div>');
+                                    console.log(n);
+                                    swaggerSpec.path = 'uploads/swaggerSpecs/' + swaggerSpec.ctime.slice(0,7) + '/' + swaggerSpec.filename;
+                                    jQuery(function () {
+                                        window.swaggerUi = new SwaggerUi({
+                                            url: GLOBAL_CONTEXT_PATH + swaggerSpec.path,
+                                            dom_id: 'swagger_ui_div_' + n,
+                                            useJQuery: true,
+                                            showRequestHeaders: true,
+                                            supportHeaderParams: true,
+                                            supportedSubmitMethods: ['get', 'post', 'put'],
+                                            highlightSizeThreshold: 1024 * 1024, // 1Mb
+                                            onComplete: function(swaggerApi, swaggerUi){
+                                                <?php if($app_id):?>
+                                                jQuery("#swagger_ui_div a[href^='#']").each(function(i,ele){
+                                                    var link = jQuery(ele).attr("href");
+                                                    jQuery(ele).attr("href","<?php echo JUri::getInstance()->toString();?>" + link);
+                                                });
+                                                <?php endif;?>
+                                                jQuery('pre code').each(function(i, e) {hljs.highlightBlock(e);});
+                                            },
+                                            onFailure: function(data) {
+                                                //jQuery('#tabs-list a[href="#tab-api-explorer"]').removeAttr('data-toggle').addClass("tab-disabled");
+                                                if(!window.first){
+                                                    //portal engine is down
+                                                    if(data.indexOf("50")!=-1){
+                                                        handleError(data,"<?php echo JText::_('API_EXPLORER_ERROR'); ?>");
+                                                        <?php foreach($old_operations_of_api as $idx=>$item): ?>
+                                                        var poerations = jQuery("#swagger_ui_div").append("<h2><?php echo $item['title']; ?></h2>")
+                                                        jQuery("#swagger_ui_div").append("<ul class='operations2 list<?php echo $idx; ?>'></ul>");
+                                                        var lis = "";
+                                                        <?php foreach($item['operations'] as $operation): ?>
+                                                        lis = lis + "<li><span class='method'><?php echo $operation['REST method']; ?></span><span class='path'><?php echo $operation['URI path']; ?></span><span class='desc'><?php echo explode(':',$operation['Description'])[1]; ?></span></li>";
+                                                        <?php endforeach; ?>
+                                                        jQuery(".list<?php echo $idx; ?>").append(lis);
+                                                        <?php endforeach; ?>
+                                                    }else{
+                                                        //portal engine is up, but no operations
+                                                        Joomla._renderMessages(["<?php echo JText::_('NO_OPERATIONS'); ?>"]);
+                                                    }
+                                                    window.first = true;
+                                                }
 
-                            },
-                            docExpansion: 'none'
-                      }), setKeyInHeader = function() {
-                            var key = jQuery('#input_apiKey').val();
-                            if(window.swaggerUi.api) {
-                                if (key && key.trim && key.trim() !== "") {
-                                    window.swaggerUi.api.clientAuthorizations.add("api_key", new SwaggerClient.ApiKeyAuthorization("Apikey", key, "header"));
-                                } else {
-                                    if (window.swaggerUi.api.clientAuthorizations.authz && window.swaggerUi.api.clientAuthorizations.authz.api_key) {
-                                        delete window.swaggerUi.api.clientAuthorizations.authz.api_key;
-                                    }
-                                }
+                                            },
+                                            docExpansion: 'none',
+                                            jsonEditor: false,
+                                            defaultModelRendering: 'schema',
+                                            showRequestHeaders: false
+                                        }), setKeyInHeader = function() {
+                                            var key = jQuery('#input_apiKey').val();
+                                            if(window.swaggerUi.api) {
+                                                if (key && key.trim && key.trim() !== "") {
+                                                    window.swaggerUi.api.clientAuthorizations.add("api_key", new SwaggerClient.ApiKeyAuthorization("Apikey", key, "header"));
+                                                } else {
+                                                    if (window.swaggerUi.api.clientAuthorizations.authz && window.swaggerUi.api.clientAuthorizations.authz.api_key) {
+                                                        delete window.swaggerUi.api.clientAuthorizations.authz.api_key;
+                                                    }
+                                                }
+                                            }
+                                        };
+                                        jQuery('#input_apiKey').change(function() {
+                                            setKeyInHeader();
+                                        }).keyup(function() {
+                                            setKeyInHeader();
+                                        });
+                                        jQuery('#input_apiKey').val(jQuery('#apps').val());
+                                        setKeyInHeader();
+                                        jQuery('#apps').change(function() {
+                                            jQuery('#input_apiKey').val(jQuery('#apps').val());
+                                            setKeyInHeader();
+                                        });
+                                        swaggerUi.load();
+                                        if(jQuery('#apps').length > 0 && jQuery('#apps')[0].options.length > 1) {
+                                            jQuery('#apps')[0].selectedIndex = 1;
+                                            jQuery('#input_apiKey').val(jQuery('#apps').val());
+                                            setKeyInHeader();
+                                        }
+
+                                    });
+                                });
+                            } else {
+                                Joomla.showError(["Can not find the swagger JSON file."]);
                             }
-                      };
-                      jQuery('#input_apiKey').change(function() {
-                          setKeyInHeader();
-                      }).keyup(function() {
-                          setKeyInHeader();
-                      });
-                      jQuery('#input_apiKey').val(jQuery('#apps').val());
-                      setKeyInHeader();
-                      jQuery('#apps').change(function() {
-                        jQuery('#input_apiKey').val(jQuery('#apps').val());
-                        setKeyInHeader();
-                      });
-                      swaggerUi.load();
-                      if(jQuery('#apps').length > 0 && jQuery('#apps')[0].options.length > 1) {
-                        jQuery('#apps')[0].selectedIndex = 1;
-                        jQuery('#input_apiKey').val(jQuery('#apps').val());
-                        setKeyInHeader();
-                      }
-                      function handleError(data,error){
+                        },
+                        'json'
+                    )
+                    function handleError(data,error){
                         var sUUID = UUID.generate(),
-                        sErrMsg = PORTAL_UNREACHABLE_ERROR_MESSAGE;
+                            sErrMsg = PORTAL_UNREACHABLE_ERROR_MESSAGE;
                         //Joomla.showError(["The API Explorer is currently in non-interactive mode."]);
                         DeveloperPortal._saveLogInDatabase({
                             log_type: '',
@@ -605,8 +630,7 @@ if($params->get('tmpl_core.item_follow_num'))
                         }, function(sErrMsg) {
                             Joomla.showError([error,sErrMsg]);
                         }, [DeveloperPortal._urlifySupport(sUUID, sErrMsg) + sUUID]);
-                      };                      
-                    });
+                    };
 
                 </script>
            </div>
