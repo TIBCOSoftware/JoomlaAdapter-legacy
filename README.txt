@@ -1,7 +1,7 @@
 ==================================================================================
 Project Name    : Adapter Code for TIBCO(R) API Exchange and Joomla!
-Release Version : 2.2.1
-Release Date    : December 2015
+Release Version : 2.3.0
+Release Date    : October 2016
 ==================================================================================
 DISCLAIMER
 
@@ -93,8 +93,8 @@ licenses are contained in a file titled "LICENSE.txt" that is included
 with this code distribution.
 
 TIBCO package:
-    * Copyright (c) 2013-2015 TIBCO Software Inc. ALL RIGHTS RESERVED.
-    * Copyright (c) 2011 - 2015  Wordnik, Inc. (licensed under the Apache
+    * Copyright (c) 2013-2016 TIBCO Software Inc. ALL RIGHTS RESERVED.
+    * Copyright (c) 2011 - 2016  Wordnik, Inc. (licensed under the Apache
       License, version 2.0)
     * Copyright (c) 2009-2012 Jeremy Ashkenas, DocumentCloud
       Inc. (licensed under the MIT license)
@@ -102,9 +102,9 @@ TIBCO package:
     * Copyright (c) 2010 "Cowboy" Ben Alman (MIT and GPL licenses)
 
 Joomla package:
-    * Copyright (c) 2005 - 2015 Open Source Matters. All rights reserved.
+    * Copyright (c) 2005 - 2016 Open Source Matters. All rights reserved.
     * See License details at http://docs.joomla.org/Joomla_Licenses
 
 Cobalt packages:
-     * Copyright (c) 2005 - 2015 MintJoomla
+     * Copyright (c) 2005 - 2016 MintJoomla
 ==================================================================================
